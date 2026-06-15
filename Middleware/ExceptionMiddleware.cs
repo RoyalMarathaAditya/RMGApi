@@ -1,16 +1,19 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
 
 namespace HRMS.Api.Middleware
 {
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionMiddleware> _logger;
 
-        public ExceptionMiddleware(RequestDelegate next)
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
@@ -21,19 +24,10 @@ namespace HRMS.Api.Middleware
             }
             catch (Exception ex)
             {
-                httpContext.Response.ContentType = "application/json";
+                // Log the exception with request context
+                _logger.LogError(ex, "Unhandled exception while processing request {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
 
-                if (ex is SecurityTokenException)
-                {
-                    httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    var response = new
-                    {
-                        message = "Authentication error.",
-                        detail = ex.Message,
-                    };
-                    await httpContext.Response.WriteAsync(JsonSerializer.Serialize(response));
-                    return;
-                }
+                httpContext.Response.ContentType = "application/json";
 
                 httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 var generic = new

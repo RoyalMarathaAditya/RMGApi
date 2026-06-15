@@ -91,6 +91,9 @@ var app = builder.Build();
 
 app.UseSerilogRequestLogging();
 
+// Request/response logging
+app.UseMiddleware<LoggerMiddleware>();
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
