@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HRMS.Api.Migrations
 {
-    [DbContext(typeof(HrmsDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20260611101625_InitialCreate")]
     partial class InitialCreate
     {

@@ -3,9 +3,9 @@ using HRMS.Api.Models;
 
 namespace HRMS.Api.Data
 {
-    public class HrmsDbContext : DbContext
+    public class AppDbContext : DbContext
     {
-        public HrmsDbContext(DbContextOptions<HrmsDbContext> options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }

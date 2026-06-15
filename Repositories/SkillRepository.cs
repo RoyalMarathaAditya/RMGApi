@@ -6,9 +6,9 @@ namespace HRMS.Api.Repositories
 {
     public class SkillRepository : ISkillRepository
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public SkillRepository(HrmsDbContext dbContext)
+        public SkillRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

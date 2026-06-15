@@ -4,12 +4,12 @@ namespace HRMS.Api.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
         private IEmployeeRepository? _employees;
         private IAuthRepository? _users;
         private IRefreshTokenRepository? _refreshTokens;
 
-        public UnitOfWork(HrmsDbContext dbContext)
+        public UnitOfWork(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

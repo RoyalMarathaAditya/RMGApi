@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HRMS.Api.Migrations
 {
-    [DbContext(typeof(HrmsDbContext))]
+    [DbContext(typeof(AppDbContext))]
     partial class HrmsDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

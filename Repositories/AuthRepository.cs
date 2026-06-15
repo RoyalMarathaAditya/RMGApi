@@ -6,9 +6,9 @@ namespace HRMS.Api.Repositories
 {
     public class AuthRepository : IAuthRepository
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public AuthRepository(HrmsDbContext dbContext)
+        public AuthRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }
