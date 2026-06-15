@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using HRMS.Api.DTOs;
 using HRMS.Api.Models;
-using HRMS.Api.Repositories;
+using HRMS.Api.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

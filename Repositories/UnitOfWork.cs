@@ -1,4 +1,5 @@
 using HRMS.Api.Data;
+using HRMS.Api.Repositories.Interfaces;
 
 namespace HRMS.Api.Repositories
 {

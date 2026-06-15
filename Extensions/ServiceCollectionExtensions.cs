@@ -2,6 +2,7 @@ using HRMS.Api.Data;
 using HRMS.Api.Models;
 using HRMS.Api.Profiles;
 using HRMS.Api.Repositories;
+using HRMS.Api.Repositories.Interfaces;
 using HRMS.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -1,5 +1,6 @@
 using HRMS.Api.Data;
 using HRMS.Api.Models;
+using HRMS.Api.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Api.Repositories

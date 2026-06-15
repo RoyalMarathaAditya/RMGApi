@@ -1,7 +1,7 @@
 using AutoMapper;
 using HRMS.Api.DTOs;
 using HRMS.Api.Models;
-using HRMS.Api.Repositories;
+using HRMS.Api.Repositories.Interfaces;
 
 namespace HRMS.Api.Services
 {
