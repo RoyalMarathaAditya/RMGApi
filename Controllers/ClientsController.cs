@@ -1,6 +1,6 @@
 using HRMS.Api.DTOs;
 using HRMS.Api.Models;
-using HRMS.Api.Repositories;
+using HRMS.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.Api.Controllers

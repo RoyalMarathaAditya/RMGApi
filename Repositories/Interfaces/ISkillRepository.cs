@@ -1,6 +1,6 @@
 using HRMS.Api.Models;
 
-namespace HRMS.Api.Repositories
+namespace HRMS.Api.Repositories.Interfaces
 {
     public interface ISkillRepository
     {

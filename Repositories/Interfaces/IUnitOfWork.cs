@@ -1,4 +1,4 @@
-namespace HRMS.Api.Repositories
+namespace HRMS.Api.Repositories.Interfaces
 {
     public interface IUnitOfWork
     {
