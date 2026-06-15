@@ -6,6 +6,21 @@ namespace HRMS.Api.Middleware
     public class AuthorizationMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly string[] _excludedPaths = new[]
+        {
+            "/swagger",
+            "/swagger-ui.html",
+            "/swagger-ui.js",
+            "/swagger-ui.css",
+            "/swagger-ui-bundle.js",
+            "/swagger-ui-standalone-preset.js",
+            "/swagger-ui-standalone-preset.css",
+            "/swagger-initializer.js",
+            "/openapi",
+            "/api/auth/login",
+            "/",
+            "/index.html"
+        };
 
         public AuthorizationMiddleware(RequestDelegate next)
         {
@@ -16,6 +31,15 @@ namespace HRMS.Api.Middleware
         {
             try
             {
+                var path = httpContext.Request.Path.Value ?? "";
+
+                // Check if the request path is in the excluded list
+                if (IsPathExcluded(path))
+                {
+                    await _next(httpContext);
+                    return;
+                }
+
                 // If no authenticated user, return 401
                 if (httpContext.User?.Identity == null || !httpContext.User.Identity.IsAuthenticated)
                 {
@@ -59,6 +83,34 @@ namespace HRMS.Api.Middleware
                 };
                 await httpContext.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
+        }
+
+        private bool IsPathExcluded(string path)
+        {
+            // Normalize path for comparison
+            var normalizedPath = path.TrimEnd('/').ToLowerInvariant();
+
+            // Check for exact matches
+            foreach (var excludedPath in _excludedPaths)
+            {
+                if (normalizedPath.Equals(excludedPath.TrimEnd('/').ToLowerInvariant(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            // Check if path starts with any excluded prefix (for nested resources like /swagger/*)
+            foreach (var excludedPath in _excludedPaths)
+            {
+                var prefix = excludedPath.TrimEnd('/').ToLowerInvariant();
+                if (normalizedPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
