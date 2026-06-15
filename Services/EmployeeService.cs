@@ -1,3 +1,4 @@
+using AutoMapper;
 using HRMS.Api.DTOs;
 using HRMS.Api.Models;
 using HRMS.Api.Repositories;
@@ -7,41 +8,31 @@ namespace HRMS.Api.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IMapper _mapper;
 
-        public EmployeeService(IEmployeeRepository employeeRepository)
+        public EmployeeService(IEmployeeRepository employeeRepository, IMapper mapper)
         {
             _employeeRepository = employeeRepository;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var employees = await _employeeRepository.GetAllAsync(cancellationToken);
-            return employees.Select(ToDto);
+            return _mapper.Map<IEnumerable<EmployeeDto>>(employees);
         }
 
         public async Task<EmployeeDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var employee = await _employeeRepository.GetByIdAsync(id, cancellationToken);
-            return employee is null ? null : ToDto(employee);
+            return employee is null ? null : _mapper.Map<EmployeeDto>(employee);
         }
 
         public async Task<EmployeeDto> CreateAsync(CreateEmployeeDto request, CancellationToken cancellationToken = default)
         {
-            var employee = new Employee
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                Department = request.Department,
-                Designation = request.Designation,
-                Status = request.Status,
-                DateOfJoining = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-            };
-
+            var employee = _mapper.Map<Employee>(request);
             var created = await _employeeRepository.CreateAsync(employee, cancellationToken);
-            return ToDto(created);
+            return _mapper.Map<EmployeeDto>(created);
         }
 
         public async Task<EmployeeDto?> UpdateAsync(int id, UpdateEmployeeDto request, CancellationToken cancellationToken = default)
@@ -52,33 +43,14 @@ namespace HRMS.Api.Services
                 return null;
             }
 
-            existing.FirstName = request.FirstName;
-            existing.LastName = request.LastName;
-            existing.Email = request.Email;
-            existing.Department = request.Department;
-            existing.Designation = request.Designation;
-            existing.Status = request.Status;
-            existing.UpdatedAt = DateTime.UtcNow;
-
+            _mapper.Map(request, existing);
             var updated = await _employeeRepository.UpdateAsync(existing, cancellationToken);
-            return ToDto(updated);
+            return _mapper.Map<EmployeeDto>(updated);
         }
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
             await _employeeRepository.DeleteAsync(id, cancellationToken);
         }
-
-        private static EmployeeDto ToDto(Employee employee) => new()
-        {
-            Id = employee.Id,
-            FirstName = employee.FirstName,
-            LastName = employee.LastName,
-            Email = employee.Email,
-            Department = employee.Department,
-            Designation = employee.Designation,
-            Status = employee.Status,
-            DateOfJoining = employee.DateOfJoining,
-        };
     }
 }

@@ -6,9 +6,9 @@ namespace HRMS.Api.Repositories
 {
     public class ProjectDetailsRepository : IProjectDetailsRepository
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public ProjectDetailsRepository(HrmsDbContext dbContext)
+        public ProjectDetailsRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

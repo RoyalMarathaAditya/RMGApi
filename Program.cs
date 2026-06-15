@@ -4,6 +4,12 @@ using HRMS.Api.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
+Console.Title = "RMG.Api";
+
+Console.WriteLine("==================================");
+Console.WriteLine("     RMG API Started Successfully");
+Console.WriteLine("==================================");
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog early
@@ -61,11 +67,11 @@ app.MapGet("/", () => Results.Redirect("/swagger"));
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<HrmsDbContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     // Apply pending migrations automatically
     await dbContext.Database.MigrateAsync();
-    //await DbInitializer.SeedAsync(dbContext);
+ 
 }
 
 app.Run();

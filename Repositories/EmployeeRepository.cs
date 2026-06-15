@@ -6,9 +6,9 @@ namespace HRMS.Api.Repositories
 {
     public class EmployeeRepository : IEmployeeRepository
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public EmployeeRepository(HrmsDbContext dbContext)
+        public EmployeeRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

@@ -6,9 +6,9 @@ namespace HRMS.Api.Repositories
 {
     public class RefreshTokenRepository : IRefreshTokenRepository
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public RefreshTokenRepository(HrmsDbContext dbContext)
+        public RefreshTokenRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

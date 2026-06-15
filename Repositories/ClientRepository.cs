@@ -6,9 +6,9 @@ namespace HRMS.Api.Repositories
 {
     public class ClientRepository : IClientRepository
     {
-        private readonly HrmsDbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public ClientRepository(HrmsDbContext dbContext)
+        public ClientRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }
