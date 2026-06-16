@@ -20,7 +20,8 @@ namespace HRMS.Api.Extensions
             services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 
             // AutoMapper
-            services.AddAutoMapper(typeof(MappingProfile));
+            //services.AddAutoMapper(typeof(MappingProfile));
+            services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
             // Repositories and services
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();

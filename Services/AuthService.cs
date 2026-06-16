@@ -90,7 +90,9 @@ await _unitOfWork.SaveAsync(cancellationToken);
                 new Claim(ClaimTypes.Role, user.Role),
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+            // Decode the Base64 key before creating SymmetricSecurityKey
+            var keyBytes = Convert.FromBase64String(_jwtSettings.Key);
+            var key = new SymmetricSecurityKey(keyBytes);
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
 

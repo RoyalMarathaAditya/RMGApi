@@ -5,21 +5,42 @@ namespace HRMS.Api.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-            : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
 
-        public DbSet<User> Users => Set<User>();
-        public DbSet<Role> Roles => Set<Role>();
-        public DbSet<Employee> Employees => Set<Employee>();
-        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<User> Users { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Skill> Skills { get; set; }
+        public DbSet<ProjectDetails> ProjectDetails { get; set; }
+        public DbSet<ProjectDetailsSkill> ProjectDetailsSkills { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<Location> Locations { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        // RMG project entities
-        public DbSet<Client> Clients => Set<Client>();
-        public DbSet<Location> Locations => Set<Location>();
-        public DbSet<ProjectDetails> ProjectDetails => Set<ProjectDetails>();
-        public DbSet<Skill> Skills => Set<Skill>();
-        public DbSet<ProjectDetailsSkill> ProjectDetailsSkills => Set<ProjectDetailsSkill>();
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configure relationships
+            
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId);
+
+
+
+            modelBuilder.Entity<ProjectDetailsSkill>()
+                .HasOne(ps => ps.Skill)
+                .WithMany(s => s.ProjectSkills)
+                .HasForeignKey(ps => ps.SkillId);
+
+            modelBuilder.Entity<ProjectDetailsSkill>()
+                .HasOne(ps => ps.ProjectDetails)
+                .WithMany(p => p.ProjectSkills)
+                .HasForeignKey(ps => ps.ProjectDetailsId);
+        }
     }
 }
