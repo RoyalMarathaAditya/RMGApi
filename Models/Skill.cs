@@ -15,5 +15,6 @@ namespace HRMS.Api.Models
         public string Description { get; set; } = string.Empty;
 
         public ICollection<ProjectDetailsSkill> ProjectSkills { get; set; } = new List<ProjectDetailsSkill>();
+
     }
 }

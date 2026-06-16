@@ -9,6 +9,7 @@ namespace HRMS.Api.Middleware
         private readonly string[] _excludedPaths = new[]
         {
             "/swagger",
+            "/swagger/v1/swagger.json",
             "/swagger-ui.html",
             "/swagger-ui.js",
             "/swagger-ui.css",
@@ -53,8 +54,19 @@ namespace HRMS.Api.Middleware
                     return;
                 }
 
-                // Example: enforce that user must have at least one of roles specified on endpoint via Items["AllowedRoles"]
-                if (httpContext.Items.TryGetValue("AllowedRoles", out var allowedObj) && allowedObj is string[] allowedRoles && allowedRoles.Length > 0)
+                // Inspect endpoint metadata for CustomAuthorize attribute to determine allowed roles (if any)
+                var endpoint = httpContext.GetEndpoint();
+                string[]? allowedRoles = null;
+                if (endpoint != null)
+                {
+                    var customAuth = endpoint.Metadata.GetMetadata<CustomAuthorizeAttribute>();
+                    if (customAuth != null && !string.IsNullOrWhiteSpace(customAuth.Roles))
+                    {
+                        allowedRoles = customAuth.Roles.Split(',').Select(r => r.Trim()).Where(r => !string.IsNullOrEmpty(r)).ToArray();
+                    }
+                }
+
+                if (allowedRoles != null && allowedRoles.Length > 0)
                 {
                     var userRoles = httpContext.User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToArray();
                     if (!userRoles.Any(r => allowedRoles.Contains(r)))

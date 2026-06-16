@@ -1,12 +1,11 @@
 using HRMS.Api.DTOs;
 using HRMS.Api.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.Api.Controllers
 {
     [ApiController]
-    [Authorize]
+    [CustomAuthorize("Admin")]
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
