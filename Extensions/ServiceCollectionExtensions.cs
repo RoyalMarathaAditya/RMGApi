@@ -4,9 +4,8 @@ using HRMS.Api.Profiles;
 using HRMS.Api.Repositories;
 using HRMS.Api.Repositories.Interfaces;
 using HRMS.Api.Services;
+using HRMS.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace HRMS.Api.Extensions
 {
@@ -29,13 +28,19 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<ISkillRepository, SkillRepository>();
-            services.AddScoped<IProjectDetailsRepository, ProjectDetailsRepository>();
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IDesignationRepository, DesignationRepository>();
+            services.AddScoped<IEmployeeHierarchyRepository, EmployeeHierarchyRepository>();
+
 
             // Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IDesignationService, DesignationService>();
+            services.AddScoped<IEmployeeHierarchyService, EmployeeHierarchyService>();
+
 
             return services;
         }

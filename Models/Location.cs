@@ -14,6 +14,8 @@ namespace HRMS.Api.Models
         [MaxLength(500)]
         public string Address { get; set; } = string.Empty;
 
-        public ICollection<ProjectDetails> Projects { get; set; } = new List<ProjectDetails>();
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
+
+        public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }

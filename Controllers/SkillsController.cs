@@ -20,7 +20,7 @@ namespace HRMS.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var items = await _skillRepo.GetAllAsync();
-            return Ok(items.Select(s => new SkillDto { Id = s.Id, Name = s.Name, Description = s.Description }));
+            return Ok(items.Select(s => new SkillDto { Id = s.Id, Name = s.Name, Description = s.Description ?? string.Empty }));
         }
 
         [HttpGet("{id:int}")]
@@ -28,7 +28,7 @@ namespace HRMS.Api.Controllers
         {
             var s = await _skillRepo.GetByIdAsync(id);
             if (s is null) return NotFound();
-            return Ok(new SkillDto { Id = s.Id, Name = s.Name, Description = s.Description });
+            return Ok(new SkillDto { Id = s.Id, Name = s.Name, Description = s.Description ?? string.Empty });
         }
 
         [HttpPost]

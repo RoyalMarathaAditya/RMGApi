@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../../app/hooks';
 import ProjectStatusChip from '../components/ProjectStatusChip';
 
-export default function ProjectDetails() {
+export default function Project() {
   const navigate = useNavigate();
   const { id } = useParams();
   const projects = useAppSelector((state) => state.projects.projects);

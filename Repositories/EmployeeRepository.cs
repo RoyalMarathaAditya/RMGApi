@@ -14,14 +14,24 @@ namespace HRMS.Api.Repositories
             _dbContext = dbContext;
         }
 
+       
+
         public async Task<IEnumerable<Employee>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.Employees.AsNoTracking().ToListAsync(cancellationToken);
-        }
+{
+    return await _dbContext.Employees
+        .AsNoTracking()
+        .Include(e => e.Designation)
+        .Include(e => e.Practice)
+        .Include(e => e.SubPractice)
+        .Include(e => e.Location)
+        .Include(e => e.Manager)
+        .ToListAsync(cancellationToken);
+}
 
         public async Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Employees.FindAsync(new object[] { id }, cancellationToken);
+            return await _dbContext.Employees
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public async Task<Employee> CreateAsync(Employee employee, CancellationToken cancellationToken = default)
@@ -40,11 +50,9 @@ namespace HRMS.Api.Repositories
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var employee = await GetByIdAsync(id, cancellationToken);
-            if (employee is null)
-            {
-                return;
-            }
+            var employee = await _dbContext.Employees.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+            if (employee is null) return;
 
             _dbContext.Employees.Remove(employee);
             await _dbContext.SaveChangesAsync(cancellationToken);
