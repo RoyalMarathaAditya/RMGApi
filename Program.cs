@@ -93,11 +93,41 @@ app.UseMiddleware<CustomAuthorizationMiddleware>();                // 2nd: Check
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
-// Automatically handle database migrations at startup
+//// Automatically handle database migrations at startup
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//    await dbContext.Database.MigrateAsync();
+//}
+
+
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.Database.MigrateAsync();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Applying database migrations...");
+
+        await dbContext.Database.MigrateAsync();
+
+        logger.LogInformation("Database migration completed successfully.");
+
+        logger.LogInformation("Seeding initial data...");
+
+        await HRMS.Api.Data.Seeders.DbSeeder.SeedAsync(dbContext);
+
+        logger.LogInformation("Database seeding completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred during migration or seeding.");
+
+        throw; // IMPORTANT: fail fast so issue is visible
+    }
 }
+
+
 
 app.Run();

@@ -4,7 +4,7 @@ import PageContainer from '../components/common/PageContainer';
 import MainLayout from '../layouts/MainLayout';
 import ProjectCreate from '../features/projects/pages/ProjectCreate';
 import ProjectDashboard from '../features/projects/pages/ProjectDashboard';
-import ProjectDetails from '../features/projects/pages/ProjectDetails';
+import Project from '../features/projects/pages/Project';
 import ProjectEdit from '../features/projects/pages/ProjectEdit';
 import ProjectList from '../features/projects/pages/ProjectList';
 import EmployeeList from '../features/employees/pages/EmployeeList';
@@ -57,7 +57,7 @@ export function AppRoutes() {
           <Route path="/projects/create" element={<ProjectCreate />} />
           <Route path="/projects/dashboard" element={<ProjectDashboard />} />
           <Route path="/projects/edit/:id" element={<ProjectEdit />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
+          <Route path="/projects/:id" element={<Project />} />
           <Route path="/allocations" element={<AllocationDashboard />} />
           <Route path="/allocations/list" element={<AllocationList />} />
           <Route path="/allocations/status" element={<EmployeeAllocationStatus />} />

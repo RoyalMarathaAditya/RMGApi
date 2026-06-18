@@ -22,6 +22,8 @@ namespace HRMS.Api.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public ICollection<ProjectDetails> Projects { get; set; } = new List<ProjectDetails>();
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
+
+        public bool IsActive { get; set; } = true;
     }
 }
