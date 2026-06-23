@@ -12,8 +12,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { logout } from '../features/auth/authSlice';
+// Redux: dispatch reads user from state for display, dispatches logout on click
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { logout } from '../redux/slices/authSlice';
 
 interface HeaderProps {
   drawerWidth: number;

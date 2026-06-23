@@ -2,10 +2,11 @@ import { CssBaseline, GlobalStyles, ThemeProvider } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Redux: Provider makes the Redux store available to all components
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { store } from './app/store';
+import { store } from './redux/store';
 import { theme } from './theme/theme';
 
 const queryClient = new QueryClient();

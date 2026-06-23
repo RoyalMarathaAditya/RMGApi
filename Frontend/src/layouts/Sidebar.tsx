@@ -1,4 +1,5 @@
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import FolderSharedOutlinedIcon from '@mui/icons-material/FolderSharedOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
@@ -31,6 +32,7 @@ const menuItems = [
   { icon: PsychologyOutlinedIcon, label: 'Skills Management', path: '/skills' },
   { icon: HubOutlinedIcon, label: 'Resource Allocation', path: '/allocations' },
   { icon: AssessmentOutlinedIcon, label: 'Reports', path: '/reports' },
+  { icon: BadgeOutlinedIcon, label: 'Designation Master', path: '/designations' },
   { icon: SettingsOutlinedIcon, label: 'Settings', path: '/settings' },
 ];
 

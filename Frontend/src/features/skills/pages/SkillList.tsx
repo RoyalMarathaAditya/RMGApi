@@ -19,10 +19,11 @@ import {
 } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+// Redux: dispatches deleteSkill, reads skills list from store
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import SkillFilterPanel from '../components/SkillFilterPanel';
 import SkillTable from '../components/SkillTable';
-import { deleteSkill } from '../skillSlice';
+import { deleteSkill } from '../../../redux/slices/skillSlice';
 import type { Skill } from '../types';
 
 export default function SkillList() {

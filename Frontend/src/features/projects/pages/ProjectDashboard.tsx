@@ -17,7 +17,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads projects from store for dashboard statistics
+import { useAppSelector } from '../../../redux/hooks';
 import type { ProjectStatus } from '../types/project.types';
 
 const statusColors: Record<ProjectStatus, string> = {

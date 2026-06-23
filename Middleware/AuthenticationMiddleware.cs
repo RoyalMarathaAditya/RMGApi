@@ -23,11 +23,13 @@ namespace HRMS.Api.Middleware
             {
                 var path = httpContext.Request.Path.Value ?? "";
 
-                // 1. High-speed bypass for Swagger files, static assets, and login routes
+                // 1. High-speed bypass for Swagger files, static assets, and auth routes
                 if (path == "/" ||
                     path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase) ||
                     path.StartsWith("/openapi", StringComparison.OrdinalIgnoreCase) ||
                     path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase) ||
+                    path.StartsWith("/api/auth/refresh-token", StringComparison.OrdinalIgnoreCase) ||
+                    path.StartsWith("/api/auth/logout", StringComparison.OrdinalIgnoreCase) ||
                     path.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ||
                     path.EndsWith(".css", StringComparison.OrdinalIgnoreCase) ||
                     path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
@@ -36,7 +38,7 @@ namespace HRMS.Api.Middleware
                     return;
                 }
 
-                // 2. Extract Authorization header keys
+                // 2. Extract token from Authorization header
                 if (!httpContext.Request.Headers.TryGetValue("Authorization", out var authHeaderValues))
                 {
                     httpContext.Response.ContentType = "application/json";
@@ -68,14 +70,11 @@ namespace HRMS.Api.Middleware
                 }
 
                 // FIX: TRUNCATE TRAILING JSON / WHITESPACE DATA
-                // If there's a space followed by trailing JSON elements (like your space at index 406), 
-                // this cleanly splits the string and grabs ONLY the first contiguous block (the valid JWT)
                 if (token.Contains(" "))
                 {
                     token = token.Split(' ')[0];
                 }
 
-                // Trim leading/trailing garbage characters, quotes, or commas left behind by JSON objects
                 token = token.Trim(' ', '"', '\'', '\t', '\r', '\n', ',', '{', '}');
 
                 if (token.Contains("%"))
@@ -84,8 +83,6 @@ namespace HRMS.Api.Middleware
                 }
 
                 // 4. CRITICAL STRUCTURAL GUARD: Pre-verify isolated JWT format before parsing
-                // Now that trailing content is stripped, the remaining isolated token string 
-                // MUST contain exactly 2 dots. If it doesn't, reject it immediately.
                 if (string.IsNullOrEmpty(token) || token.Count(c => c == '.') != 2)
                 {
                     httpContext.Response.ContentType = "application/json";
@@ -121,7 +118,12 @@ namespace HRMS.Api.Middleware
                             return new Claim(ClaimTypes.Role, c.Value);
                         }
 
-                        if (c.Type == "unique_name" || c.Type == "sub" || c.Type == "name" || c.Type == ClaimTypes.Name)
+                        if (c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier)
+                        {
+                            return new Claim(ClaimTypes.NameIdentifier, c.Value);
+                        }
+
+                        if (c.Type == "unique_name" || c.Type == "name" || c.Type == ClaimTypes.Name)
                         {
                             return new Claim(ClaimTypes.Name, c.Value);
                         }

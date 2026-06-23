@@ -14,6 +14,7 @@ import SkillCreate from '../features/skills/pages/SkillCreate';
 import SkillDashboard from '../features/skills/pages/SkillDashboard';
 import SkillDetails from '../features/skills/pages/SkillDetails';
 import SkillEdit from '../features/skills/pages/SkillEdit';
+import DesignationList from '../features/designations/pages/DesignationList';
 import SkillList from '../features/skills/pages/SkillList';
 import SkillMatrix from '../features/skills/pages/SkillMatrix';
 import AllocationDashboard from '../features/allocations/pages/AllocationDashboard';
@@ -64,6 +65,7 @@ export function AppRoutes() {
           <Route path="/allocations/bench" element={<BenchResources />} />
           <Route path="/allocations/billable" element={<BillableResources />} />
           <Route path="/allocations/utilization" element={<ResourceUtilization />} />
+          <Route path="/designations" element={<DesignationList />} />
           <Route path="/skills" element={<SkillList />} />
           <Route path="/skills/create" element={<SkillCreate />} />
           <Route path="/skills/dashboard" element={<SkillDashboard />} />

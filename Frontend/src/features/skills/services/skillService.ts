@@ -1,27 +1,22 @@
 import axios from 'axios';
-import { mockEmployeeSkills } from '../mock/mockEmployeeSkills';
-import { mockSkills } from '../mock/mockSkills';
 import type { EmployeeSkill, Skill } from '../types';
 
-const skillClient = axios.create({
-  baseURL: '/local-mock/skills',
-  timeout: 500,
+const client = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/skills` : '/api/skills',
+  timeout: 5000,
 });
 
-const wait = async () => new Promise((resolve) => window.setTimeout(resolve, 250));
-
 export const skillService = {
-  client: skillClient,
-  async getEmployeeSkills(): Promise<EmployeeSkill[]> {
-    await wait();
-    return mockEmployeeSkills;
+  async getEmployeeSkills(employeeId: number): Promise<EmployeeSkill[]> {
+    const res = await client.get(`/by-employee/${employeeId}`);
+    return res.data as EmployeeSkill[];
   },
-  async getSkillById(id: number): Promise<Skill | undefined> {
-    await wait();
-    return mockSkills.find((skill) => skill.id === id);
+  async getSkillById(id: number): Promise<Skill> {
+    const res = await client.get(`/${id}`);
+    return res.data as Skill;
   },
   async getSkills(): Promise<Skill[]> {
-    await wait();
-    return mockSkills;
+    const res = await client.get('/');
+    return res.data as Skill[];
   },
 };

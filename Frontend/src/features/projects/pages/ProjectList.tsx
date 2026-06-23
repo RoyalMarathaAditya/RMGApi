@@ -19,10 +19,11 @@ import {
 } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+// Redux: dispatches deleteProject, reads projects list from store
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ProjectTable from '../components/ProjectTable';
 import { projectStatuses } from '../mock/projects';
-import { deleteProject } from '../store/projectSlice';
+import { deleteProject } from '../../../redux/slices/projectSlice';
 import type { Project, ProjectStatus } from '../types/project.types';
 
 export default function ProjectList() {

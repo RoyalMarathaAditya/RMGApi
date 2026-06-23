@@ -1,4 +1,5 @@
-﻿using HRMS.Api.DTOs.EmployeeDtos;
+﻿using HRMS.Api.DTOs.Common;
+using HRMS.Api.DTOs.EmployeeDtos;
 using HRMS.Api.Models;
 
 namespace HRMS.Api.Services
@@ -6,13 +7,11 @@ namespace HRMS.Api.Services
     public interface IEmployeeService
     {
         Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllAsync(CancellationToken cancellationToken = default);
-
         Task<ApiResponse<EmployeeDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-
         Task<ApiResponse<EmployeeDto>> CreateAsync(CreateEmployeeDto request, CancellationToken cancellationToken = default);
-
         Task<ApiResponse<EmployeeDto>> UpdateAsync(int id, UpdateEmployeeDto request, CancellationToken cancellationToken = default);
-
         Task<ApiResponse<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default);
+        Task<ApiResponse<PagedResponse<EmployeeDto>>> GetPagedAsync(PaginationParams parameters, CancellationToken cancellationToken = default);
+        Task<ApiResponse<IEnumerable<EmployeeDto>>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default);
     }
 }

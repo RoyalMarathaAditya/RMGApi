@@ -1,31 +1,30 @@
 
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
-import { Alert, Box, Button, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import type { GridPaginationModel } from '@mui/x-data-grid';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import PageContainer from '../../../components/common/PageContainer';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+// Redux: dispatches thunks for employee CRUD, reads employee list and filter state
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import BulkUploadSection from '../components/BulkUploadSection';
 import EmployeeGrid from '../components/EmployeeGrid';
 import EmployeeDialog from '../components/EmployeeDialog';
 import DeleteEmployeeDialog from '../components/DeleteEmployeeDialog';
 import { getEmployeeColumns } from '../config/employeeColumns';
+// Redux async thunks and actions for employee operations
 import {
   createEmployee,
   deleteEmployee,
   fetchEmployees,
   setEmployeeSearch,
-  setEmployeeStatusFilter,
   updateEmployee,
-} from '../store/employeeSlice';
-import type { Employee, EmployeeFilters, EmployeeFormValues } from '../types/employee';
-
-const statusFilters: EmployeeFilters['status'][] = ['All', 'Active', 'Inactive', 'On Leave'];
+} from '../../../redux/slices/employeeSlice';
+import type { Employee, EmployeeFormValues } from '../types/employee';
 
 export default function EmployeeList() {
   const dispatch = useAppDispatch();
   const { employees, error, filters, loading } = useAppSelector((state) => state.employees);
-  const skills = useAppSelector((state) => state.skills.skills);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
@@ -40,38 +39,34 @@ export default function EmployeeList() {
 
   const filteredEmployees = useMemo(() => {
     const search = filters.search.trim().toLowerCase();
-    const skillNameById = new Map(skills.map((skill) => [skill.id, skill.skillName]));
-
     return employees.filter((employee) => {
-      const matchesStatus = filters.status === 'All' || employee.status === filters.status;
       const searchable = [
         employee.employeeCode,
-        employee.firstName,
-        employee.lastName,
+        employee.fullName,
         employee.email,
-        employee.department,
+        employee.employmentType,
         employee.designation,
-        employee.role,
-        ...employee.skillIds.map((skillId) => skillNameById.get(skillId) ?? ''),
+        employee.practice,
+        employee.location,
+        employee.departmentType,
+        employee.employeeStatus,
       ]
         .join(' ')
         .toLowerCase();
-
-      return matchesStatus && (!search || searchable.includes(search));
+      return !search || searchable.includes(search);
     });
-  }, [employees, filters.search, filters.status, skills]);
+  }, [employees, filters.search]);
 
   const columns = useMemo(
     () =>
       getEmployeeColumns({
-        skills,
         onDelete: (employee) => setDeleteTarget(employee),
         onEdit: (employee) => {
           setSelectedEmployee(employee);
           setDialogOpen(true);
         },
       }),
-    [skills],
+    [],
   );
 
   const handleAdd = () => {
@@ -85,23 +80,24 @@ export default function EmployeeList() {
     } else {
       await dispatch(createEmployee(values)).unwrap();
     }
-
     setDialogOpen(false);
     setSelectedEmployee(null);
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) {
-      return;
-    }
-
+    if (!deleteTarget) return;
     await dispatch(deleteEmployee(deleteTarget.id)).unwrap();
     setDeleteTarget(null);
   };
 
+  const handleImportComplete = useCallback(() => {
+    dispatch(fetchEmployees());
+  }, [dispatch]);
+
   return (
     <PageContainer title="Employee Management">
       <Stack spacing={2.5}>
+        <BulkUploadSection onImportComplete={handleImportComplete} />
         <Stack
           alignItems={{ xs: 'stretch', md: 'center' }}
           direction={{ xs: 'column', md: 'row' }}
@@ -137,21 +133,6 @@ export default function EmployeeList() {
               },
             }}
           />
-          <TextField
-            label="Status"
-            onChange={(event) =>
-              dispatch(setEmployeeStatusFilter(event.target.value as EmployeeFilters['status']))
-            }
-            select
-            sx={{ minWidth: { md: 180 } }}
-            value={filters.status}
-          >
-            {statusFilters.map((status) => (
-              <MenuItem key={status} value={status}>
-                {status}
-              </MenuItem>
-            ))}
-          </TextField>
         </Stack>
 
         {error ? <Alert severity="error">{error}</Alert> : null}

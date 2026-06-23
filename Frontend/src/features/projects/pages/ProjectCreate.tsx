@@ -1,9 +1,10 @@
 import { Alert, Snackbar, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../../app/hooks';
+// Redux: dispatches addProject to store new project in state
+import { useAppDispatch } from '../../../redux/hooks';
 import ProjectForm from '../components/ProjectForm';
-import { addProject } from '../store/projectSlice';
+import { addProject } from '../../../redux/slices/projectSlice';
 import type { ProjectFormValues } from '../types/project.types';
 
 export default function ProjectCreate() {

@@ -1,6 +1,7 @@
 import { Card, CardContent, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads skills from store for skill matrix grid
+import { useAppSelector } from '../../../redux/hooks';
 import SkillMatrixGrid from '../components/SkillMatrixGrid';
 import { mockEmployeeSkills } from '../mock/mockEmployeeSkills';
 import { skillCategories } from '../types';

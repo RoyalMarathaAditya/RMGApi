@@ -21,8 +21,9 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { login, setLoading } from '../../features/auth/authSlice';
+// Redux: dispatches login action on successful auth, checks isAuthenticated for redirect
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { login, setLoading } from '../../redux/slices/authSlice';
 import { authenticate } from '../../features/auth/authService';
 import type { LoginCredentials } from '../../features/auth/authTypes';
 
@@ -36,8 +37,9 @@ export default function Login() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard';
 
@@ -61,6 +63,7 @@ export default function Login() {
 
   const onSubmit = async (values: LoginCredentials) => {
     setSubmitError(null);
+    setIsSubmitting(true);
     dispatch(setLoading(true));
 
     try {
@@ -73,6 +76,7 @@ export default function Login() {
           ? error.response?.data?.message ?? error.message
           : 'Unable to sign in. Please check your credentials and try again.';
       setSubmitError(message);
+      setIsSubmitting(false);
       dispatch(setLoading(false));
     }
   };
@@ -168,8 +172,8 @@ export default function Login() {
                   />
                 )}
               />
-              <Button disabled={loading} fullWidth size="large" type="submit" variant="contained">
-                {loading ? 'Signing in...' : 'Login'}
+              <Button disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained">
+                {isSubmitting ? 'Signing in...' : 'Login'}
               </Button>
             </Stack>
           </Box>

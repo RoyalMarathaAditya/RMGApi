@@ -1,7 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
-import { fetchUtilization } from '../store/allocationSlice';
+// Redux: dispatches fetchUtilization, reads utilization/allocations data from store
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import { fetchUtilization } from '../../../redux/slices/allocationSlice';
 import AllocationTypePieChart from '../components/AllocationTypePieChart';
 import UtilizationChart from '../components/UtilizationChart';
 

@@ -36,17 +36,7 @@ namespace HRMS.Api.Services
                 }
 
                 var token = BuildJwtToken(user);
-                var refreshToken = GenerateRefreshToken();
-
-                                string GenerateRefreshToken()
-                                {
-                                    using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-                                                    {
-                                                        var bytes = new byte[64];
-                                                        rng.GetBytes(bytes);
-                                                        return Convert.ToBase64String(bytes);
-                                                    }
-                                }
+                var refreshToken = GenerateRefreshTokenString();
 
                 var rtEntity = new RefreshToken
                 {
@@ -80,6 +70,94 @@ await _unitOfWork.SaveAsync(cancellationToken);
             }
         }
 
+        public async Task<LoginResponse?> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var storedToken = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken, cancellationToken);
+                if (storedToken is null || storedToken.ExpiresAt < DateTime.UtcNow)
+                    return null;
+
+                var user = await _authRepository.GetByIdAsync(storedToken.UserId, cancellationToken);
+                if (user is null || !user.IsActive)
+                    return null;
+
+                await _unitOfWork.RefreshTokens.DeleteAsync(storedToken, cancellationToken);
+
+                var newAccessToken = BuildJwtToken(user);
+                var newRefreshToken = GenerateRefreshTokenString();
+
+                var rtEntity = new RefreshToken
+                {
+                    Token = newRefreshToken,
+                    ExpiresAt = DateTime.UtcNow.AddDays(7),
+                    CreatedAt = DateTime.UtcNow,
+                    UserId = user.Id
+                };
+
+                await _unitOfWork.RefreshTokens.AddAsync(rtEntity, cancellationToken);
+
+                return new LoginResponse
+                {
+                    Token = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        Name = user.Name,
+                        Role = user.Role,
+                    },
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception while refreshing token");
+                throw;
+            }
+        }
+
+        public async Task<UserDto?> GetCurrentUserAsync(int userId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var user = await _authRepository.GetByIdAsync(userId, cancellationToken);
+                if (user is null)
+                    return null;
+
+                return new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Name = user.Name,
+                    Role = user.Role,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception while fetching current user {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<bool> RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var storedToken = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken, cancellationToken);
+                if (storedToken is null)
+                    return false;
+
+                await _unitOfWork.RefreshTokens.DeleteAsync(storedToken, cancellationToken);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception while revoking refresh token");
+                throw;
+            }
+        }
+
         private string BuildJwtToken(Models.User user)
         {
             var claims = new List<Claim>
@@ -90,7 +168,6 @@ await _unitOfWork.SaveAsync(cancellationToken);
                 new Claim(ClaimTypes.Role, user.Role),
             };
 
-            // Decode the Base64 key before creating SymmetricSecurityKey
             var keyBytes = Convert.FromBase64String(_jwtSettings.Key);
             var key = new SymmetricSecurityKey(keyBytes);
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -104,6 +181,14 @@ await _unitOfWork.SaveAsync(cancellationToken);
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private static string GenerateRefreshTokenString()
+        {
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            var bytes = new byte[64];
+            rng.GetBytes(bytes);
+            return Convert.ToBase64String(bytes);
         }
     }
 }

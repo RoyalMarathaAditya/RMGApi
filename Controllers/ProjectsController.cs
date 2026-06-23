@@ -1,8 +1,10 @@
+using AutoMapper;
+using HRMS.Api.Data;
 using HRMS.Api.DTOs;
-using HRMS.Api.Enums;
 using HRMS.Api.Models;
 using HRMS.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Api.Controllers
 {
@@ -11,96 +13,94 @@ namespace HRMS.Api.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectRepository _projectRepo;
+        private readonly AppDbContext _db;
 
-        public ProjectsController(IProjectRepository projectRepo)
+        public ProjectsController(IProjectRepository projectRepo, AppDbContext db)
         {
             _projectRepo = projectRepo;
+            _db = db;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var items = await _projectRepo.GetAllAsync();
-            return Ok(items.Select(p => new ProjectDto
-            {
-                Id = p.Id,
-                Name = p.Name ?? string.Empty,
-                Description = p.Description ?? string.Empty,
-                StartDate = p.StartDate,
-                EndDate = p.EndDate,
-                ClientId = p.ClientId,
-                ClientName = p.Client?.Name ?? string.Empty,
-                LocationId = p.LocationId,
-                LocationName = p.Location?.Name ?? string.Empty,
-                IsActive = p.IsActive,
-                Skills = p.ProjectSkills.Select(ps => new SkillDto { Id = ps.Skill?.Id ?? 0, Name = ps.Skill?.Name ?? string.Empty, Description = ps.Skill?.Description ?? string.Empty }).ToList()
-            }));
+            var items = await _db.Projects
+                .AsNoTracking()
+                .Include(p => p.Client)
+                .Include(p => p.ProjectType)
+                .Include(p => p.PricingType)
+                .Include(p => p.Practice)
+                .Include(p => p.ProjectManager)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.ProjectName,
+                    p.Description,
+                    p.StartDate,
+                    p.EndDate,
+                    p.IsActive,
+                    ClientName = p.Client.Name,
+                    ProjectType = p.ProjectType.Name,
+                    PricingType = p.PricingType.Name,
+                    Practice = p.Practice.Name,
+                    ProjectManager = p.ProjectManager != null ? p.ProjectManager.FullName : null
+                })
+                .ToListAsync();
+            return Ok(items);
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var p = await _projectRepo.GetByIdAsync(id);
+            var p = await _db.Projects
+                .AsNoTracking()
+                .Include(p => p.Client)
+                .Include(p => p.ProjectType)
+                .Include(p => p.PricingType)
+                .Include(p => p.Practice)
+                .Include(p => p.ProjectManager)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (p is null) return NotFound();
-            return Ok(new ProjectDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description ?? string.Empty,
-                StartDate = p.StartDate,
-                EndDate = p.EndDate,
-                ClientId = p.ClientId,
-                ClientName = p.Client?.Name ?? string.Empty,
-                LocationId = p.LocationId,
-                LocationName = p.Location?.Name ?? string.Empty,
-                IsActive = p.IsActive,
-                Skills = p.ProjectSkills.Select(ps => new SkillDto { Id = ps.Skill?.Id ?? 0, Name = ps.Skill?.Name ?? string.Empty, Description = ps.Skill?.Description ?? string.Empty }).ToList()
-            });
+            return Ok(p);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProjectDto dto)
+        public async Task<IActionResult> Create([FromBody] Project project)
         {
-            var project = new Project
-            {
-                Name = dto.Name,
-                Description = dto.Description,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                ClientId = dto.ClientId,
-                LocationId = dto.LocationId,
-                IsActive = dto.IsActive,
-                ProjectSkills = dto.Skills.Select(s => new ProjectSkill
-                {
-                    SkillId = s.Id,
-                    Level = SkillLevel.Intermediate
-                }).ToList()
-            };
-            var created = await _projectRepo.CreateAsync(project);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            _db.Projects.Add(project);
+            await _db.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ProjectDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] Project project)
         {
-            var existing = await _projectRepo.GetByIdAsync(id);
+            var existing = await _db.Projects.FindAsync(id);
             if (existing is null) return NotFound();
-            existing.Name = dto.Name;
-            existing.Description = dto.Description;
-            existing.StartDate = dto.StartDate;
-            existing.EndDate = dto.EndDate;
-            existing.ClientId = dto.ClientId;
-            existing.LocationId = dto.LocationId;
-            existing.IsActive = dto.IsActive;
-            existing.ProjectSkills = dto.Skills.Select(s => new ProjectSkill { SkillId = s.Id, Level = SkillLevel.Intermediate }).ToList();
-            var updated = await _projectRepo.UpdateAsync(existing);
-            return Ok(updated);
+
+            existing.ProjectName = project.ProjectName;
+            existing.Description = project.Description;
+            existing.ClientId = project.ClientId;
+            existing.ProjectTypeId = project.ProjectTypeId;
+            existing.PricingTypeId = project.PricingTypeId;
+            existing.StartDate = project.StartDate;
+            existing.EndDate = project.EndDate;
+            existing.IsActive = project.IsActive;
+            existing.PracticeId = project.PracticeId;
+            existing.ProjectManagerId = project.ProjectManagerId;
+            existing.CSMId = project.CSMId;
+
+            await _db.SaveChangesAsync();
+            return Ok(existing);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _projectRepo.DeleteAsync(id);
+            var existing = await _db.Projects.FindAsync(id);
+            if (existing is null) return NotFound();
+            existing.IsDeleted = true;
+            await _db.SaveChangesAsync();
             return NoContent();
         }
     }

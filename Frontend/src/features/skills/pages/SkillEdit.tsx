@@ -1,9 +1,10 @@
 import { Alert, Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+// Redux: dispatches updateSkill, reads skills list to find the one being edited
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import SkillForm from '../components/SkillForm';
-import { updateSkill } from '../skillSlice';
+import { updateSkill } from '../../../redux/slices/skillSlice';
 import type { SkillFormValues } from '../types';
 
 export default function SkillEdit() {

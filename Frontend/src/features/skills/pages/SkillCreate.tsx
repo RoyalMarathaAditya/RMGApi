@@ -1,9 +1,10 @@
 import { Alert, Snackbar, Stack, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../../app/hooks';
+// Redux: dispatches addSkill to store new skill in state
+import { useAppDispatch } from '../../../redux/hooks';
 import SkillForm from '../components/SkillForm';
-import { addSkill } from '../skillSlice';
+import { addSkill } from '../../../redux/slices/skillSlice';
 import type { SkillFormValues } from '../types';
 
 export default function SkillCreate() {
