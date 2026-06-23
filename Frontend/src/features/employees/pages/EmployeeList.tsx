@@ -112,9 +112,9 @@ export default function EmployeeList() {
               {filteredEmployees.length} of {employees.length} employee records
             </Typography>
           </Box>
-          <Button onClick={handleAdd} startIcon={<AddIcon />} variant="contained">
+          {/* <Button onClick={handleAdd} startIcon={<AddIcon />} variant="contained">
             Add Employee
-          </Button>
+          </Button> */}
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
