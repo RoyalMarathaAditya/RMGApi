@@ -1,7 +1,8 @@
 import { Box, Button, Card, CardContent, Stack, Typography, Alert } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
-import { createAllocation, deleteAllocation, fetchAllocations, updateAllocation } from '../store/allocationSlice';
+// Redux: dispatches thunks for allocation CRUD, reads allocations, employees, and projects from store
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import { createAllocation, deleteAllocation, fetchAllocations, updateAllocation } from '../../../redux/slices/allocationSlice';
 import AllocationDialog from '../components/AllocationDialog';
 import DeleteAllocationDialog from '../components/DeleteAllocationDialog';
 import ResourceAllocationGrid from '../components/ResourceAllocationGrid';

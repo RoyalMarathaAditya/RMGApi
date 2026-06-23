@@ -1,7 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
-import { fetchBillableResources } from '../store/allocationSlice';
+// Redux: dispatches fetchBillableResources, reads billable resources from store
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import { fetchBillableResources } from '../../../redux/slices/allocationSlice';
 import BillableResourceGrid from '../components/BillableResourceGrid';
 
 export default function BillableResources() {

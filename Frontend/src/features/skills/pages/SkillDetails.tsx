@@ -7,7 +7,8 @@ import EmployeeSkillGrid from '../components/EmployeeSkillGrid';
 import SkillCategoryChip from '../components/SkillCategoryChip';
 import SkillStatusChip from '../components/SkillStatusChip';
 import { mockEmployeeSkills } from '../mock/mockEmployeeSkills';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads skills from store to display skill details
+import { useAppSelector } from '../../../redux/hooks';
 
 export default function SkillDetails() {
   const navigate = useNavigate();

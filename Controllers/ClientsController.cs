@@ -1,7 +1,7 @@
-using HRMS.Api.DTOs;
+using HRMS.Api.Data;
 using HRMS.Api.Models;
-using HRMS.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Api.Controllers
 {
@@ -9,73 +9,74 @@ namespace HRMS.Api.Controllers
     [Route("api/[controller]")]
     public class ClientsController : ControllerBase
     {
-        private readonly IClientRepository _clientRepo;
+        private readonly AppDbContext _db;
 
-        public ClientsController(IClientRepository clientRepo)
+        public ClientsController(AppDbContext db)
         {
-            _clientRepo = clientRepo;
+            _db = db;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var clients = await _clientRepo.GetAllAsync();
-            return Ok(clients.Select(c => new ClientDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                ContactEmail = c.ContactEmail,
-                ContactNumber = c.ContactNumber,
-                Address = c.Address
-            }));
+            var clients = await _db.Clients
+                .AsNoTracking()
+                .Include(c => c.ClientStatus)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.ContractStartDate,
+                    c.ContractEndDate,
+                    StatusName = c.ClientStatus.Name,
+                    c.Location
+                })
+                .ToListAsync();
+            return Ok(clients);
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var c = await _clientRepo.GetByIdAsync(id);
+            var c = await _db.Clients
+                .AsNoTracking()
+                .Include(c => c.ClientStatus)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (c is null) return NotFound();
-            return Ok(new ClientDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                ContactEmail = c.ContactEmail,
-                ContactNumber = c.ContactNumber,
-                Address = c.Address
-            });
+            return Ok(c);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ClientDto dto)
+        public async Task<IActionResult> Create([FromBody] Client client)
         {
-            var client = new Client
-            {
-                Name = dto.Name,
-                ContactEmail = dto.ContactEmail,
-                ContactNumber = dto.ContactNumber,
-                Address = dto.Address,
-            };
-            var created = await _clientRepo.CreateAsync(client);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            _db.Clients.Add(client);
+            await _db.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetById), new { id = client.Id }, client);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ClientDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] Client client)
         {
-            var existing = await _clientRepo.GetByIdAsync(id);
+            var existing = await _db.Clients.FindAsync(id);
             if (existing is null) return NotFound();
-            existing.Name = dto.Name;
-            existing.ContactEmail = dto.ContactEmail;
-            existing.ContactNumber = dto.ContactNumber;
-            existing.Address = dto.Address;
-            var updated = await _clientRepo.UpdateAsync(existing);
-            return Ok(updated);
+
+            existing.Name = client.Name;
+            existing.ContractStartDate = client.ContractStartDate;
+            existing.ContractEndDate = client.ContractEndDate;
+            existing.StatusId = client.StatusId;
+            existing.Location = client.Location;
+
+            await _db.SaveChangesAsync();
+            return Ok(existing);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _clientRepo.DeleteAsync(id);
+            var existing = await _db.Clients.FindAsync(id);
+            if (existing is null) return NotFound();
+            existing.IsDeleted = true;
+            await _db.SaveChangesAsync();
             return NoContent();
         }
     }

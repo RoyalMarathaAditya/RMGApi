@@ -1,53 +1,68 @@
-﻿using HRMS.Api.DTOs.DesignationDtos;
+using HRMS.Api.DTOs;
 using HRMS.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/designations")]
     public class DesignationController : ControllerBase
     {
-        private readonly IDesignationService _service;
+        private readonly IDesignationService _designationService;
 
-        public DesignationController(IDesignationService service)
+        public DesignationController(IDesignationService designationService)
         {
-            _service = service;
+            _designationService = designationService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
-            var result = await _service.GetAllAsync(cancellationToken);
-            return Ok(result);
+            var response = await _designationService.GetAllAsync(cancellationToken);
+            return Ok(response);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActive(CancellationToken cancellationToken)
         {
-            var result = await _service.GetByIdAsync(id, cancellationToken);
-            return Ok(result);
+            var response = await _designationService.GetActiveAsync(cancellationToken);
+            return Ok(response);
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+        {
+            var response = await _designationService.GetByIdAsync(id, cancellationToken);
+            if (!response.Success)
+                return NotFound(response);
+            return Ok(response);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateDesignationDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create([FromBody] CreateDesignationDto request, CancellationToken cancellationToken)
         {
-            var result = await _service.CreateAsync(dto, cancellationToken);
-            return Ok(result);
+            var response = await _designationService.CreateAsync(request, cancellationToken);
+            if (!response.Success)
+                return BadRequest(response);
+            return CreatedAtAction(nameof(GetById), new { id = response.Data?.Id }, response);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateDesignationDto dto, CancellationToken cancellationToken)
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDesignationDto request, CancellationToken cancellationToken)
         {
-            var result = await _service.UpdateAsync(id, dto, cancellationToken);
-            return Ok(result);
+            var response = await _designationService.UpdateAsync(id, request, cancellationToken);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
         {
-            var result = await _service.DeleteAsync(id, cancellationToken);
-            return Ok(result);
+            var response = await _designationService.DeleteAsync(id, cancellationToken);
+            if (!response.Success)
+                return NotFound(response);
+            return Ok(response);
         }
     }
 }

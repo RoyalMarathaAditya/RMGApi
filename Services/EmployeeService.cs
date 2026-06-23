@@ -1,40 +1,44 @@
 using AutoMapper;
+using HRMS.Api.Data;
+using HRMS.Api.DTOs.Common;
 using HRMS.Api.DTOs.EmployeeDtos;
 using HRMS.Api.Models;
 using HRMS.Api.Repositories.Interfaces;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Api.Services.Interfaces
 {
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly AppDbContext _dbContext;
         private readonly IMapper _mapper;
 
-        public EmployeeService(IEmployeeRepository employeeRepository, IMapper mapper)
+        public EmployeeService(IEmployeeRepository employeeRepository, AppDbContext dbContext, IMapper mapper)
         {
             _employeeRepository = employeeRepository;
+            _dbContext = dbContext;
             _mapper = mapper;
         }
 
         public async Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            var employees = await _employeeRepository.GetAllAsync(cancellationToken);
+            var employees = await GetEmployeeQuery()
+                .ToListAsync(cancellationToken);
 
             var result = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
-
             return ApiResponse<IEnumerable<EmployeeDto>>.Ok(result);
         }
 
         public async Task<ApiResponse<EmployeeDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id, cancellationToken);
+            var employee = await GetEmployeeQuery()
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
             if (employee is null)
                 return ApiResponse<EmployeeDto>.Fail("Employee not found");
 
             var result = _mapper.Map<EmployeeDto>(employee);
-
             return ApiResponse<EmployeeDto>.Ok(result);
         }
 
@@ -42,46 +46,140 @@ namespace HRMS.Api.Services.Interfaces
         {
             var employee = _mapper.Map<Employee>(request);
 
-            // Optional business logic
-            employee.CompanyExperience = 0;
-            employee.TotalExperience = employee.PriorExperience;
+            if (request.SkillIds.Any())
+            {
+                foreach (var skillId in request.SkillIds)
+                {
+                    employee.EmployeeSkills.Add(new EmployeeSkill
+                    {
+                        SkillId = skillId
+                    });
+                }
+            }
 
             var created = await _employeeRepository.CreateAsync(employee, cancellationToken);
-
-            var result = _mapper.Map<EmployeeDto>(created);
-
+            var saved = await GetEmployeeQuery().FirstOrDefaultAsync(e => e.Id == created.Id, cancellationToken);
+            var result = _mapper.Map<EmployeeDto>(saved);
             return ApiResponse<EmployeeDto>.Ok(result, "Employee created successfully");
         }
 
         public async Task<ApiResponse<EmployeeDto>> UpdateAsync(int id, UpdateEmployeeDto request, CancellationToken cancellationToken = default)
         {
-            var existing = await _employeeRepository.GetByIdAsync(id, cancellationToken);
+            var existing = await _dbContext.Employees
+                .Include(e => e.EmployeeSkills)
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
             if (existing is null)
                 return ApiResponse<EmployeeDto>.Fail("Employee not found");
 
             _mapper.Map(request, existing);
 
-            // Optional business logic recalculation
-            existing.TotalExperience = existing.PriorExperience + existing.CompanyExperience;
+            _dbContext.EmployeeSkills.RemoveRange(existing.EmployeeSkills);
+            existing.EmployeeSkills.Clear();
+            if (request.SkillIds.Any())
+            {
+                foreach (var skillId in request.SkillIds)
+                {
+                    existing.EmployeeSkills.Add(new EmployeeSkill
+                    {
+                        EmployeeId = id,
+                        SkillId = skillId
+                    });
+                }
+            }
 
-            var updated = await _employeeRepository.UpdateAsync(existing, cancellationToken);
-
-            var result = _mapper.Map<EmployeeDto>(updated);
-
+            await _employeeRepository.UpdateAsync(existing, cancellationToken);
+            var saved = await GetEmployeeQuery().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            var result = _mapper.Map<EmployeeDto>(saved);
             return ApiResponse<EmployeeDto>.Ok(result, "Employee updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var existing = await _employeeRepository.GetByIdAsync(id, cancellationToken);
-
+            var existing = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
             if (existing is null)
                 return ApiResponse<bool>.Fail("Employee not found");
 
-            await _employeeRepository.DeleteAsync(id, cancellationToken);
-
+            existing.IsDeleted = true;
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
+        }
+
+        public async Task<ApiResponse<PagedResponse<EmployeeDto>>> GetPagedAsync(PaginationParams parameters, CancellationToken cancellationToken = default)
+        {
+            var query = GetEmployeeQuery();
+
+            if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
+            {
+                var search = parameters.SearchTerm.ToLower();
+                query = query.Where(e =>
+                    e.FullName.ToLower().Contains(search) ||
+                    e.Email.ToLower().Contains(search) ||
+                    e.EmployeeCode.ToLower().Contains(search) ||
+                    (e.MobileNumber != null && e.MobileNumber.Contains(search)));
+            }
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(parameters.SortBy))
+            {
+                query = parameters.SortDescending
+                    ? query.OrderByDescending(e => EF.Property<object>(e, parameters.SortBy))
+                    : query.OrderBy(e => EF.Property<object>(e, parameters.SortBy));
+            }
+            else
+            {
+                query = query.OrderBy(e => e.FullName);
+            }
+
+            var items = await query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync(cancellationToken);
+
+            var result = _mapper.Map<IEnumerable<EmployeeDto>>(items);
+
+            return ApiResponse<PagedResponse<EmployeeDto>>.Ok(new PagedResponse<EmployeeDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                PageNumber = parameters.PageNumber,
+                PageSize = parameters.PageSize
+            });
+        }
+
+        public async Task<ApiResponse<IEnumerable<EmployeeDto>>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return ApiResponse<IEnumerable<EmployeeDto>>.Ok(Enumerable.Empty<EmployeeDto>());
+
+            var search = searchTerm.ToLower();
+            var employees = await GetEmployeeQuery()
+                .Where(e =>
+                    e.FullName.ToLower().Contains(search) ||
+                    e.Email.ToLower().Contains(search) ||
+                    e.EmployeeCode.ToLower().Contains(search))
+                .Take(20)
+                .ToListAsync(cancellationToken);
+
+            var result = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
+            return ApiResponse<IEnumerable<EmployeeDto>>.Ok(result);
+        }
+
+        private IQueryable<Employee> GetEmployeeQuery()
+        {
+            return _dbContext.Employees
+                .AsNoTracking()
+                .Include(e => e.EmploymentType)
+                .Include(e => e.Location)
+                .Include(e => e.WorkModel)
+                .Include(e => e.Practice)
+                .Include(e => e.DepartmentType)
+                .Include(e => e.EmployeeStatus)
+                .Include(e => e.ReportingManager)
+                .Include(e => e.PracticeHead)
+                .Include(e => e.Designation)
+                .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill);
         }
     }
 }

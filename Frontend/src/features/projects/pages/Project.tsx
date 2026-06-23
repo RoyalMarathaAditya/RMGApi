@@ -3,7 +3,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { Box, Button, Chip, Divider, LinearProgress, Paper, Stack, Typography } from '@mui/material';
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads projects from store to find the currently selected project
+import { useAppSelector } from '../../../redux/hooks';
 import ProjectStatusChip from '../components/ProjectStatusChip';
 
 export default function Project() {

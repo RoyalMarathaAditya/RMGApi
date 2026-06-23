@@ -2,10 +2,10 @@
 
 namespace HRMS.Api.Models
 {
-    public class Practice
+    public class Practice : BaseEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [MaxLength(100)]
@@ -16,11 +16,9 @@ namespace HRMS.Api.Models
 
         public bool IsActive { get; set; } = true;
 
-        // Navigation Properties
-        public ICollection<SubPractice> SubPractices { get; set; }
-            = new List<SubPractice>();
+        public int? PracticeHeadId { get; set; }
+        public Employee? PracticeHead { get; set; }
 
-        public ICollection<Employee> Employees { get; set; }
-            = new List<Employee>();
+        public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }

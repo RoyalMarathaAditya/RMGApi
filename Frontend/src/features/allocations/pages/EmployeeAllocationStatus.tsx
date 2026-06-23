@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads employees from store to show their allocation status
+import { useAppSelector } from '../../../redux/hooks';
 import { useAllocationsQuery } from '../services/allocationQueries';
 import EmployeeAllocationSummary from '../components/EmployeeAllocationSummary';
 

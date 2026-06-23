@@ -1,324 +1,264 @@
 
-import { yupResolver } from '@hookform/resolvers/yup';
-import { Autocomplete, Box, Button, MenuItem, Stack, TextField } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useAppSelector } from '../../../app/hooks';
-import type { Employee, EmployeeFormValues, EmployeeRole, EmployeeStatus } from '../types/employee';
+import { Autocomplete, Box, Button, Checkbox, FormControlLabel, MenuItem, Stack, TextField } from '@mui/material';
+import { useEffect, useState } from 'react';
+import api from '../../../services/api';
+import type { Employee, EmployeeFormValues } from '../types/employee';
 
-const statusOptions: EmployeeStatus[] = ['Active', 'Inactive', 'On Leave'];
-const roleOptions: EmployeeRole[] = ['Admin', 'HR', 'Manager', 'Team Lead', 'Employee'];
-const departmentOptions = [
-  'Application Development',
-  'Cloud Services',
-  'Cybersecurity',
-  'Data & Analytics',
-  'DevOps',
-  'Enterprise Applications',
-  'IT Support',
-  'Product Engineering',
-  'Project Management',
-  'Quality Assurance',
-  'UI/UX Design',
-] as const;
-const designationOptions = [
-  'Associate Software Engineer',
-  'Software Engineer',
-  'Senior Software Engineer',
-  'Technical Lead',
-  'Solution Architect',
-  'DevOps Engineer',
-  'Cloud Engineer',
-  'QA Engineer',
-  'Automation Test Engineer',
-  'Business Analyst',
-  'Scrum Master',
-  'Project Manager',
-  'UI/UX Designer',
-  'Data Analyst',
-  'Support Engineer',
-] as const;
+interface MasterItem {
+  id: string;
+  name: string;
+}
+interface LeaderItem {
+  id: number;
+  fullName: string;
+}
 
-const schema: yup.ObjectSchema<EmployeeFormValues> = yup.object({
-  employeeCode: yup.string().trim().required('Employee code is required').max(20, 'Use 20 characters or fewer'),
-  firstName: yup.string().trim().required('First name is required').max(50, 'Use 50 characters or fewer'),
-  lastName: yup.string().trim().required('Last name is required').max(50, 'Use 50 characters or fewer'),
-  email: yup.string().trim().email('Enter a valid email').required('Email is required'),
-  phone: yup.string().trim().required('Phone is required').max(24, 'Use 24 characters or fewer'),
-  department: yup.string().oneOf([...departmentOptions], 'Select a valid department').required('Department is required'),
-  designation: yup
-    .string()
-    .oneOf([...designationOptions], 'Select a valid designation')
-    .required('Designation is required'),
-  role: yup.mixed<EmployeeRole>().oneOf(roleOptions).required('Role is required'),
-  skillIds: yup.array().of(yup.number().required()).required(),
-  experience: yup
-    .number()
-    .typeError('Experience is required')
-    .min(0, 'Experience cannot be negative')
-    .max(50, 'Experience looks too high')
-    .required('Experience is required'),
-  joiningDate: yup.string().required('Joining date is required'),
-  status: yup.mixed<EmployeeStatus>().oneOf(statusOptions).required('Status is required'),
+const schema = yup.object({
+  employeeCode: yup.string().trim().required('Required').max(20, 'Max 20 characters'),
+  fullName: yup.string().trim().required('Required').max(200, 'Max 200 characters'),
+  email: yup.string().trim().email('Invalid email').required('Required'),
+  doj: yup.string().required('Required'),
+  priorExperience: yup.number().typeError('Enter a number').min(0).max(50).required('Required'),
+  employmentTypeId: yup.string().required('Required'),
+  locationId: yup.string().required('Required'),
+  workModelId: yup.string().required('Required'),
+  practiceId: yup.string().required('Required'),
+  departmentTypeId: yup.string().required('Required'),
+  designationId: yup.string().required('Required'),
+  statusId: yup.string().required('Required'),
 });
 
-const emptyValues: EmployeeFormValues = {
-  employeeCode: '',
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  department: 'Application Development',
-  designation: 'Software Engineer',
-  role: 'Employee',
-  skillIds: [],
-  experience: 0,
-  joiningDate: new Date().toISOString().slice(0, 10),
-  status: 'Active',
-};
-
-interface EmployeeFormProps {
+export default function EmployeeForm({
+  employee,
+  onCancel,
+  onSubmit,
+}: {
   employee?: Employee | null;
   onCancel: () => void;
   onSubmit: (values: EmployeeFormValues) => Promise<void> | void;
-}
+}) {
+  const [employmentTypes, setEmploymentTypes] = useState<MasterItem[]>([]);
+  const [locations, setLocations] = useState<MasterItem[]>([]);
+  const [workModels, setWorkModels] = useState<MasterItem[]>([]);
+  const [practices, setPractices] = useState<MasterItem[]>([]);
+  const [departmentTypes, setDepartmentTypes] = useState<MasterItem[]>([]);
+  const [designations, setDesignations] = useState<MasterItem[]>([]);
+  const [statuses, setStatuses] = useState<MasterItem[]>([]);
+  const [leaders, setLeaders] = useState<LeaderItem[]>([]);
+  const [skills, setSkills] = useState<MasterItem[]>([]);
 
-export default function EmployeeForm({ employee, onCancel, onSubmit }: EmployeeFormProps) {
-  const skills = useAppSelector((state) => state.skills.skills);
-  const {
-    control,
-    formState: { errors, isSubmitting },
-    handleSubmit,
-  } = useForm<EmployeeFormValues>({
-    defaultValues: employee ? { ...employee } : emptyValues,
+  const { control, handleSubmit, setValue, reset } = useForm<EmployeeFormValues>({
+    defaultValues: {
+      employeeCode: '',
+      fullName: '',
+      email: '',
+      doj: '',
+      lwd: null,
+      priorExperience: 0,
+      relevantExperience: null,
+      employmentTypeId: '',
+      locationId: '',
+      workModelId: '',
+      practiceId: '',
+      departmentTypeId: '',
+      designationId: '',
+      statusId: '',
+      reportingManagerId: null,
+      practiceHeadId: null,
+      deloitteFitment: null,
+      engineering: null,
+      mobileNumber: '',
+      skillIds: [],
+    },
     resolver: yupResolver(schema),
   });
+
+  useEffect(() => {
+    const apiGet = (path: string) => api.get(path).then((r) => r.data as MasterItem[]);
+    apiGet('/master/employmenttypes').then(setEmploymentTypes);
+    apiGet('/master/locations').then(setLocations);
+    apiGet('/master/workmodels').then(setWorkModels);
+    apiGet('/master/practices').then(setPractices);
+    apiGet('/master/departmenttypes').then(setDepartmentTypes);
+    apiGet('/master/designations').then(setDesignations);
+    apiGet('/master/statuses').then(setStatuses);
+    api.get('/employees/leaders').then((r) => setLeaders(r.data as LeaderItem[]));
+    apiGet('/master/skills').then(setSkills);
+  }, []);
+
+  useEffect(() => {
+    if (employee) {
+      reset({
+        employeeCode: employee.employeeCode,
+        fullName: employee.fullName,
+        email: employee.email,
+        doj: employee.doj ?? '',
+        lwd: employee.lwd ?? null,
+        priorExperience: employee.priorExperience ?? 0,
+        relevantExperience: employee.relevantExperience ?? null,
+        employmentTypeId: employee.employmentTypeId,
+        locationId: employee.locationId,
+        workModelId: employee.workModelId,
+        practiceId: employee.practiceId,
+        departmentTypeId: employee.departmentTypeId,
+        designationId: employee.designationId ?? '',
+        statusId: employee.statusId,
+        reportingManagerId: employee.reportingManagerId ?? null,
+        practiceHeadId: employee.practiceHeadId ?? null,
+        deloitteFitment: employee.deloitteFitment ?? null,
+        engineering: employee.engineering ?? null,
+        mobileNumber: employee.mobileNumber ?? '',
+        skillIds: employee.skills.map((s) => s.id),
+      });
+    }
+  }, [employee, reset]);
 
   return (
     <Box component="form" noValidate onSubmit={handleSubmit(onSubmit)} sx={{ pt: 1 }}>
       <Stack spacing={2}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller
-            control={control}
-            name="employeeCode"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.employeeCode)}
-                fullWidth
-                helperText={errors.employeeCode?.message}
-                label="Employee Code"
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="status"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.status)}
-                fullWidth
-                helperText={errors.status?.message}
-                label="Status"
-                select
-              >
-                {statusOptions.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
+          <Controller control={control} name="employeeCode" render={({ field, fieldState }) => (
+            <TextField {...field} fullWidth label="Employee Code" error={!!fieldState.error} helperText={fieldState.error?.message} />
+          )} />
+          <Controller control={control} name="doj" render={({ field, fieldState }) => (
+            <TextField {...field} fullWidth label="Date Of Joining" type="date" InputLabelProps={{ shrink: true }} error={!!fieldState.error} helperText={fieldState.error?.message} />
+          )} />
+        </Stack>
+
+        <Controller control={control} name="fullName" render={({ field, fieldState }) => (
+          <TextField {...field} fullWidth label="Full Name" error={!!fieldState.error} helperText={fieldState.error?.message} />
+        )} />
+
+        <Controller control={control} name="email" render={({ field, fieldState }) => (
+          <TextField {...field} fullWidth label="Email" type="email" error={!!fieldState.error} helperText={fieldState.error?.message} />
+        )} />
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller control={control} name="priorExperience" render={({ field, fieldState }) => (
+            <TextField {...field} fullWidth label="Prior Experience (yrs)" type="number" error={!!fieldState.error} helperText={fieldState.error?.message} onChange={(e) => field.onChange(Number(e.target.value))} />
+          )} />
+          <Controller control={control} name="relevantExperience" render={({ field }) => (
+            <TextField {...field} fullWidth label="Relevant Experience (yrs)" type="number" onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)} value={field.value ?? ''} />
+          )} />
         </Stack>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller
-            control={control}
-            name="firstName"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.firstName)}
-                fullWidth
-                helperText={errors.firstName?.message}
-                label="First Name"
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="lastName"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.lastName)}
-                fullWidth
-                helperText={errors.lastName?.message}
-                label="Last Name"
-              />
-            )}
-          />
-        </Stack>
-
-        <Controller
-          control={control}
-          name="email"
-          render={({ field }) => (
-            <TextField
-              {...field}
-              error={Boolean(errors.email)}
-              fullWidth
-              helperText={errors.email?.message}
-              label="Email"
-              type="email"
-            />
-          )}
-        />
-
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller
-            control={control}
-            name="phone"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.phone)}
-                fullWidth
-                helperText={errors.phone?.message}
-                label="Phone"
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="joiningDate"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.joiningDate)}
-                fullWidth
-                helperText={errors.joiningDate?.message}
-                label="Joining Date"
-                type="date"
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            )}
-          />
+          <Controller control={control} name="mobileNumber" render={({ field }) => (
+            <TextField {...field} fullWidth label="Mobile Number" />
+          )} />
+          <Controller control={control} name="lwd" render={({ field }) => (
+            <TextField {...field} fullWidth label="Last Working Day" type="date" InputLabelProps={{ shrink: true }} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} />
+          )} />
         </Stack>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller
-            control={control}
-            name="department"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.department)}
-                fullWidth
-                helperText={errors.department?.message}
-                label="Department"
-                select
-              >
-                {departmentOptions.map((department) => (
-                  <MenuItem key={department} value={department}>
-                    {department}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
-          <Controller
-            control={control}
-            name="designation"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.designation)}
-                fullWidth
-                helperText={errors.designation?.message}
-                label="Designation"
-                select
-              >
-                {designationOptions.map((designation) => (
-                  <MenuItem key={designation} value={designation}>
-                    {designation}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
+          <Controller control={control} name="employmentTypeId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Employment Type" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {employmentTypes.map((e) => (
+                <MenuItem key={e.id} value={e.id}>{e.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+          <Controller control={control} name="workModelId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Work Model" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {workModels.map((w) => (
+                <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
         </Stack>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller
-            control={control}
-            name="role"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.role)}
-                fullWidth
-                helperText={errors.role?.message}
-                label="Role"
-                select
-              >
-                {roleOptions.map((role) => (
-                  <MenuItem key={role} value={role}>
-                    {role}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
-          <Controller
-            control={control}
-            name="experience"
-            render={({ field }) => (
-              <TextField
-                {...field}
-                error={Boolean(errors.experience)}
-                fullWidth
-                helperText={errors.experience?.message}
-                label="Experience"
-                onChange={(event) => field.onChange(Number(event.target.value))}
-                type="number"
-              />
-            )}
-          />
+          <Controller control={control} name="practiceId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Practice" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {practices.map((p) => (
+                <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+          <Controller control={control} name="departmentTypeId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Department Type" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {departmentTypes.map((d) => (
+                <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
         </Stack>
 
-        <Controller
-          control={control}
-          name="skillIds"
-          render={({ field }) => (
-            <Autocomplete
-              getOptionLabel={(option) => option.skillName}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              multiple
-              onChange={(_event, value) => field.onChange(value.map((skill) => skill.id))}
-              options={skills}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  error={Boolean(errors.skillIds)}
-                  helperText={errors.skillIds?.message}
-                  label="Skills"
-                />
-              )}
-              value={skills.filter((skill) => field.value.includes(skill.id))}
-            />
-          )}
-        />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller control={control} name="designationId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Designation" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {designations.map((d) => (
+                <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+          <Controller control={control} name="locationId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Location" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {locations.map((l) => (
+                <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+        </Stack>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller control={control} name="statusId" render={({ field, fieldState }) => (
+            <TextField {...field} select fullWidth label="Status" error={!!fieldState.error} helperText={fieldState.error?.message}>
+              {statuses.map((s) => (
+                <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+          <Box sx={{ width: '100%' }} />
+        </Stack>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller control={control} name="reportingManagerId" render={({ field }) => (
+            <TextField {...field} select fullWidth label="Reporting Manager" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}>
+              <MenuItem value="">None</MenuItem>
+              {leaders.map((m) => (
+                <MenuItem key={m.id} value={m.id}>{m.fullName}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+          <Controller control={control} name="practiceHeadId" render={({ field }) => (
+            <TextField {...field} select fullWidth label="Practice Head" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}>
+              <MenuItem value="">None</MenuItem>
+              {leaders.map((m) => (
+                <MenuItem key={m.id} value={m.id}>{m.fullName}</MenuItem>
+              ))}
+            </TextField>
+          )} />
+        </Stack>
+
+        <Stack direction="row" spacing={2}>
+          <Controller control={control} name="deloitteFitment" render={({ field }) => (
+            <FormControlLabel control={<Checkbox checked={field.value ?? false} onChange={(e) => field.onChange(e.target.checked)} />} label="Deloitte Fitment" />
+          )} />
+          <Controller control={control} name="engineering" render={({ field }) => (
+            <FormControlLabel control={<Checkbox checked={field.value ?? false} onChange={(e) => field.onChange(e.target.checked)} />} label="Engineering" />
+          )} />
+        </Stack>
+
+        <Controller control={control} name="skillIds" render={({ field }) => (
+          <Autocomplete
+            multiple
+            options={skills}
+            getOptionLabel={(option) => option.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            onChange={(_, value) => field.onChange(value.map((s) => s.id))}
+            value={skills.filter((s) => field.value?.includes(s.id))}
+            renderInput={(params) => <TextField {...params} label="Skills" />}
+          />
+        )} />
 
         <Stack direction="row" justifyContent="flex-end" spacing={1}>
-          <Button disabled={isSubmitting} onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button disabled={isSubmitting} type="submit" variant="contained">
-            Save Employee
-          </Button>
+          <Button type="button" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" variant="contained">Save Employee</Button>
         </Stack>
       </Stack>
     </Box>

@@ -1,7 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
-import { fetchBenchResources } from '../store/allocationSlice';
+// Redux: dispatches fetchBenchResources, reads bench resources from store
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import { fetchBenchResources } from '../../../redux/slices/allocationSlice';
 import BenchResourceGrid from '../components/BenchResourceGrid';
 
 export default function BenchResources() {

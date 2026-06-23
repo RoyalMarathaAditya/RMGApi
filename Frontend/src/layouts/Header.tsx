@@ -12,8 +12,10 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { logout } from '../features/auth/authSlice';
+import api from '../services/api';
+// Redux: dispatch reads user from state for display, dispatches logout on click
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { logout } from '../redux/slices/authSlice';
 
 interface HeaderProps {
   drawerWidth: number;
@@ -28,7 +30,12 @@ export default function Header({ drawerWidth, isSidebarCollapsed, onSidebarToggl
   const appBarWidth = { md: `calc(100% - ${isSidebarCollapsed ? 72 : drawerWidth}px)` };
   const appBarMargin = { md: `${isSidebarCollapsed ? 72 : drawerWidth}px` };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Backend logout is best-effort; proceed with client-side cleanup
+    }
     dispatch(logout());
     navigate('/login', { replace: true });
   };

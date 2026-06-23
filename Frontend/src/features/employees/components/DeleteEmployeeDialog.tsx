@@ -20,9 +20,9 @@ export default function DeleteEmployeeDialog({
       <DialogTitle>Delete employee</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          {employee
-            ? `Delete ${employee.firstName} ${employee.lastName}? This action cannot be undone.`
-            : 'Delete this employee?'}
+            {employee
+              ? `Delete ${employee.fullName}? This action cannot be undone.`
+              : 'Delete this employee?'}
         </DialogContentText>
       </DialogContent>
       <DialogActions>

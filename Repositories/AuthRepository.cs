@@ -18,5 +18,10 @@ namespace HRMS.Api.Repositories
         {
             return await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         }
+
+        public async Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        }
     }
 }

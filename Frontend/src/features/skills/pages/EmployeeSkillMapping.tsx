@@ -3,7 +3,8 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { Alert, Autocomplete, Button, Card, CardContent, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads skills from store for skill mapping dropdown
+import { useAppSelector } from '../../../redux/hooks';
 import EmployeeSkillGrid from '../components/EmployeeSkillGrid';
 import { mockEmployeeSkills } from '../mock/mockEmployeeSkills';
 import { proficiencyLevels } from '../types';

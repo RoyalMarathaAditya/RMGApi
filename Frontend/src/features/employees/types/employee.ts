@@ -1,26 +1,61 @@
 
-export type EmployeeStatus = 'Active' | 'Inactive' | 'On Leave';
-export type EmployeeRole = 'Admin' | 'HR' | 'Manager' | 'Team Lead' | 'Employee';
-
 export interface Employee {
   id: number;
   employeeCode: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
-  phone: string;
-  department: string;
-  designation: string;
-  role: EmployeeRole;
-  skillIds: number[];
-  experience: number;
-  joiningDate: string;
-  status: EmployeeStatus;
+  doj: string;
+  lwd?: string | null;
+  priorExperience: number;
+  relevantExperience?: number | null;
+  mobileNumber?: string | null;
+  deloitteFitment?: boolean | null;
+  engineering?: boolean | null;
+  employmentTypeId: string;
+  employmentType: string;
+  locationId: string;
+  location: string;
+  workModelId: string;
+  workModel: string;
+  practiceId: string;
+  practice: string;
+  departmentTypeId: string;
+  departmentType: string;
+  statusId: string;
+  employeeStatus: string;
+  reportingManagerId?: number | null;
+  reportingManagerName?: string | null;
+  practiceHeadId?: number | null;
+  practiceHeadName?: string | null;
+  designationId?: string | null;
+  designation?: string | null;
+  skills: Array<{ id: string; name: string }>;
 }
 
-export type EmployeeFormValues = Omit<Employee, 'id'>;
+export interface EmployeeFormValues {
+  employeeCode: string;
+  fullName: string;
+  email: string;
+  doj: string;
+  lwd?: string | null;
+  priorExperience: number;
+  relevantExperience?: number | null;
+  employmentTypeId: string;
+  locationId: string;
+  workModelId: string;
+  practiceId: string;
+  departmentTypeId: string;
+  statusId: string;
+  reportingManagerId?: number | null;
+  practiceHeadId?: number | null;
+  designationId?: string | null;
+  deloitteFitment?: boolean | null;
+  engineering?: boolean | null;
+  mobileNumber?: string | null;
+  skillIds: string[];
+}
 
 export interface EmployeeFilters {
   search: string;
-  status: EmployeeStatus | 'All';
+  status: string;
 }

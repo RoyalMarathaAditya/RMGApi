@@ -3,7 +3,8 @@ import { Autocomplete, Box, Card, CardContent, Chip, MenuItem, Stack, TextField,
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef } from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
-import { useAppSelector } from '../../../app/hooks';
+// Redux: reads skills from store for skill search dropdown
+import { useAppSelector } from '../../../redux/hooks';
 import { mockEmployeeSkills } from '../mock/mockEmployeeSkills';
 import { proficiencyLevels } from '../types';
 import type { EmployeeSkill, ProficiencyLevel, Skill } from '../types';

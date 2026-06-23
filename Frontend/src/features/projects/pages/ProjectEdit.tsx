@@ -1,9 +1,10 @@
 import { Alert, Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+// Redux: dispatches updateProject, reads current project list to find the one being edited
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ProjectForm from '../components/ProjectForm';
-import { updateProject } from '../store/projectSlice';
+import { updateProject } from '../../../redux/slices/projectSlice';
 import type { ProjectFormValues } from '../types/project.types';
 
 export default function ProjectEdit() {

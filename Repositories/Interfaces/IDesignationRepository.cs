@@ -1,30 +1,16 @@
-﻿using HRMS.Api.Models;
+using HRMS.Api.Models;
 
 namespace HRMS.Api.Repositories.Interfaces
 {
     public interface IDesignationRepository
     {
-        Task<IEnumerable<Designation>> GetAllAsync(
-            CancellationToken cancellationToken = default);
-
-        Task<Designation?> GetByIdAsync(
-            int id,
-            CancellationToken cancellationToken = default);
-
-        Task<Designation?> GetByNameAsync(
-            string name,
-            CancellationToken cancellationToken = default);
-
-        Task<Designation> CreateAsync(
-            Designation designation,
-            CancellationToken cancellationToken = default);
-
-        Task<Designation> UpdateAsync(
-            Designation designation,
-            CancellationToken cancellationToken = default);
-
-        Task DeleteAsync(
-            int id,
-            CancellationToken cancellationToken = default);
+        Task<IEnumerable<DesignationMaster>> GetAllAsync(CancellationToken ct = default);
+        Task<IEnumerable<DesignationMaster>> GetActiveAsync(CancellationToken ct = default);
+        Task<DesignationMaster?> GetByIdAsync(Guid id, CancellationToken ct = default);
+        Task<DesignationMaster> CreateAsync(DesignationMaster designation, CancellationToken ct = default);
+        Task<DesignationMaster> UpdateAsync(DesignationMaster designation, CancellationToken ct = default);
+        Task DeleteAsync(DesignationMaster designation, CancellationToken ct = default);
+        Task<bool> ExistsAsync(string name, CancellationToken ct = default);
+        Task<bool> CodeExistsAsync(string code, CancellationToken ct = default);
     }
 }

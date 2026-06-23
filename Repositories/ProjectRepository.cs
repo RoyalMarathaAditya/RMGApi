@@ -14,64 +14,48 @@ namespace HRMS.Api.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Project>> GetAllAsync(
-            CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Project>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _dbContext.Projects
                 .Include(p => p.Client)
-                .Include(p => p.Location)
-                .Include(p => p.ProjectSkills)
-                    .ThenInclude(ps => ps.Skill)
+                .Include(p => p.ProjectType)
+                .Include(p => p.PricingType)
+                .Include(p => p.Practice)
+                .Include(p => p.ProjectManager)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<Project?> GetByIdAsync(
-            int id,
-            CancellationToken cancellationToken = default)
+        public async Task<Project?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Projects
                 .Include(p => p.Client)
-                .Include(p => p.Location)
-                .Include(p => p.ProjectSkills)
-                    .ThenInclude(ps => ps.Skill)
+                .Include(p => p.ProjectType)
+                .Include(p => p.PricingType)
+                .Include(p => p.Practice)
+                .Include(p => p.ProjectManager)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
-        public async Task<Project> CreateAsync(
-            Project project,
-            CancellationToken cancellationToken = default)
+        public async Task<Project> CreateAsync(Project project, CancellationToken cancellationToken = default)
         {
             await _dbContext.Projects.AddAsync(project, cancellationToken);
-
             await _dbContext.SaveChangesAsync(cancellationToken);
-
             return project;
         }
 
-        public async Task<Project> UpdateAsync(
-            Project project,
-            CancellationToken cancellationToken = default)
+        public async Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default)
         {
             _dbContext.Projects.Update(project);
-
             await _dbContext.SaveChangesAsync(cancellationToken);
-
             return project;
         }
 
-        public async Task DeleteAsync(
-            int id,
-            CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var project = await _dbContext.Projects
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-            if (project == null)
-                return;
-
-            _dbContext.Projects.Remove(project);
-
+            var project = await _dbContext.Projects.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            if (project == null) return;
+            project.IsDeleted = true;
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }

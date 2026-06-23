@@ -1,109 +1,3 @@
-////using System.ComponentModel.DataAnnotations;
-
-////namespace HRMS.Api.Models
-////{
-////    public class Employee
-////    {
-////        [Key]
-////        public int Id { get; set; }
-
-////        [Required]
-////        [MaxLength(120)]
-////        public string FirstName { get; set; } = null!;
-
-////        [MaxLength(120)]
-////        public string LastName { get; set; } = string.Empty;
-
-////        [Required]
-////        [MaxLength(100)]
-////        public string Email { get; set; } = null!;
-
-////        [MaxLength(50)]
-////        public string Department { get; set; } = string.Empty;
-
-////        [MaxLength(50)]
-////        public string Designation { get; set; } = string.Empty;
-
-////        [MaxLength(20)]
-////        public string Status { get; set; } = "Active";
-
-////        public DateTime DateOfJoining { get; set; } = DateTime.UtcNow;
-////        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-////        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-////    }
-////}
-
-
-//using System.ComponentModel.DataAnnotations;
-//using System.Reflection;
-
-//namespace HRMS.Api.Models
-//{
-//    public class Employee
-//    {
-//        [Key]
-//        public int Id { get; set; }
-
-//        [Required]
-//        [MaxLength(50)]
-//        public string EmployeeCode { get; set; } = string.Empty;
-
-//        [Required]
-//        [MaxLength(200)]
-//        public string FullName { get; set; } = string.Empty;
-
-//        [Required]
-//        [MaxLength(150)]
-//        public string Email { get; set; } = string.Empty;
-
-//        public DateTime DateOfJoining { get; set; }
-
-//        public decimal PriorExperience { get; set; }
-
-//        public decimal CompanyExperience { get; set; }
-
-//        public decimal TotalExperience { get; set; }
-
-//        [MaxLength(20)]
-//        public string Status { get; set; } = "Active";
-
-//        // FK
-//        public int DesignationId { get; set; }
-
-//        public int PracticeId { get; set; }
-
-//        public int? SubPracticeId { get; set; }
-
-//        public int LocationId { get; set; }
-
-//        public int? ManagerId { get; set; }
-
-//        // Navigation Properties
-//        public Designation Designation { get; set; } = null!;
-
-//        public Practice Practice { get; set; } = null!;
-
-//        public SubPractice? SubPractice { get; set; }
-
-//        public Location Location { get; set; } = null!;
-
-//        public Employee? Manager { get; set; }
-
-//        public ICollection<Employee> DirectReports { get; set; }
-//            = new List<Employee>();
-
-//        public ICollection<EmployeeSkill> EmployeeSkills { get; set; }
-//            = new List<EmployeeSkill>();
-
-//        public ICollection<ResourceAllocation> ResourceAllocations { get; set; }
-//            = new List<ResourceAllocation>();
-
-//        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-//        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-//    }
-//}
-
 using System.ComponentModel.DataAnnotations;
 
 namespace HRMS.Api.Models
@@ -117,6 +11,12 @@ namespace HRMS.Api.Models
         [MaxLength(50)]
         public string EmployeeCode { get; set; } = string.Empty;
 
+        [MaxLength(100)]
+        public string? FirstName { get; set; }
+
+        [MaxLength(100)]
+        public string? LastName { get; set; }
+
         [Required]
         [MaxLength(200)]
         public string FullName { get; set; } = string.Empty;
@@ -125,61 +25,68 @@ namespace HRMS.Api.Models
         [MaxLength(150)]
         public string Email { get; set; } = string.Empty;
 
-        public DateTime DateOfJoining { get; set; }
+        public decimal? ExperienceYears { get; set; }
 
+        public Guid? DesignationId { get; set; }
+        public DesignationMaster? Designation { get; set; }
+
+        public int? ClientId { get; set; }
+        public Client? Client { get; set; }
+
+        public Guid? OnboardingTypeId { get; set; }
+        public OnboardingTypeMaster? OnboardingType { get; set; }
+
+        public DateTime DOJ { get; set; }
+        public DateTime? LWD { get; set; }
         public decimal PriorExperience { get; set; }
+        public decimal? RelevantExperience { get; set; }
 
-        public decimal CompanyExperience { get; set; }
+        public Guid EmploymentTypeId { get; set; }
+        public EmploymentTypeMaster EmploymentType { get; set; } = null!;
 
-        public decimal TotalExperience { get; set; }
-
-        [MaxLength(20)]
-        public string Status { get; set; } = "Active";
-
-        // Foreign Keys
-        public int DesignationId { get; set; }
-
-        public int PracticeId { get; set; }
-
-        public int? SubPracticeId { get; set; }
-
-        public int LocationId { get; set; }
-
-        public int? ManagerId { get; set; }
-
-        // Navigation Properties
-        public Designation Designation { get; set; } = null!;
-
-        public Practice Practice { get; set; } = null!;
-
-        public SubPractice? SubPractice { get; set; }
-
+        public Guid LocationId { get; set; }
         public Location Location { get; set; } = null!;
 
-        public Employee? Manager { get; set; }
+        public Guid WorkModelId { get; set; }
+        public WorkModelMaster WorkModel { get; set; } = null!;
 
-        public ICollection<Employee> DirectReports { get; set; }
-            = new List<Employee>();
+        public Guid PracticeId { get; set; }
+        public Practice Practice { get; set; } = null!;
 
-        public ICollection<EmployeeSkill> EmployeeSkills { get; set; }
-            = new List<EmployeeSkill>();
+        public Guid DepartmentTypeId { get; set; }
+        public DepartmentTypeMaster DepartmentType { get; set; } = null!;
 
-        public ICollection<ResourceAllocation> ResourceAllocations { get; set; }
-            = new List<ResourceAllocation>();
+        public Guid StatusId { get; set; }
+        public StatusMaster EmployeeStatus { get; set; } = null!;
 
-        public ICollection<Project> ManagedProjects { get; set; }
-    = new List<Project>();
+        public int? ReportingManagerId { get; set; }
+        public Employee? ReportingManager { get; set; }
+        public ICollection<Employee> DirectReports { get; set; } = new List<Employee>();
 
-        public ICollection<Project> DeliveryProjects { get; set; }
-            = new List<Project>();
-        public ICollection<FutureAssignment> FutureAssignments { get; set; }
-    = new List<FutureAssignment>();
+        public int? PracticeHeadId { get; set; }
+        public Employee? PracticeHead { get; set; }
+        public ICollection<Employee> PracticeHeadEmployees { get; set; } = new List<Employee>();
 
-    //    public ICollection<EmployeeHierarchy> EmployeeHierarchies { get; set; }
-    //= new List<EmployeeHierarchy>();
+        public bool? DeloitteFitment { get; set; }
+        public bool? Engineering { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [MaxLength(20)]
+        public string? MobileNumber { get; set; }
 
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+        public string? CreatedBy { get; set; }
+        public DateTime? ModifiedOn { get; set; }
+        public string? ModifiedBy { get; set; }
+        public bool IsDeleted { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = default!;
+
+        public ICollection<EmployeeSkill> EmployeeSkills { get; set; } = new List<EmployeeSkill>();
+        public ICollection<Project> ManagedProjects { get; set; } = new List<Project>();
+        public ICollection<Project> CSMProjects { get; set; } = new List<Project>();
+        public ICollection<EmployeeLeave> EmployeeLeaves { get; set; } = new List<EmployeeLeave>();
+        public ICollection<PIP> PIPs { get; set; } = new List<PIP>();
+        public ICollection<ProjectAllocation> ProjectAllocations { get; set; } = new List<ProjectAllocation>();
     }
 }
