@@ -45,6 +45,5 @@ namespace HRMS.Api.Models
         [Timestamp]
         public byte[] RowVersion { get; set; } = default!;
 
-        public ICollection<ProjectAllocation> ProjectAllocations { get; set; } = new List<ProjectAllocation>();
     }
 }

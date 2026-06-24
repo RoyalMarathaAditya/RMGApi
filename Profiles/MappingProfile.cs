@@ -2,7 +2,6 @@ using AutoMapper;
 using HRMS.Api.DTOs;
 using HRMS.Api.DTOs.EmployeeDtos;
 using HRMS.Api.DTOs.MasterDtos;
-using HRMS.Api.DTOs.ProjectAllocationDtos;
 using HRMS.Api.DTOs.LeaveDtos;
 using HRMS.Api.DTOs.PIPDtos;
 using HRMS.Api.Models;
@@ -49,28 +48,11 @@ namespace HRMS.Api.Profiles
             CreateMap<LeaveTypeMaster, MasterDto>();
             CreateMap<PricingTypeMaster, MasterDto>();
             CreateMap<ProjectTypeMaster, MasterDto>();
-            CreateMap<AllocationStatusMaster, MasterDto>();
-            CreateMap<EmployeeProjectStatusMaster, MasterDto>();
             CreateMap<DepartmentTypeMaster, MasterDto>();
             CreateMap<DesignationMaster, MasterDto>();
             CreateMap<Location, MasterDto>();
             CreateMap<Practice, MasterDto>();
             CreateMap<Skill, MasterDto>();
-            #endregion
-
-            #region Allocation
-            CreateMap<CreateAllocationDto, ProjectAllocation>()
-                .ForMember(dest => dest.CreatedOn, opt => opt.MapFrom(_ => DateTime.UtcNow));
-
-            CreateMap<UpdateAllocationDto, ProjectAllocation>()
-                .ForMember(dest => dest.ModifiedOn, opt => opt.MapFrom(_ => DateTime.UtcNow));
-
-            CreateMap<ProjectAllocation, AllocationDto>()
-                .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.FullName : null))
-                .ForMember(dest => dest.EmployeeCode, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.EmployeeCode : null))
-                .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectName : null))
-                .ForMember(dest => dest.EmployeeProjectStatus, opt => opt.MapFrom(src => src.EmployeeProjectStatus != null ? src.EmployeeProjectStatus.Name : null))
-                .ForMember(dest => dest.AllocationStatus, opt => opt.MapFrom(src => src.AllocationStatus != null ? src.AllocationStatus.Name : null));
             #endregion
 
             #region Leave

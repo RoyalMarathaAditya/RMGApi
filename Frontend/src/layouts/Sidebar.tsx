@@ -1,7 +1,7 @@
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
-import FolderSharedOutlinedIcon from '@mui/icons-material/FolderSharedOutlined';
+
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import HubOutlinedIcon from '@mui/icons-material/HubOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
@@ -29,8 +29,8 @@ const menuItems = [
   { icon: DashboardOutlinedIcon, label: 'Dashboard', path: '/dashboard' },
   { icon: GroupsOutlinedIcon, label: 'Employee Management', path: '/employees' },
   { icon: WorkOutlineOutlinedIcon, label: 'Project Management', path: '/projects' },
+  { icon: HubOutlinedIcon, label: 'Resource Allocation', path: '/rmg' },
   { icon: PsychologyOutlinedIcon, label: 'Skills Management', path: '/skills' },
-  { icon: HubOutlinedIcon, label: 'Resource Allocation', path: '/allocations' },
   { icon: AssessmentOutlinedIcon, label: 'Reports', path: '/reports' },
   { icon: BadgeOutlinedIcon, label: 'Designation Master', path: '/designations' },
   { icon: SettingsOutlinedIcon, label: 'Settings', path: '/settings' },
@@ -51,17 +51,16 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
     <Box sx={{ height: '100%', overflowX: 'hidden', px: 1.5, py: 2 }}>
       <Stack alignItems="center" direction="row" spacing={1.5} sx={{ minHeight: 56, px: 1 }}>
         <Box
-          alignItems="center"
-          bgcolor="primary.main"
-          borderRadius={2}
-          color="primary.contrastText"
-          display="flex"
-          height={40}
-          justifyContent="center"
-          width={40}
-        >
-          <FolderSharedOutlinedIcon />
-        </Box>
+          component="img"
+          src="/logo.png"
+          alt="HRMS Logo"
+          sx={{
+            height: 64,
+            width: 64,
+            objectFit: 'contain',
+            borderRadius: 1,
+          }}
+        />
         {!collapsed ? (
           <Typography color="primary" fontWeight={800} noWrap variant="subtitle1">
             HRMS
@@ -78,7 +77,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
               key={item.path}
               onClick={isDesktop ? undefined : onMobileClose}
               selected={
-                item.path === '/projects' || item.path === '/skills' ? location.pathname.startsWith(item.path) : location.pathname === item.path
+                item.path === '/projects' || item.path === '/skills' || item.path === '/rmg' ? location.pathname.startsWith(item.path) : location.pathname === item.path
               }
               sx={{
                 borderRadius: 2,
