@@ -19,5 +19,7 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public string? PhoneNumber { get; set; }
         public string Email { get; set; } = string.Empty;
         public decimal? Experience { get; set; }
+        public string? Skills { get; set; }
+        public string? SubPractice { get; set; }
     }
 }

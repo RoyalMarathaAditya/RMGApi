@@ -1,8 +1,9 @@
+using System.Data;
 using System.Globalization;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.EmployeeDtos;
 using HRMS.Api.Models;
-using HRMS.Api.Validators;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 
@@ -11,16 +12,18 @@ namespace HRMS.Api.Services
     public class BulkImportService : IBulkImportService
     {
         private readonly AppDbContext _dbContext;
-        private static readonly HashSet<string> EmailSet = new(StringComparer.OrdinalIgnoreCase);
+        private readonly string _connectionString;
 
         static BulkImportService()
         {
             ExcelPackage.License.SetNonCommercialOrganization("RMG HRMS");
         }
 
-        public BulkImportService(AppDbContext dbContext)
+        public BulkImportService(AppDbContext dbContext, IConfiguration configuration)
         {
             _dbContext = dbContext;
+            _connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("DefaultConnection string not found");
         }
 
         public async Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken)
@@ -48,92 +51,97 @@ namespace HRMS.Api.Services
                 return result;
             }
 
-            result.SuccessRows = result.TotalRows;
+            await AutoGenerateEmployeeCodesAsync(rows, cancellationToken);
 
-            var autoCodeCounter = await GetNextEmployeeCodeNumberAsync(cancellationToken);
+            var batchId = Guid.NewGuid();
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var dataTable = ConvertToDataTable(rows, batchId, uploadedBy);
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            using var transaction = connection.BeginTransaction();
+
             try
             {
-                var masterCache = new MasterCache(_dbContext);
-                await masterCache.InitializeAsync(cancellationToken);
-
-                foreach (var row in rows)
+                using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
                 {
-                    var empTypeId = await masterCache.GetOrCreateEmploymentTypeAsync(row.EmployeeType, cancellationToken);
-                    var workModelId = await masterCache.GetOrCreateWorkModelAsync(row.WorkModel, cancellationToken);
-                    var practiceId = await masterCache.GetOrCreatePracticeAsync(row.Practice, cancellationToken);
-                    var locationId = await masterCache.GetOrCreateLocationAsync(row.NVLocation, cancellationToken);
-                    var designationId = await masterCache.GetOrCreateDesignationAsync(row.Designation, cancellationToken);
-                    var onboardingId = await masterCache.GetOrCreateOnboardingTypeAsync(row.Onboarding, cancellationToken);
-                    var clientId = await masterCache.GetOrCreateClientAsync(row.Client, cancellationToken);
-                    var statusId = await masterCache.GetDefaultStatusIdAsync(cancellationToken);
-                    var deptTypeId = await masterCache.GetDefaultDepartmentTypeIdAsync(cancellationToken);
+                    DestinationTableName = "EmployeeImportStaging",
+                    BatchSize = 5000,
+                    BulkCopyTimeout = 300
+                };
 
-                    var reportingManagerId = await FindOrWarnEmployeeAsync(row.ReportingManager, result.Errors, row, "Reporting manager", cancellationToken);
-                    var practiceHeadId = await FindOrWarnEmployeeAsync(row.PracticeHead, result.Errors, row, "Practice head", cancellationToken);
+                bulkCopy.ColumnMappings.Add("BatchId", "BatchId");
+                bulkCopy.ColumnMappings.Add("EmployeeCode", "EmployeeCode");
+                bulkCopy.ColumnMappings.Add("FirstName", "FirstName");
+                bulkCopy.ColumnMappings.Add("LastName", "LastName");
+                bulkCopy.ColumnMappings.Add("Email", "Email");
+                bulkCopy.ColumnMappings.Add("EmployeeType", "EmployeeType");
+                bulkCopy.ColumnMappings.Add("Designation", "Designation");
+                bulkCopy.ColumnMappings.Add("Practice", "Practice");
+                bulkCopy.ColumnMappings.Add("ReportingManager", "ReportingManager");
+                bulkCopy.ColumnMappings.Add("Location", "Location");
+                bulkCopy.ColumnMappings.Add("WorkModel", "WorkModel");
+                bulkCopy.ColumnMappings.Add("Experience", "Experience");
+                bulkCopy.ColumnMappings.Add("Skills", "Skills");
+                bulkCopy.ColumnMappings.Add("DOJ", "DOJ");
+                bulkCopy.ColumnMappings.Add("PhoneNumber", "PhoneNumber");
+                bulkCopy.ColumnMappings.Add("Client", "Client");
+                bulkCopy.ColumnMappings.Add("Onboarding", "Onboarding");
+                bulkCopy.ColumnMappings.Add("PracticeHead", "PracticeHead");
+                bulkCopy.ColumnMappings.Add("SubPractice", "SubPractice");
+                bulkCopy.ColumnMappings.Add("ImportedOn", "ImportedOn");
+                bulkCopy.ColumnMappings.Add("ImportedBy", "ImportedBy");
 
-                    string employeeCode;
-                    if (!string.IsNullOrWhiteSpace(row.EmployeeCode))
-                    {
-                        employeeCode = row.EmployeeCode;
-                    }
-                    else
-                    {
-                        employeeCode = $"EMP{autoCodeCounter:D4}";
-                        autoCodeCounter++;
-                    }
+                await bulkCopy.WriteToServerAsync(dataTable, cancellationToken);
 
-                    var employee = new Employee
-                    {
-                        FirstName = row.FirstName,
-                        LastName = row.LastName,
-                        FullName = $"{row.FirstName} {row.LastName}".Trim(),
-                        EmployeeCode = employeeCode,
-                        Email = row.Email,
-                        DOJ = row.DOJ ?? DateTime.UtcNow,
-                        EmploymentTypeId = empTypeId ?? Guid.Empty,
-                        WorkModelId = workModelId ?? Guid.Empty,
-                        PracticeId = practiceId ?? Guid.Empty,
-                        LocationId = locationId ?? Guid.Empty,
-                        DesignationId = designationId,
-                        ClientId = clientId,
-                        OnboardingTypeId = onboardingId,
-                        StatusId = statusId,
-                        DepartmentTypeId = deptTypeId,
-                        ReportingManagerId = reportingManagerId,
-                        PracticeHeadId = practiceHeadId,
-                        MobileNumber = row.PhoneNumber,
-                        PriorExperience = row.Experience ?? 0,
-                        RelevantExperience = row.Experience,
-                        ExperienceYears = row.Experience,
-                        IsDeleted = false,
-                        CreatedOn = DateTime.UtcNow,
-                    };
+                using var cmd = new SqlCommand("sp_ProcessEmployeeImport", connection, transaction)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                    CommandTimeout = 300
+                };
+                cmd.Parameters.AddWithValue("@BatchId", batchId);
+                cmd.Parameters.AddWithValue("@ImportedBy", (object?)uploadedBy ?? DBNull.Value);
 
-                    _dbContext.Employees.Add(employee);
+                using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                if (await reader.ReadAsync(cancellationToken))
+                {
+                    result.TotalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
+                    result.SuccessRows = reader.GetInt32(reader.GetOrdinal("ImportedRows"));
+                    result.FailedRows = reader.GetInt32(reader.GetOrdinal("FailedRows"));
+                    result.DeletedRows = reader.GetInt32(reader.GetOrdinal("DeletedRows"));
+                }
+                await reader.CloseAsync();
+
+                if (result.FailedRows > 0)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    result.Success = false;
+                    return result;
                 }
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                transaction.Commit();
 
-                var audit = new ImportAudit
+                var history = new EmployeeImportHistory
                 {
+                    BatchId = batchId,
                     FileName = file.FileName,
+                    ImportedBy = uploadedBy,
+                    ImportedOn = DateTime.UtcNow,
                     TotalRows = result.TotalRows,
-                    SuccessRows = result.SuccessRows,
+                    ImportedRows = result.SuccessRows,
                     FailedRows = result.FailedRows,
-                    UploadedBy = uploadedBy,
-                    UploadedOn = DateTime.UtcNow
+                    DeletedRows = result.DeletedRows,
+                    Status = "Completed"
                 };
-                _dbContext.ImportAudits.Add(audit);
+                _dbContext.Set<EmployeeImportHistory>().Add(history);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
-                await transaction.CommitAsync(cancellationToken);
                 result.Success = true;
             }
-            catch (Exception)
+            catch
             {
-                await transaction.RollbackAsync(cancellationToken);
+                try { transaction.Rollback(); } catch { }
                 throw;
             }
 
@@ -150,7 +158,7 @@ namespace HRMS.Api.Services
                 "Employee Code", "First Name", "Second Name", "Employee Type", "Designation",
                 "Practice Head", "Reporting Manager", "Practice", "Client",
                 "DOJ", "NV Location", "Work Model", "Onboarding",
-                "Phone Number", "E-mail ID", "Experience"
+                "Phone Number", "E-mail ID", "Experience", "Skills", "SubPractice"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -217,22 +225,35 @@ namespace HRMS.Api.Services
                 {
                     RowNumber = row,
                     EmployeeCode = GetString(worksheet, row, headerMap, "Employee Code") ?? GetString(worksheet, row, headerMap, "Emp Code"),
-                    FirstName = GetString(worksheet, row, headerMap, "First Name"),
+                    FirstName = GetString(worksheet, row, headerMap, "First Name") ?? string.Empty,
                     LastName = GetString(worksheet, row, headerMap, "Second Name"),
-                    EmployeeType = GetString(worksheet, row, headerMap, "Employee Type"),
-                    Designation = GetString(worksheet, row, headerMap, "Designation"),
+                    EmployeeType = GetString(worksheet, row, headerMap, "Employee Type") ?? string.Empty,
+                    Designation = GetString(worksheet, row, headerMap, "Designation") ?? string.Empty,
                     PracticeHead = GetString(worksheet, row, headerMap, "Practice Head"),
                     ReportingManager = GetString(worksheet, row, headerMap, "Reporting Manager"),
-                    Practice = GetString(worksheet, row, headerMap, "Practice"),
+                    Practice = GetString(worksheet, row, headerMap, "Practice") ?? string.Empty,
                     Client = GetString(worksheet, row, headerMap, "Client"),
                     NVLocation = GetString(worksheet, row, headerMap, "NV Location"),
                     WorkModel = GetString(worksheet, row, headerMap, "Work Model"),
                     Onboarding = GetString(worksheet, row, headerMap, "Onboarding"),
                     PhoneNumber = GetString(worksheet, row, headerMap, "Phone Number"),
-                    Email = GetString(worksheet, row, headerMap, "E-mail ID") ?? GetString(worksheet, row, headerMap, "Email"),
+                    Email = GetString(worksheet, row, headerMap, "E-mail ID") ?? GetString(worksheet, row, headerMap, "Email") ?? string.Empty,
                     DOJ = ParseDate(GetString(worksheet, row, headerMap, "DOJ")),
                     Experience = ParseDecimal(GetString(worksheet, row, headerMap, "Experience")),
+                    Skills = GetString(worksheet, row, headerMap, "Skills"),
+                    SubPractice = GetString(worksheet, row, headerMap, "SubPractice"),
                 };
+
+                if (string.IsNullOrWhiteSpace(importRow.EmployeeCode) &&
+                    string.IsNullOrWhiteSpace(importRow.FirstName) &&
+                    string.IsNullOrWhiteSpace(importRow.Email) &&
+                    string.IsNullOrWhiteSpace(importRow.Practice) &&
+                    string.IsNullOrWhiteSpace(importRow.Designation) &&
+                    string.IsNullOrWhiteSpace(importRow.EmployeeType))
+                {
+                    continue;
+                }
+
                 rows.Add(importRow);
             }
 
@@ -265,20 +286,9 @@ namespace HRMS.Api.Services
         private async Task<List<EmployeeImportErrorDto>> ValidateRowsAsync(List<EmployeeImportRowDto> rows, CancellationToken cancellationToken)
         {
             var errors = new List<EmployeeImportErrorDto>();
-            var validator = new EmployeeImportRowValidator();
+            var validator = new Validators.EmployeeImportRowValidator();
             var emailSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var existingEmails = await _dbContext.Employees
-                .IgnoreQueryFilters()
-                .Select(e => e.Email)
-                .ToListAsync(cancellationToken);
-            var existingEmailSet = new HashSet<string>(existingEmails, StringComparer.OrdinalIgnoreCase);
-
             var employeeCodeSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var existingCodes = await _dbContext.Employees
-                .IgnoreQueryFilters()
-                .Select(e => e.EmployeeCode)
-                .ToListAsync(cancellationToken);
-            var existingCodeSet = new HashSet<string>(existingCodes, StringComparer.OrdinalIgnoreCase);
 
             foreach (var row in rows)
             {
@@ -291,18 +301,12 @@ namespace HRMS.Api.Services
                 {
                     if (!employeeCodeSet.Add(row.EmployeeCode))
                         rowErrors.Add("Duplicate employee code found within the uploaded file.");
-
-                    if (existingCodeSet.Contains(row.EmployeeCode))
-                        rowErrors.Add("Employee code already exists in the system.");
                 }
 
                 if (!string.IsNullOrEmpty(row.Email))
                 {
                     if (!emailSet.Add(row.Email))
                         rowErrors.Add("Duplicate email found within the uploaded file.");
-
-                    if (existingEmailSet.Contains(row.Email))
-                        rowErrors.Add("Email already exists in the system.");
                 }
 
                 if (rowErrors.Any())
@@ -331,25 +335,17 @@ namespace HRMS.Api.Services
             return $"/uploads/errors/{fileName}";
         }
 
-        private async Task<int?> FindOrWarnEmployeeAsync(string? name, List<EmployeeImportErrorDto> warnings, EmployeeImportRowDto row, string label, CancellationToken cancellationToken)
+        private async Task AutoGenerateEmployeeCodesAsync(List<EmployeeImportRowDto> rows, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(name)) return null;
-
-            var employee = await _dbContext.Employees
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(e => e.FullName == name || e.Email == name, cancellationToken);
-
-            if (employee != null) return employee.Id;
-
-            warnings.Add(new EmployeeImportErrorDto
+            var autoCodeCounter = await GetNextEmployeeCodeNumberAsync(cancellationToken);
+            foreach (var row in rows)
             {
-                RowNumber = row.RowNumber,
-                EmployeeName = $"{row.FirstName} {row.LastName}".Trim(),
-                Email = row.Email,
-                ErrorMessage = $"{label} '{name}' not found. Set to null."
-            });
-
-            return null;
+                if (string.IsNullOrWhiteSpace(row.EmployeeCode))
+                {
+                    row.EmployeeCode = $"EMP{autoCodeCounter:D4}";
+                    autoCodeCounter++;
+                }
+            }
         }
 
         private async Task<int> GetNextEmployeeCodeNumberAsync(CancellationToken cancellationToken)
@@ -385,214 +381,62 @@ namespace HRMS.Api.Services
             return nextNumber;
         }
 
-        private class MasterCache
+        private static DataTable ConvertToDataTable(List<EmployeeImportRowDto> rows, Guid batchId, string? uploadedBy)
         {
-            private readonly AppDbContext _db;
-            private Dictionary<string, Guid>? _employmentTypes;
-            private Dictionary<string, Guid>? _workModels;
-            private Dictionary<string, Guid>? _practices;
-            private Dictionary<string, Guid>? _locations;
-            private Dictionary<string, Guid>? _designations;
-            private Dictionary<string, Guid>? _onboardingTypes;
-            private Dictionary<string, int>? _clients;
-            private Guid? _defaultStatusId;
-            private Guid? _defaultDepartmentTypeId;
+            var table = new DataTable();
 
-            public MasterCache(AppDbContext db)
+            table.Columns.Add("BatchId", typeof(Guid));
+            table.Columns.Add("EmployeeCode", typeof(string));
+            table.Columns.Add("FirstName", typeof(string));
+            table.Columns.Add("LastName", typeof(string));
+            table.Columns.Add("Email", typeof(string));
+            table.Columns.Add("EmployeeType", typeof(string));
+            table.Columns.Add("Designation", typeof(string));
+            table.Columns.Add("Practice", typeof(string));
+            table.Columns.Add("ReportingManager", typeof(string));
+            table.Columns.Add("Location", typeof(string));
+            table.Columns.Add("WorkModel", typeof(string));
+            table.Columns.Add("Experience", typeof(decimal));
+            table.Columns.Add("Skills", typeof(string));
+            table.Columns.Add("DOJ", typeof(DateTime));
+            table.Columns.Add("PhoneNumber", typeof(string));
+            table.Columns.Add("Client", typeof(string));
+            table.Columns.Add("Onboarding", typeof(string));
+            table.Columns.Add("PracticeHead", typeof(string));
+            table.Columns.Add("SubPractice", typeof(string));
+            table.Columns.Add("ImportedOn", typeof(DateTime));
+            table.Columns.Add("ImportedBy", typeof(string));
+
+            var now = DateTime.UtcNow;
+
+            foreach (var row in rows)
             {
-                _db = db;
+                var dr = table.NewRow();
+                dr["BatchId"] = batchId;
+                dr["EmployeeCode"] = (object?)row.EmployeeCode ?? DBNull.Value;
+                dr["FirstName"] = (object?)row.FirstName ?? DBNull.Value;
+                dr["LastName"] = (object?)row.LastName ?? DBNull.Value;
+                dr["Email"] = (object?)row.Email ?? DBNull.Value;
+                dr["EmployeeType"] = (object?)row.EmployeeType ?? DBNull.Value;
+                dr["Designation"] = (object?)row.Designation ?? DBNull.Value;
+                dr["Practice"] = (object?)row.Practice ?? DBNull.Value;
+                dr["ReportingManager"] = (object?)row.ReportingManager ?? DBNull.Value;
+                dr["Location"] = (object?)row.NVLocation ?? DBNull.Value;
+                dr["WorkModel"] = (object?)row.WorkModel ?? DBNull.Value;
+                dr["Experience"] = (object?)row.Experience ?? DBNull.Value;
+                dr["Skills"] = (object?)row.Skills ?? DBNull.Value;
+                dr["DOJ"] = (object?)row.DOJ ?? DBNull.Value;
+                dr["PhoneNumber"] = (object?)row.PhoneNumber ?? DBNull.Value;
+                dr["Client"] = (object?)row.Client ?? DBNull.Value;
+                dr["Onboarding"] = (object?)row.Onboarding ?? DBNull.Value;
+                dr["PracticeHead"] = (object?)row.PracticeHead ?? DBNull.Value;
+                dr["SubPractice"] = (object?)row.SubPractice ?? DBNull.Value;
+                dr["ImportedOn"] = now;
+                dr["ImportedBy"] = (object?)uploadedBy ?? DBNull.Value;
+                table.Rows.Add(dr);
             }
 
-            public async Task InitializeAsync(CancellationToken ct)
-            {
-                _employmentTypes = await _db.EmploymentTypeMasters
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(e => e.Name, e => e.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _workModels = await _db.WorkModelMasters
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(w => w.Name, w => w.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _practices = await _db.Practices
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(p => p.Name, p => p.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _locations = await _db.Locations
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(l => l.Name, l => l.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _designations = await _db.DesignationMasters
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(d => d.Name, d => d.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _onboardingTypes = await _db.OnboardingTypeMasters
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(o => o.Name, o => o.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _clients = await _db.Clients
-                    .IgnoreQueryFilters()
-                    .ToDictionaryAsync(c => c.Name, c => c.Id, StringComparer.OrdinalIgnoreCase, ct);
-
-                _defaultStatusId = await _db.StatusMasters
-                    .IgnoreQueryFilters()
-                    .Where(s => s.IsActive)
-                    .Select(s => (Guid?)s.Id)
-                    .FirstOrDefaultAsync(ct);
-
-                _defaultDepartmentTypeId = await _db.DepartmentTypeMasters
-                    .IgnoreQueryFilters()
-                    .Where(d => d.IsActive)
-                    .Select(d => (Guid?)d.Id)
-                    .FirstOrDefaultAsync(ct);
-            }
-
-            public async Task<Guid> GetDefaultDepartmentTypeIdAsync(CancellationToken ct)
-            {
-                if (_defaultDepartmentTypeId.HasValue) return _defaultDepartmentTypeId.Value;
-                var deptType = await _db.DepartmentTypeMasters
-                    .IgnoreQueryFilters()
-                    .FirstAsync(ct);
-                _defaultDepartmentTypeId = deptType.Id;
-                return deptType.Id;
-            }
-
-            public async Task<Guid?> GetOrCreateEmploymentTypeAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-                return await GetOrCreateGuidAsync(name, _employmentTypes!, _db.EmploymentTypeMasters, ct);
-            }
-
-            public async Task<Guid?> GetOrCreateWorkModelAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-                return await GetOrCreateGuidAsync(name, _workModels!, _db.WorkModelMasters, ct);
-            }
-
-            public async Task<Guid?> GetOrCreatePracticeAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-                return await GetOrCreateGuidAsync(name, _practices!, _db.Practices, ct, isPractice: true);
-            }
-
-            public async Task<Guid?> GetOrCreateLocationAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-                return await GetOrCreateGuidAsync(name, _locations!, _db.Locations, ct, isLocation: true);
-            }
-
-            public async Task<Guid?> GetOrCreateDesignationAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-                return await GetOrCreateGuidAsync(name, _designations!, _db.DesignationMasters, ct, isDesignation: true);
-            }
-
-            public async Task<Guid?> GetOrCreateOnboardingTypeAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-                return await GetOrCreateGuidAsync(name, _onboardingTypes!, _db.OnboardingTypeMasters, ct, isOnboarding: true);
-            }
-
-            public async Task<int?> GetOrCreateClientAsync(string? name, CancellationToken ct)
-            {
-                if (string.IsNullOrWhiteSpace(name)) return null;
-
-                if (_clients!.TryGetValue(name, out var id))
-                    return id;
-
-                var existing = await _db.Clients
-                    .IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(c => c.Name == name, ct);
-                if (existing != null)
-                {
-                    _clients[name] = existing.Id;
-                    return existing.Id;
-                }
-
-                var defaultStatusId = await _db.StatusMasters
-                    .IgnoreQueryFilters()
-                    .Where(s => s.IsActive)
-                    .Select(s => s.Id)
-                    .FirstAsync(ct);
-
-                var client = new Client
-                {
-                    Name = name,
-                    StatusId = defaultStatusId,
-                    CreatedOn = DateTime.UtcNow
-                };
-                _db.Clients.Add(client);
-                await _db.SaveChangesAsync(ct);
-                _clients[name] = client.Id;
-                return client.Id;
-            }
-
-            public async Task<Guid> GetDefaultStatusIdAsync(CancellationToken ct)
-            {
-                if (_defaultStatusId.HasValue) return _defaultStatusId.Value;
-                var status = await _db.StatusMasters
-                    .IgnoreQueryFilters()
-                    .FirstAsync(ct);
-                _defaultStatusId = status.Id;
-                return status.Id;
-            }
-
-            private async Task<Guid?> GetOrCreateGuidAsync<T>(
-                string name,
-                Dictionary<string, Guid> cache,
-                DbSet<T> dbSet,
-                CancellationToken ct,
-                bool isPractice = false,
-                bool isLocation = false,
-                bool isDesignation = false,
-                bool isOnboarding = false) where T : class
-            {
-                if (cache.TryGetValue(name, out var id))
-                    return id;
-
-                object? existing = null;
-                if (isPractice)
-                    existing = await dbSet.IgnoreQueryFilters().OfType<Practice>().FirstOrDefaultAsync(p => p.Name == name, ct);
-                else if (isLocation)
-                    existing = await dbSet.IgnoreQueryFilters().OfType<Location>().FirstOrDefaultAsync(l => l.Name == name, ct);
-                else if (isDesignation)
-                    existing = await dbSet.IgnoreQueryFilters().OfType<DesignationMaster>().FirstOrDefaultAsync(d => d.Name == name, ct);
-                else if (isOnboarding)
-                    existing = await dbSet.IgnoreQueryFilters().OfType<OnboardingTypeMaster>().FirstOrDefaultAsync(o => o.Name == name, ct);
-                else
-                    existing = await dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(
-                        e => EF.Property<string>(e, "Name") == name, ct);
-
-                if (existing is BaseMasterEntity masterEntity && masterEntity.Id != Guid.Empty)
-                {
-                    cache[name] = masterEntity.Id;
-                    return masterEntity.Id;
-                }
-                if (existing is Practice p && p.Id != Guid.Empty) { cache[name] = p.Id; return p.Id; }
-                if (existing is Location loc && loc.Id != Guid.Empty) { cache[name] = loc.Id; return loc.Id; }
-
-                var newId = Guid.NewGuid();
-                var newEntity = Activator.CreateInstance<T>()!;
-
-                var idProp = typeof(T).GetProperty("Id");
-                idProp?.SetValue(newEntity, newId);
-
-                var nameProp = typeof(T).GetProperty("Name");
-                nameProp?.SetValue(newEntity, name);
-
-                var isDeletedProp = typeof(T).GetProperty("IsDeleted");
-                isDeletedProp?.SetValue(newEntity, false);
-
-                var isActiveProp = typeof(T).GetProperty("IsActive");
-                isActiveProp?.SetValue(newEntity, true);
-
-                var createdOnProp = typeof(T).GetProperty("CreatedOn");
-                createdOnProp?.SetValue(newEntity, DateTime.UtcNow);
-
-                dbSet.Add(newEntity);
-                await _db.SaveChangesAsync(ct);
-                cache[name] = newId;
-                return newId;
-            }
+            return table;
         }
     }
 }
