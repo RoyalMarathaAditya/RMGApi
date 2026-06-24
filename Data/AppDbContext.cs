@@ -1,6 +1,7 @@
 using HRMS.Api.Configurations;
 using HRMS.Api.Data.Seeds;
 using HRMS.Api.Models;
+using HRMS.Api.Models.RMG;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Api.Data
@@ -15,7 +16,6 @@ namespace HRMS.Api.Data
         public DbSet<EmployeeSkill> EmployeeSkills { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Project> Projects { get; set; }
-        public DbSet<ProjectAllocation> ProjectAllocations { get; set; }
         public DbSet<EmployeeLeave> EmployeeLeaves { get; set; }
         public DbSet<PIP> PIPs { get; set; }
 
@@ -29,12 +29,14 @@ namespace HRMS.Api.Data
         public DbSet<LeaveTypeMaster> LeaveTypeMasters { get; set; }
         public DbSet<PricingTypeMaster> PricingTypeMasters { get; set; }
         public DbSet<ProjectTypeMaster> ProjectTypeMasters { get; set; }
-        public DbSet<AllocationStatusMaster> AllocationStatusMasters { get; set; }
-        public DbSet<EmployeeProjectStatusMaster> EmployeeProjectStatusMasters { get; set; }
         public DbSet<DepartmentTypeMaster> DepartmentTypeMasters { get; set; }
         public DbSet<DesignationMaster> DesignationMasters { get; set; }
         public DbSet<OnboardingTypeMaster> OnboardingTypeMasters { get; set; }
         public DbSet<ImportAudit> ImportAudits { get; set; }
+
+        public DbSet<ResourceAllocation> ResourceAllocations { get; set; }
+        public DbSet<ResourceAllocationHistory> ResourceAllocationHistory { get; set; }
+        public DbSet<ResourceRequest> ResourceRequests { get; set; }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

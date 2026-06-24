@@ -22,63 +22,6 @@ namespace HRMS.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HRMS.Api.Models.AllocationStatusMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("AllocationStatusMasters", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("90000000-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Current"
-                        },
-                        new
-                        {
-                            Id = new Guid("90000000-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "History"
-                        });
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
                 {
                     b.Property<int>("Id")
@@ -693,135 +636,6 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("LeaveTypeId");
 
                     b.ToTable("EmployeeLeaves", (string)null);
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.EmployeeProjectStatusMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("EmployeeProjectStatusMasters", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Billable"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Scoped"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "To Be Scoped"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Utilized"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Onboarding"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Training"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "PIP"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Management"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Long Leave"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000010"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "1$ Utilized"
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000011"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Shadowing"
-                        });
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.EmployeeSkill", b =>
@@ -1562,94 +1376,6 @@ namespace HRMS.Api.Migrations
                     b.ToTable("Projects", (string)null);
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.ProjectAllocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("AllocationEndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("AllocationPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime>("AllocationStartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("AllocationStatusId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("BillablePercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("EmployeeProjectStatusId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsBillable")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsUtilized")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("NextAssignmentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ProbableBillableDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AllocationStatusId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("EmployeeProjectStatusId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("EmployeeId", "ProjectId", "AllocationStatusId");
-
-                    b.ToTable("ProjectAllocations", (string)null);
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.ProjectTypeMaster", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1713,6 +1439,209 @@ namespace HRMS.Api.Migrations
                             IsDeleted = false,
                             Name = "Internal"
                         });
+                });
+
+            modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceAllocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AllocationPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("AllocationStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("EmployeeId", "ProjectId", "AllocationStatus");
+
+                    b.ToTable("ResourceAllocations", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceAllocationHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("NewAllocationPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("NewAllocationStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("NewProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("OldAllocationPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("OldAllocationStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("OldProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ResourceAllocationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ResourceAllocationId");
+
+                    b.ToTable("ResourceAllocationHistory", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("PracticeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Priority")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequestedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RequiredByDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RequiredCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequiredSkillIds")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PracticeId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("RequestedById");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("ResourceRequests", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.RefreshToken", b =>
@@ -2378,39 +2307,49 @@ namespace HRMS.Api.Migrations
                     b.Navigation("ProjectType");
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.ProjectAllocation", b =>
+            modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceAllocation", b =>
                 {
-                    b.HasOne("HRMS.Api.Models.AllocationStatusMaster", "AllocationStatus")
-                        .WithMany()
-                        .HasForeignKey("AllocationStatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("HRMS.Api.Models.Employee", "Employee")
-                        .WithMany("ProjectAllocations")
+                        .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HRMS.Api.Models.EmployeeProjectStatusMaster", "EmployeeProjectStatus")
-                        .WithMany()
-                        .HasForeignKey("EmployeeProjectStatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("HRMS.Api.Models.Project", "Project")
-                        .WithMany("ProjectAllocations")
+                        .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AllocationStatus");
-
                     b.Navigation("Employee");
 
-                    b.Navigation("EmployeeProjectStatus");
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceRequest", b =>
+                {
+                    b.HasOne("HRMS.Api.Models.Practice", "Practice")
+                        .WithMany()
+                        .HasForeignKey("PracticeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HRMS.Api.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Api.Models.Employee", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Practice");
 
                     b.Navigation("Project");
+
+                    b.Navigation("RequestedBy");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.RefreshToken", b =>
@@ -2444,8 +2383,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("PIPs");
 
                     b.Navigation("PracticeHeadEmployees");
-
-                    b.Navigation("ProjectAllocations");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.Location", b =>
@@ -2458,11 +2395,6 @@ namespace HRMS.Api.Migrations
             modelBuilder.Entity("HRMS.Api.Models.Practice", b =>
                 {
                     b.Navigation("Employees");
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.Project", b =>
-                {
-                    b.Navigation("ProjectAllocations");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.Skill", b =>

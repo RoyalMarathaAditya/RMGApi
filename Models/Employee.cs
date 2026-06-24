@@ -87,6 +87,5 @@ namespace HRMS.Api.Models
         public ICollection<Project> CSMProjects { get; set; } = new List<Project>();
         public ICollection<EmployeeLeave> EmployeeLeaves { get; set; } = new List<EmployeeLeave>();
         public ICollection<PIP> PIPs { get; set; } = new List<PIP>();
-        public ICollection<ProjectAllocation> ProjectAllocations { get; set; } = new List<ProjectAllocation>();
     }
 }

@@ -1,5 +1,5 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import BusinessCenterOutlinedIcon from '@mui/icons-material/BusinessCenterOutlined';
+
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {
@@ -95,17 +95,16 @@ export default function Login() {
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack alignItems="center" spacing={2.5}>
             <Box
-              alignItems="center"
-              bgcolor="primary.main"
-              borderRadius={2}
-              color="primary.contrastText"
-              display="flex"
-              height={64}
-              justifyContent="center"
-              width={64}
-            >
-              <BusinessCenterOutlinedIcon fontSize="large" />
-            </Box>
+              component="img"
+              src="/logo.png"
+              alt="HRMS Logo"
+              sx={{
+                height: 140,
+                width: 140,
+                objectFit: 'contain',
+                borderRadius: 2,
+              }}
+            />
             <Box textAlign="center">
               <Typography component="h1" fontWeight={800} variant="h4">
                 HRMS Login

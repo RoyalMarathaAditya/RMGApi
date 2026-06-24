@@ -16,8 +16,6 @@ namespace HRMS.Api.Data.Seeds
             LeaveTypeMasterSeed.Seed(modelBuilder);
             PricingTypeMasterSeed.Seed(modelBuilder);
             ProjectTypeMasterSeed.Seed(modelBuilder);
-            AllocationStatusMasterSeed.Seed(modelBuilder);
-            EmployeeProjectStatusMasterSeed.Seed(modelBuilder);
             DepartmentTypeMasterSeed.Seed(modelBuilder);
             DesignationMasterSeed.Seed(modelBuilder);
         }

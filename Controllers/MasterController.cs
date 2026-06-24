@@ -31,15 +31,13 @@ namespace HRMS.Api.Controllers
                 "leavetypes" => _db.LeaveTypeMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 "pricingtypes" => _db.PricingTypeMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 "projecttypes" => _db.ProjectTypeMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
-                "allocationstatuses" => _db.AllocationStatusMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
-                "employeeprojectstatuses" => _db.EmployeeProjectStatusMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 "departmenttypes" => _db.DepartmentTypeMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 "designations" => _db.DesignationMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 _ => null
             };
 
             if (query is null)
-                return NotFound(new { message = $"Master type '{type}' not found. Valid types: roles, employmenttypes, statuses, workmodels, locations, practices, skills, leavetypes, pricingtypes, projecttypes, allocationstatuses, employeeprojectstatuses, departmenttypes, designations" });
+                return NotFound(new { message = $"Master type '{type}' not found. Valid types: roles, employmenttypes, statuses, workmodels, locations, practices, skills, leavetypes, pricingtypes, projecttypes, departmenttypes, designations" });
 
             var data = await query.OrderBy(x => x.Name).ToListAsync(cancellationToken);
             return Ok(data);

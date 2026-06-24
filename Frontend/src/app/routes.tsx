@@ -17,12 +17,16 @@ import SkillEdit from '../features/skills/pages/SkillEdit';
 import DesignationList from '../features/designations/pages/DesignationList';
 import SkillList from '../features/skills/pages/SkillList';
 import SkillMatrix from '../features/skills/pages/SkillMatrix';
-import AllocationDashboard from '../features/allocations/pages/AllocationDashboard';
-import AllocationList from '../features/allocations/pages/AllocationList';
-import BenchResources from '../features/allocations/pages/BenchResources';
-import BillableResources from '../features/allocations/pages/BillableResources';
-import ResourceUtilization from '../features/allocations/pages/ResourceUtilization';
-import EmployeeAllocationStatus from '../features/allocations/pages/EmployeeAllocationStatus';
+import ResourceAllocationDashboard from '../features/rmg/pages/ResourceAllocationDashboard';
+import ResourceAllocationList from '../features/rmg/pages/ResourceAllocationList';
+import ResourceAllocationDetail from '../features/rmg/pages/ResourceAllocationDetail';
+import CreateAllocation from '../features/rmg/pages/CreateAllocation';
+import ResourceFinder from '../features/rmg/pages/ResourceFinder';
+import PracticeUtilization from '../features/rmg/pages/PracticeUtilization';
+import ResourceRequestPage from '../features/rmg/pages/ResourceRequestPage';
+import AllocationHistory from '../features/rmg/pages/AllocationHistory';
+import CalendarViewPage from '../features/rmg/pages/CalendarViewPage';
+import TimelineViewPage from '../features/rmg/pages/TimelineViewPage';
 import Login from '../pages/auth/Login';
 import Dashboard from '../pages/dashboard/Dashboard';
 import Home from '../pages/home/Home';
@@ -30,7 +34,7 @@ import Home from '../pages/home/Home';
 const modulePages = {
   employees: 'Employee Management',
   skills: 'Skills Management',
-  allocations: 'Resource Allocation',
+  rmg: 'Resource Allocation',
   reports: 'Reports',
   settings: 'Settings',
 } as const;
@@ -59,12 +63,6 @@ export function AppRoutes() {
           <Route path="/projects/dashboard" element={<ProjectDashboard />} />
           <Route path="/projects/edit/:id" element={<ProjectEdit />} />
           <Route path="/projects/:id" element={<Project />} />
-          <Route path="/allocations" element={<AllocationDashboard />} />
-          <Route path="/allocations/list" element={<AllocationList />} />
-          <Route path="/allocations/status" element={<EmployeeAllocationStatus />} />
-          <Route path="/allocations/bench" element={<BenchResources />} />
-          <Route path="/allocations/billable" element={<BillableResources />} />
-          <Route path="/allocations/utilization" element={<ResourceUtilization />} />
           <Route path="/designations" element={<DesignationList />} />
           <Route path="/skills" element={<SkillList />} />
           <Route path="/skills/create" element={<SkillCreate />} />
@@ -74,6 +72,16 @@ export function AppRoutes() {
           <Route path="/skills/matrix" element={<SkillMatrix />} />
           <Route path="/skills/resources" element={<ResourceSearchBySkill />} />
           <Route path="/skills/:id" element={<SkillDetails />} />
+          <Route path="/rmg" element={<ResourceAllocationDashboard />} />
+          <Route path="/rmg/list" element={<ResourceAllocationList />} />
+          <Route path="/rmg/create" element={<CreateAllocation />} />
+          <Route path="/rmg/edit/:id" element={<ResourceAllocationDetail />} />
+          <Route path="/rmg/finder" element={<ResourceFinder />} />
+          <Route path="/rmg/practice-utilization" element={<PracticeUtilization />} />
+          <Route path="/rmg/requests" element={<ResourceRequestPage />} />
+          <Route path="/rmg/history/:allocationId" element={<AllocationHistory />} />
+          <Route path="/rmg/calendar" element={<CalendarViewPage />} />
+          <Route path="/rmg/timeline" element={<TimelineViewPage />} />
           <Route path="/reports" element={<ModulePlaceholder title={modulePages.reports} />} />
           <Route path="/settings" element={<ModulePlaceholder title={modulePages.settings} />} />
         </Route>

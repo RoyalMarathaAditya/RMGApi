@@ -57,7 +57,13 @@ export default function Header({ drawerWidth, isSidebarCollapsed, onSidebarToggl
         <IconButton aria-label="Toggle navigation" edge="start" onClick={onSidebarToggle} sx={{ mr: 2 }}>
           <MenuIcon />
         </IconButton>
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="HRMS Logo"
+            sx={{ height: 56, width: 56, objectFit: 'contain' }}
+          />
           <Typography color="primary" fontWeight={800} noWrap variant="h6">
             HRMS Resource Management
           </Typography>

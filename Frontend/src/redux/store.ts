@@ -4,7 +4,6 @@ import employeeReducer from './slices/employeeSlice';
 import projectReducer from './slices/projectSlice';
 import skillReducer from './slices/skillSlice';
 import designationReducer from './slices/designationSlice';
-import allocationReducer from './slices/allocationSlice';
 
 // Redux store configuration combining all feature slices
 export const store = configureStore({
@@ -14,7 +13,6 @@ export const store = configureStore({
     projects: projectReducer,
     skills: skillReducer,
     designations: designationReducer,
-    allocations: allocationReducer,
   },
 });
 
