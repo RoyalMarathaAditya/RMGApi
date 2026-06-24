@@ -6,6 +6,7 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public int TotalRows { get; set; }
         public int SuccessRows { get; set; }
         public int FailedRows { get; set; }
+        public int DeletedRows { get; set; }
         public List<EmployeeImportErrorDto> Errors { get; set; } = new();
         public string? ErrorFileUrl { get; set; }
     }
