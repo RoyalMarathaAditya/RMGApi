@@ -70,5 +70,14 @@ namespace HRMS.Api.Repositories.RMG
             allocation.IsDeleted = true;
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<List<ResourceAllocation>> GetActiveByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.ResourceAllocations
+                .AsNoTracking()
+                .Include(ra => ra.Project)
+                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released")
+                .ToListAsync(cancellationToken);
+        }
     }
 }

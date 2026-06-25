@@ -112,8 +112,9 @@ namespace HRMS.Api.Services.RMG
                     .Where(ra => ra.EmployeeId == emp.Id && !ra.IsDeleted && ra.AllocationStatus == "Active")
                     .ToListAsync(cancellationToken);
 
+                var projectNames = activeAllocations.Select(ra => ra.Project?.ProjectName ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
                 var totalAllocated = activeAllocations.Sum(ra => ra.AllocationPercentage);
-                var currentProject = activeAllocations.FirstOrDefault()?.Project?.ProjectName;
+                var currentProject = projectNames.Count > 1 ? $"{projectNames[0]} (+{projectNames.Count - 1})" : projectNames.FirstOrDefault();
                 var allocationStatus = activeAllocations.FirstOrDefault()?.AllocationStatus;
 
                 var onLeave = emp.EmployeeLeaves?.Any(el => el.FromDate <= DateTime.UtcNow && el.ToDate >= DateTime.UtcNow) ?? false;
@@ -141,6 +142,7 @@ namespace HRMS.Api.Services.RMG
                     PracticeHead = emp.Practice?.PracticeHead?.FullName,
                     Skills = emp.EmployeeSkills != null ? string.Join(", ", emp.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name)) : null,
                     CurrentProject = currentProject,
+                    Projects = projectNames,
                     AllocationPercentage = totalAllocated,
                     AvailableCapacity = Math.Max(0, 100 - totalAllocated),
                     ResourceStatus = resourceStatus,
@@ -218,7 +220,8 @@ namespace HRMS.Api.Services.RMG
                     .ToListAsync(cancellationToken);
 
                 var totalAllocated = activeAllocations.Sum(ra => ra.AllocationPercentage);
-                var currentProject = activeAllocations.FirstOrDefault()?.Project?.ProjectName;
+                var projectNames = activeAllocations.Select(ra => ra.Project?.ProjectName ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
+                var currentProject = projectNames.Count > 1 ? $"{projectNames[0]} (+{projectNames.Count - 1})" : projectNames.FirstOrDefault();
                 var nextRelease = activeAllocations
                     .Where(ra => ra.EndDate.HasValue)
                     .OrderBy(ra => ra.EndDate)

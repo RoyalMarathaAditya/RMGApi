@@ -20,6 +20,7 @@ export interface DashboardGridDto {
   practiceHead: string | null;
   skills: string | null;
   currentProject: string | null;
+  projects: string[];
   allocationPercentage: number;
   availableCapacity: number;
   resourceStatus: string;

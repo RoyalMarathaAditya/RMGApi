@@ -89,5 +89,72 @@ namespace HRMS.Api.Controllers
             var result = await _service.GetTimelineDataAsync(cancellationToken);
             return Ok(result);
         }
+
+        [HttpGet("employee/{employeeId}")]
+        public async Task<IActionResult> GetEmployeeAllocations(int employeeId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _service.GetEmployeeAllocationsAsync(employeeId, cancellationToken);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("project")]
+        public async Task<IActionResult> AddProjectAllocation(AddProjectAllocationDto dto, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userName = User.Identity?.Name ?? "system";
+                var result = await _service.AddProjectAllocationAsync(dto, userName, cancellationToken);
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("project/{allocationId}")]
+        public async Task<IActionResult> UpdateProjectAllocation(int allocationId, UpdateProjectAllocationDto dto, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userName = User.Identity?.Name ?? "system";
+                var result = await _service.UpdateProjectAllocationAsync(allocationId, dto, userName, cancellationToken);
+                if (result is null) return NotFound();
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("project/{allocationId}")]
+        public async Task<IActionResult> DeleteProjectAllocation(int allocationId, CancellationToken cancellationToken)
+        {
+            var result = await _service.DeleteProjectAllocationAsync(allocationId, cancellationToken);
+            if (!result) return NotFound();
+            return NoContent();
+        }
+
+        [HttpGet("employee/{employeeId}/capacity-summary")]
+        public async Task<IActionResult> GetEmployeeCapacitySummary(int employeeId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _service.GetEmployeeCapacitySummaryAsync(employeeId, cancellationToken);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }
