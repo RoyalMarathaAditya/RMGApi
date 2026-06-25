@@ -24,6 +24,7 @@ namespace HRMS.Api.DTOs.RmgDashboardDtos
         public string? PracticeHead { get; set; }
         public string? Skills { get; set; }
         public string? CurrentProject { get; set; }
+        public List<string> Projects { get; set; } = new();
         public decimal AllocationPercentage { get; set; }
         public decimal AvailableCapacity { get; set; }
         public string ResourceStatus { get; set; } = string.Empty;

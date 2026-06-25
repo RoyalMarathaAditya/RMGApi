@@ -12,6 +12,12 @@ namespace HRMS.Api.Services.Interfaces.RMG
         Task<IEnumerable<AllocationHistoryDto>> GetHistoryAsync(int allocationId, CancellationToken cancellationToken = default);
         Task<IEnumerable<CalendarViewDto>> GetCalendarDataAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<TimelineViewDto>> GetTimelineDataAsync(CancellationToken cancellationToken = default);
+
+        Task<EmployeeAllocationDto> GetEmployeeAllocationsAsync(int employeeId, CancellationToken cancellationToken = default);
+        Task<ProjectAllocationDto> AddProjectAllocationAsync(AddProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default);
+        Task<ProjectAllocationDto?> UpdateProjectAllocationAsync(int allocationId, UpdateProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default);
+        Task<bool> DeleteProjectAllocationAsync(int allocationId, CancellationToken cancellationToken = default);
+        Task<EmployeeCapacitySummaryDto> GetEmployeeCapacitySummaryAsync(int employeeId, CancellationToken cancellationToken = default);
     }
 
     public class AllocationHistoryDto

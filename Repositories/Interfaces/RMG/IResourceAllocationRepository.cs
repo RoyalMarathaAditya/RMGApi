@@ -11,5 +11,6 @@ namespace HRMS.Api.Repositories.Interfaces.RMG
         Task<ResourceAllocation> CreateAsync(ResourceAllocation allocation, CancellationToken cancellationToken = default);
         Task<ResourceAllocation> UpdateAsync(ResourceAllocation allocation, CancellationToken cancellationToken = default);
         Task DeleteAsync(int id, CancellationToken cancellationToken = default);
+        Task<List<ResourceAllocation>> GetActiveByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default);
     }
 }

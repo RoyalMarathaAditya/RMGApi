@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
-  Grid,
   IconButton,
   InputAdornment,
   MenuItem,
@@ -25,10 +23,7 @@ import {
 } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
@@ -37,7 +32,7 @@ import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlin
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
-import type { DashboardSummaryDto, DashboardGridDto, DashboardFilterDto } from '../types/dashboard';
+import type { DashboardSummaryDto, DashboardGridDto } from '../types/dashboard';
 import { dashboardService } from '../services/dashboardService';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
@@ -195,9 +190,6 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="Overallocated">Overallocated</MenuItem>
                 <MenuItem value="On Leave">On Leave</MenuItem>
               </Select>
-              <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={() => navigate('/rmg/create')}>
-                Allocate
-              </Button>
               <IconButton onClick={loadData}><RefreshOutlinedIcon /></IconButton>
             </Stack>
           </Stack>
@@ -224,7 +216,7 @@ export default function ResourceAllocationDashboard() {
                     key={row.employeeId}
                     hover
                     sx={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/rmg/allocations/${row.employeeId}`)}
+                    onClick={() => navigate(`/rmg/edit/${row.employeeId}`)}
                   >
                     <TableCell>
                       <Typography fontWeight={600} variant="body2">{row.employeeName}</Typography>
@@ -237,7 +229,25 @@ export default function ResourceAllocationDashboard() {
                         {row.skills ?? '-'}
                       </Typography>
                     </TableCell>
-                    <TableCell>{row.currentProject ?? '-'}</TableCell>
+                    <TableCell>
+                      {row.currentProject && row.projects && row.projects.length > 1 ? (
+                        <Tooltip
+                          title={
+                            <Stack spacing={0.5}>
+                              {row.projects.map((p, i) => (
+                                <Typography key={i} variant="body2">{p}</Typography>
+                              ))}
+                            </Stack>
+                          }
+                        >
+                          <Typography variant="body2" sx={{ textDecoration: 'underline dotted', cursor: 'help' }}>
+                            {row.currentProject}
+                          </Typography>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="body2">{row.currentProject ?? '-'}</Typography>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Typography fontWeight={600} color={row.allocationPercentage > 100 ? 'error.main' : row.allocationPercentage >= 100 ? 'warning.main' : 'text.primary'}>
                         {row.allocationPercentage}%
@@ -249,14 +259,9 @@ export default function ResourceAllocationDashboard() {
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
-                        <Tooltip title="Edit Allocation">
+                        <Tooltip title="Edit Allocations">
                           <IconButton size="small" onClick={() => navigate(`/rmg/edit/${row.employeeId}`)}>
                             <EditOutlinedIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="View History">
-                          <IconButton size="small" onClick={() => navigate(`/rmg/history/${row.employeeId}`)}>
-                            <HistoryOutlinedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                       </Stack>

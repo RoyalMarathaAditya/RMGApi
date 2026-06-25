@@ -62,6 +62,8 @@ namespace HRMS.Api.Services.RMG
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
                 AllocationStatus = dto.AllocationStatus ?? "Planned",
+                AllocationType = dto.AllocationType,
+                BillableStatus = dto.BillableStatus,
                 Notes = dto.Notes,
                 CreatedBy = userName
             };
@@ -85,6 +87,8 @@ namespace HRMS.Api.Services.RMG
             if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
             if (!string.IsNullOrEmpty(dto.AllocationStatus)) allocation.AllocationStatus = dto.AllocationStatus;
+            if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
+            if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.Notes is not null) allocation.Notes = dto.Notes;
             allocation.ModifiedBy = userName;
             allocation.ModifiedOn = DateTime.UtcNow;
@@ -155,6 +159,134 @@ namespace HRMS.Api.Services.RMG
             }
 
             return result;
+        }
+
+        public async Task<EmployeeAllocationDto> GetEmployeeAllocationsAsync(int employeeId, CancellationToken cancellationToken = default)
+        {
+            var employee = await _dbContext.Employees
+                .AsNoTracking()
+                .Include(e => e.Designation)
+                .Include(e => e.Practice)
+                .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill)
+                .FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken)
+                ?? throw new InvalidOperationException("Employee not found.");
+
+            var activeAllocations = await _repository.GetActiveByEmployeeIdAsync(employeeId, cancellationToken);
+            var totalAllocated = activeAllocations.Sum(a => a.AllocationPercentage);
+            var available = 100 - totalAllocated;
+
+            var resourceStatus = totalAllocated >= 100 ? "Fully Allocated"
+                : totalAllocated > 0 ? "Partially Allocated"
+                : "Available";
+
+            if (totalAllocated > 100) resourceStatus = "Overallocated";
+
+            return new EmployeeAllocationDto
+            {
+                EmployeeId = employee.Id,
+                EmployeeName = employee.FullName,
+                EmployeeCode = employee.EmployeeCode,
+                Designation = employee.Designation?.Name,
+                Practice = employee.Practice?.Name ?? "",
+                Skills = employee.EmployeeSkills != null
+                    ? string.Join(", ", employee.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name))
+                    : null,
+                CurrentUtilization = totalAllocated,
+                AvailableCapacity = Math.Max(0, available),
+                ResourceStatus = resourceStatus,
+                Allocations = activeAllocations.Select(a => new ProjectAllocationDto
+                {
+                    Id = a.Id,
+                    ProjectId = a.ProjectId,
+                    ProjectName = a.Project?.ProjectName ?? "",
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate,
+                    AllocationPercentage = a.AllocationPercentage,
+                    BillableStatus = a.BillableStatus,
+                    AllocationType = a.AllocationType,
+                    AllocationStatus = a.AllocationStatus
+                }).ToList()
+            };
+        }
+
+        public async Task<ProjectAllocationDto> AddProjectAllocationAsync(AddProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default)
+        {
+            var employee = await _dbContext.Employees
+                .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId, cancellationToken)
+                ?? throw new InvalidOperationException("Employee not found.");
+
+            var totalAllocated = await GetTotalAllocatedAsync(dto.EmployeeId, null, cancellationToken);
+            if (totalAllocated + dto.AllocationPercentage > 100)
+                throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation: {totalAllocated}%.");
+
+            var allocation = new ResourceAllocation
+            {
+                EmployeeId = dto.EmployeeId,
+                ProjectId = dto.ProjectId,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                AllocationPercentage = dto.AllocationPercentage,
+                AllocationStatus = dto.AllocationStatus ?? "Active",
+                AllocationType = dto.AllocationType,
+                BillableStatus = dto.BillableStatus,
+                CreatedBy = userName
+            };
+
+            var created = await _repository.CreateAsync(allocation, cancellationToken);
+            await SaveHistoryAsync(created, "Created", userName, null, cancellationToken);
+            return await ToProjectAllocationDtoAsync(created, cancellationToken);
+        }
+
+        public async Task<ProjectAllocationDto?> UpdateProjectAllocationAsync(int allocationId, UpdateProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default)
+        {
+            var allocation = await _repository.GetByIdAsync(allocationId, cancellationToken);
+            if (allocation is null) return null;
+
+            var oldPercentage = allocation.AllocationPercentage;
+
+            if (dto.ProjectId.HasValue) allocation.ProjectId = dto.ProjectId.Value;
+            if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
+            if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
+            if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
+            if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
+            if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
+            if (!string.IsNullOrEmpty(dto.AllocationStatus)) allocation.AllocationStatus = dto.AllocationStatus;
+            allocation.ModifiedBy = userName;
+            allocation.ModifiedOn = DateTime.UtcNow;
+
+            var totalAllocated = await GetTotalAllocatedAsync(allocation.EmployeeId, allocationId, cancellationToken);
+            if (totalAllocated + allocation.AllocationPercentage > 100)
+                throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation excluding this: {totalAllocated}%.");
+
+            var updated = await _repository.UpdateAsync(allocation, cancellationToken);
+            await SaveHistoryAsync(updated, "Updated", userName, null, cancellationToken);
+            return await ToProjectAllocationDtoAsync(updated, cancellationToken);
+        }
+
+        public async Task<bool> DeleteProjectAllocationAsync(int allocationId, CancellationToken cancellationToken = default)
+        {
+            return await DeleteAsync(allocationId, cancellationToken);
+        }
+
+        public async Task<EmployeeCapacitySummaryDto> GetEmployeeCapacitySummaryAsync(int employeeId, CancellationToken cancellationToken = default)
+        {
+            var activeAllocations = await _repository.GetActiveByEmployeeIdAsync(employeeId, cancellationToken);
+            var totalAllocated = activeAllocations.Sum(a => a.AllocationPercentage);
+            var available = 100 - totalAllocated;
+
+            var resourceStatus = totalAllocated >= 100 ? "Fully Allocated"
+                : totalAllocated > 0 ? "Partially Allocated"
+                : "Available";
+
+            if (totalAllocated > 100) resourceStatus = "Overallocated";
+
+            return new EmployeeCapacitySummaryDto
+            {
+                TotalCapacity = 100,
+                AllocatedCapacity = totalAllocated,
+                AvailableCapacity = Math.Max(0, available),
+                ResourceStatus = resourceStatus
+            };
         }
 
         public async Task<IEnumerable<CalendarViewDto>> GetCalendarDataAsync(CancellationToken cancellationToken = default)
@@ -279,10 +411,29 @@ namespace HRMS.Api.Services.RMG
                 EndDate = allocation.EndDate,
                 AllocationPercentage = allocation.AllocationPercentage,
                 AllocationStatus = allocation.AllocationStatus,
+                AllocationType = allocation.AllocationType,
+                BillableStatus = allocation.BillableStatus,
                 Notes = allocation.Notes,
                 TotalAllocated = myAllocation,
                 AvailableCapacity = Math.Max(0, available),
                 ResourceStatus = resourceStatus
+            };
+        }
+
+        private async Task<ProjectAllocationDto> ToProjectAllocationDtoAsync(ResourceAllocation allocation, CancellationToken cancellationToken = default)
+        {
+            var project = allocation.Project ?? await _dbContext.Projects.FindAsync(new object[] { allocation.ProjectId }, cancellationToken);
+            return new ProjectAllocationDto
+            {
+                Id = allocation.Id,
+                ProjectId = allocation.ProjectId,
+                ProjectName = project?.ProjectName ?? "",
+                StartDate = allocation.StartDate,
+                EndDate = allocation.EndDate,
+                AllocationPercentage = allocation.AllocationPercentage,
+                BillableStatus = allocation.BillableStatus,
+                AllocationType = allocation.AllocationType,
+                AllocationStatus = allocation.AllocationStatus
             };
         }
     }

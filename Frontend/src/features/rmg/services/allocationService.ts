@@ -6,6 +6,11 @@ import type {
   AllocationHistoryDto,
   CalendarViewDto,
   TimelineViewDto,
+  EmployeeAllocationDto,
+  AddProjectAllocationDto,
+  UpdateProjectAllocationDto,
+  ProjectAllocationDto,
+  EmployeeCapacitySummaryDto,
 } from '../types/allocation';
 
 function unwrap<T>(response: { data: T }): T {
@@ -49,6 +54,30 @@ export const allocationService = {
 
   async getTimelineData(): Promise<TimelineViewDto[]> {
     const response = await api.get<TimelineViewDto[]>('/resource-allocations/timeline');
+    return unwrap(response);
+  },
+
+  async getEmployeeAllocations(employeeId: number): Promise<EmployeeAllocationDto> {
+    const response = await api.get<EmployeeAllocationDto>(`/resource-allocations/employee/${employeeId}`);
+    return unwrap(response);
+  },
+
+  async addProjectAllocation(values: AddProjectAllocationDto): Promise<ProjectAllocationDto> {
+    const response = await api.post<ProjectAllocationDto>('/resource-allocations/project', values);
+    return unwrap(response);
+  },
+
+  async updateProjectAllocation(allocationId: number, values: UpdateProjectAllocationDto): Promise<ProjectAllocationDto> {
+    const response = await api.put<ProjectAllocationDto>(`/resource-allocations/project/${allocationId}`, values);
+    return unwrap(response);
+  },
+
+  async deleteProjectAllocation(allocationId: number): Promise<void> {
+    await api.delete(`/resource-allocations/project/${allocationId}`);
+  },
+
+  async getEmployeeCapacitySummary(employeeId: number): Promise<EmployeeCapacitySummaryDto> {
+    const response = await api.get<EmployeeCapacitySummaryDto>(`/resource-allocations/employee/${employeeId}/capacity-summary`);
     return unwrap(response);
   },
 };

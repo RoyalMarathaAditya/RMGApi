@@ -18,9 +18,7 @@ import DesignationList from '../features/designations/pages/DesignationList';
 import SkillList from '../features/skills/pages/SkillList';
 import SkillMatrix from '../features/skills/pages/SkillMatrix';
 import ResourceAllocationDashboard from '../features/rmg/pages/ResourceAllocationDashboard';
-import ResourceAllocationList from '../features/rmg/pages/ResourceAllocationList';
 import ResourceAllocationDetail from '../features/rmg/pages/ResourceAllocationDetail';
-import CreateAllocation from '../features/rmg/pages/CreateAllocation';
 import ResourceFinder from '../features/rmg/pages/ResourceFinder';
 import PracticeUtilization from '../features/rmg/pages/PracticeUtilization';
 import ResourceRequestPage from '../features/rmg/pages/ResourceRequestPage';
@@ -73,8 +71,6 @@ export function AppRoutes() {
           <Route path="/skills/resources" element={<ResourceSearchBySkill />} />
           <Route path="/skills/:id" element={<SkillDetails />} />
           <Route path="/rmg" element={<ResourceAllocationDashboard />} />
-          <Route path="/rmg/list" element={<ResourceAllocationList />} />
-          <Route path="/rmg/create" element={<CreateAllocation />} />
           <Route path="/rmg/edit/:id" element={<ResourceAllocationDetail />} />
           <Route path="/rmg/finder" element={<ResourceFinder />} />
           <Route path="/rmg/practice-utilization" element={<PracticeUtilization />} />
