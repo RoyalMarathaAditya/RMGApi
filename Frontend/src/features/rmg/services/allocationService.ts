@@ -11,6 +11,7 @@ import type {
   UpdateProjectAllocationDto,
   ProjectAllocationDto,
   EmployeeCapacitySummaryDto,
+  EmployeeResourceDetailsDto,
 } from '../types/allocation';
 
 function unwrap<T>(response: { data: T }): T {
@@ -78,6 +79,11 @@ export const allocationService = {
 
   async getEmployeeCapacitySummary(employeeId: number): Promise<EmployeeCapacitySummaryDto> {
     const response = await api.get<EmployeeCapacitySummaryDto>(`/resource-allocations/employee/${employeeId}/capacity-summary`);
+    return unwrap(response);
+  },
+
+  async getEmployeeDetails(employeeId: number): Promise<EmployeeResourceDetailsDto> {
+    const response = await api.get<EmployeeResourceDetailsDto>(`/resourceallocation/employee-details/${employeeId}`);
     return unwrap(response);
   },
 };

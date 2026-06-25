@@ -175,6 +175,51 @@ export interface PracticeUtilizationDto {
   utilizationPercentage: number;
 }
 
+export interface EmployeeResourceDetailsDto {
+  employeeId: number;
+  employeeCode: string;
+  employeeName: string;
+  email: string;
+  role: string | null;
+  practice: string | null;
+  subPractice: string | null;
+  primarySkill: string | null;
+  skill: string | null;
+  active: boolean | null;
+  location: string | null;
+  l1Manager: string | null;
+  practiceHead: string | null;
+  doj: string | null;
+
+  priorExperience: number;
+  nvExperience: number;
+  totalExperience: number;
+  experienceRange: string;
+
+  fteConsultant: string | null;
+  utilised: string | null;
+  billable: string | null;
+  status: string | null;
+
+  projectAllocations: ProjectAllocationDetailDto[];
+}
+
+export interface ProjectAllocationDetailDto {
+  projectCode: number | null;
+  client: string | null;
+  project: string | null;
+  projectType: string | null;
+  projectStatus: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  allocationPercentage: number | null;
+  billablePercentage: number | null;
+  engineering: string | null;
+  durationInProject: string | null;
+  ageing: string | null;
+  remarks: string | null;
+}
+
 export const ALLOCATION_STATUSES = ['Planned', 'Active', 'Completed', 'Released', 'Cancelled'] as const;
 export const RESOURCE_STATUSES = ['Available', 'Partially Allocated', 'Fully Allocated', 'Overallocated', 'Bench', 'On Leave'] as const;
 export const REQUEST_STATUSES = ['Draft', 'Submitted', 'Reviewing', 'Approved', 'Rejected', 'Fulfilled'] as const;

@@ -156,5 +156,19 @@ namespace HRMS.Api.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        [HttpGet("~/api/resourceallocation/employee-details/{employeeId}")]
+        public async Task<IActionResult> GetEmployeeDetails(int employeeId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _service.GetEmployeeDetailsAsync(employeeId, cancellationToken);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }
