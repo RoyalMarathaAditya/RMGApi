@@ -54,6 +54,8 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public int Id { get; set; }
         public int ProjectId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
+        public int? ClientId { get; set; }
+        public string? ClientName { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
@@ -66,6 +68,7 @@ namespace HRMS.Api.DTOs.AllocationDtos
     {
         public int EmployeeId { get; set; }
         public int ProjectId { get; set; }
+        public int? ClientId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
@@ -77,6 +80,7 @@ namespace HRMS.Api.DTOs.AllocationDtos
     public class UpdateProjectAllocationDto
     {
         public int? ProjectId { get; set; }
+        public int? ClientId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal? AllocationPercentage { get; set; }
@@ -93,6 +97,8 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? Designation { get; set; }
         public string Practice { get; set; } = string.Empty;
         public string? Skills { get; set; }
+        public string? PrimarySkill { get; set; }
+        public decimal? TotalExperience { get; set; }
         public decimal CurrentUtilization { get; set; }
         public decimal AvailableCapacity { get; set; }
         public string ResourceStatus { get; set; } = string.Empty;

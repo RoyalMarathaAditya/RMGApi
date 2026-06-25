@@ -48,6 +48,8 @@ export interface ProjectAllocationDto {
   id: number;
   projectId: number;
   projectName: string;
+  clientId: number | null;
+  clientName: string | null;
   startDate: string;
   endDate: string | null;
   allocationPercentage: number;
@@ -59,6 +61,7 @@ export interface ProjectAllocationDto {
 export interface AddProjectAllocationDto {
   employeeId: number;
   projectId: number;
+  clientId?: number | null;
   startDate: string;
   endDate: string | null;
   allocationPercentage: number;
@@ -69,6 +72,7 @@ export interface AddProjectAllocationDto {
 
 export interface UpdateProjectAllocationDto {
   projectId?: number;
+  clientId?: number | null;
   startDate?: string;
   endDate?: string | null;
   allocationPercentage?: number;
@@ -84,6 +88,8 @@ export interface EmployeeAllocationDto {
   designation: string | null;
   practice: string;
   skills: string | null;
+  primarySkill: string | null;
+  totalExperience: number | null;
   currentUtilization: number;
   availableCapacity: number;
   resourceStatus: string;

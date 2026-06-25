@@ -1,6 +1,7 @@
 using AutoMapper;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.AllocationDtos;
+using HRMS.Api.Models;
 using HRMS.Api.Models.RMG;
 using HRMS.Api.Repositories.Interfaces.RMG;
 using HRMS.Api.Services.Interfaces.RMG;
@@ -191,6 +192,8 @@ namespace HRMS.Api.Services.RMG
                 Skills = employee.EmployeeSkills != null
                     ? string.Join(", ", employee.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name))
                     : null,
+                PrimarySkill = employee.EmployeeSkills?.FirstOrDefault(es => es.Skill != null)?.Skill?.Name,
+                TotalExperience = employee.ExperienceYears ?? CalculateTotalExperience(employee),
                 CurrentUtilization = totalAllocated,
                 AvailableCapacity = Math.Max(0, available),
                 ResourceStatus = resourceStatus,
@@ -199,6 +202,8 @@ namespace HRMS.Api.Services.RMG
                     Id = a.Id,
                     ProjectId = a.ProjectId,
                     ProjectName = a.Project?.ProjectName ?? "",
+                    ClientId = a.ClientId ?? a.Project?.ClientId,
+                    ClientName = a.Client?.Name ?? a.Project?.Client?.Name,
                     StartDate = a.StartDate,
                     EndDate = a.EndDate,
                     AllocationPercentage = a.AllocationPercentage,
@@ -223,6 +228,7 @@ namespace HRMS.Api.Services.RMG
             {
                 EmployeeId = dto.EmployeeId,
                 ProjectId = dto.ProjectId,
+                ClientId = dto.ClientId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
@@ -245,6 +251,7 @@ namespace HRMS.Api.Services.RMG
             var oldPercentage = allocation.AllocationPercentage;
 
             if (dto.ProjectId.HasValue) allocation.ProjectId = dto.ProjectId.Value;
+            if (dto.ClientId.HasValue) allocation.ClientId = dto.ClientId.Value;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
             if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
@@ -422,12 +429,14 @@ namespace HRMS.Api.Services.RMG
 
         private async Task<ProjectAllocationDto> ToProjectAllocationDtoAsync(ResourceAllocation allocation, CancellationToken cancellationToken = default)
         {
-            var project = allocation.Project ?? await _dbContext.Projects.FindAsync(new object[] { allocation.ProjectId }, cancellationToken);
+            var project = allocation.Project ?? await _dbContext.Projects.Include(p => p.Client).FirstOrDefaultAsync(p => p.Id == allocation.ProjectId, cancellationToken);
             return new ProjectAllocationDto
             {
                 Id = allocation.Id,
                 ProjectId = allocation.ProjectId,
                 ProjectName = project?.ProjectName ?? "",
+                ClientId = allocation.ClientId ?? project?.ClientId,
+                ClientName = allocation.Client?.Name ?? project?.Client?.Name,
                 StartDate = allocation.StartDate,
                 EndDate = allocation.EndDate,
                 AllocationPercentage = allocation.AllocationPercentage,
@@ -435,6 +444,14 @@ namespace HRMS.Api.Services.RMG
                 AllocationType = allocation.AllocationType,
                 AllocationStatus = allocation.AllocationStatus
             };
+        }
+
+        private static decimal CalculateTotalExperience(Employee employee)
+        {
+            var doj = employee.DOJ;
+            var priorExperience = employee.PriorExperience;
+            var yearsSinceDoj = (decimal)(DateTime.UtcNow - doj).TotalDays / 365.25m;
+            return Math.Round(yearsSinceDoj + priorExperience, 1);
         }
     }
 }
