@@ -29,6 +29,11 @@ namespace HRMS.Api.Configurations
                 .HasForeignKey(ra => ra.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(ra => ra.Client)
+                .WithMany()
+                .HasForeignKey(ra => ra.ClientId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.HasIndex(ra => new { ra.EmployeeId, ra.ProjectId, ra.AllocationStatus });
         }
     }

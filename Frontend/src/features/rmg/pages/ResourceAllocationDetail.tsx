@@ -4,9 +4,8 @@ import {
   Autocomplete,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
+  Divider,
   IconButton,
   MenuItem,
   Paper,
@@ -25,7 +24,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Grid,
 } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -35,6 +33,7 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import PageContainer from '../../../components/common/PageContainer';
 import { useAppSelector } from '../../../redux/hooks';
+import api from '../../../services/api';
 import { allocationService } from '../services/allocationService';
 import type { EmployeeAllocationDto, ProjectAllocationDto, AddProjectAllocationDto, UpdateProjectAllocationDto } from '../types/allocation';
 import type { Project } from '../../projects/types/project.types';
@@ -60,6 +59,8 @@ export default function ResourceAllocationDetail() {
   const [formData, setFormData] = useState({
     projectId: 0,
     projectName: '',
+    clientId: null as number | null,
+    clientName: '',
     startDate: '',
     endDate: '',
     allocationPercentage: 0,
@@ -69,6 +70,7 @@ export default function ResourceAllocationDetail() {
   });
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
 
   const employeeId = Number(id);
   const projects = useAppSelector((state) => state.projects.projects);
@@ -77,9 +79,29 @@ export default function ResourceAllocationDetail() {
     return projects.find((p) => p.id === formData.projectId) ?? null;
   }, [projects, formData.projectId]);
 
+  const selectedClient = useMemo(() => {
+    return clients.find((c) => c.id === formData.clientId) ?? null;
+  }, [clients, formData.clientId]);
+
+  useEffect(() => {
+    if (selectedProject && !formData.clientId) {
+      setFormData((prev) => ({ ...prev, clientId: null, clientName: '' }));
+    }
+  }, [selectedProject]);
+
   useEffect(() => {
     if (id) loadEmployeeData();
+    fetchClients();
   }, [id]);
+
+  const fetchClients = async () => {
+    try {
+      const res = await api.get<{ id: number; name: string }[]>('/clients');
+      setClients(res.data);
+    } catch {
+      console.error('Failed to load clients');
+    }
+  };
 
   const loadEmployeeData = async () => {
     setLoading(true);
@@ -98,28 +120,32 @@ export default function ResourceAllocationDetail() {
     return employeeData?.allocations?.reduce((sum, a) => sum + a.allocationPercentage, 0) ?? 0;
   }, [employeeData]);
 
-  const summary = useMemo(() => {
-    const allocated = totalAllocated;
-    const available = Math.max(0, 100 - allocated);
-    let status = 'Available';
-    if (allocated > 100) status = 'Overallocated';
-    else if (allocated >= 100) status = 'Fully Allocated';
-    else if (allocated > 0) status = 'Partially Allocated';
-    return { totalCapacity: 100, allocatedCapacity: allocated, availableCapacity: available, resourceStatus: status };
+  const availableCapacity = useMemo(() => Math.max(0, 100 - totalAllocated), [totalAllocated]);
+
+  const resourceStatus = useMemo(() => {
+    if (totalAllocated > 100) return 'Overallocated';
+    if (totalAllocated >= 100) return 'Fully Allocated';
+    if (totalAllocated > 0) return 'Partially Allocated';
+    return 'Available';
   }, [totalAllocated]);
 
   const openAddDialog = () => {
     setEditingAllocation(null);
-    setFormData({ projectId: 0, projectName: '', startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'Active' });
+    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'Active' });
     setFormError('');
     setDialogOpen(true);
   };
 
   const openEditDialog = (allocation: ProjectAllocationDto) => {
     setEditingAllocation(allocation);
+    const project = projects.find((p) => p.id === allocation.projectId);
+    const clientName = allocation.clientName || project?.clientName || '';
+    const matchedClient = clientName ? clients.find((c) => c.name.toLowerCase() === clientName.toLowerCase()) : null;
     setFormData({
       projectId: allocation.projectId,
       projectName: allocation.projectName,
+      clientId: allocation.clientId ?? matchedClient?.id ?? null,
+      clientName: matchedClient?.name ?? clientName,
       startDate: allocation.startDate.split('T')[0],
       endDate: allocation.endDate ? allocation.endDate.split('T')[0] : '',
       allocationPercentage: allocation.allocationPercentage,
@@ -154,8 +180,20 @@ export default function ResourceAllocationDetail() {
       setFormError('Project Code is required');
       return;
     }
+    if (!formData.clientId) {
+      setFormError('Client is required');
+      return;
+    }
     if (!formData.startDate) {
       setFormError('Start date is required');
+      return;
+    }
+    if (!formData.endDate) {
+      setFormError('End date is required');
+      return;
+    }
+    if (formData.endDate < formData.startDate) {
+      setFormError('End date cannot be earlier than start date');
       return;
     }
     if (formData.allocationPercentage <= 0 || formData.allocationPercentage > 100) {
@@ -174,6 +212,7 @@ export default function ResourceAllocationDetail() {
       if (editingAllocation) {
         const dto: UpdateProjectAllocationDto = {
           projectId: formData.projectId,
+          clientId: formData.clientId,
           startDate: formData.startDate,
           endDate: formData.endDate || null,
           allocationPercentage: formData.allocationPercentage,
@@ -186,6 +225,7 @@ export default function ResourceAllocationDetail() {
         const dto: AddProjectAllocationDto = {
           employeeId,
           projectId: formData.projectId,
+          clientId: formData.clientId,
           startDate: formData.startDate,
           endDate: formData.endDate || null,
           allocationPercentage: formData.allocationPercentage,
@@ -222,60 +262,46 @@ export default function ResourceAllocationDetail() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Stack spacing={3}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, height: '100%' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Total Capacity</Typography>
-                <Typography variant="h4" fontWeight={800}>{summary.totalCapacity}%</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, height: '100%' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Allocated Capacity</Typography>
-                <Typography variant="h4" fontWeight={800} color={summary.allocatedCapacity > 100 ? 'error.main' : summary.allocatedCapacity >= 100 ? 'warning.main' : 'primary.main'}>
-                  {summary.allocatedCapacity}%
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, height: '100%' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Available Capacity</Typography>
-                <Typography variant="h4" fontWeight={800} color="success.main">{summary.availableCapacity}%</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2}>
-              <Stack spacing={0.5}>
-                <Typography variant="h6" fontWeight={800}>{employeeData.employeeName}</Typography>
+          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
+            <Stack spacing={0.5} sx={{ flex: 1 }}>
+              <Typography variant="h6" fontWeight={800}>{employeeData.employeeName}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {employeeData.employeeCode} | {employeeData.designation ?? '-'} | {employeeData.practice}
+              </Typography>
+              {employeeData.skills && (
                 <Typography variant="body2" color="text.secondary">
-                  {employeeData.employeeCode} | {employeeData.designation ?? '-'} | {employeeData.practice}
+                  Skills: {employeeData.skills}
                 </Typography>
-                {employeeData.skills && (
-                  <Typography variant="body2" color="text.secondary">
-                    Skills: {employeeData.skills}
-                  </Typography>
-                )}
+              )}
+              {employeeData.primarySkill && (
+                <Typography variant="body2" color="text.secondary">
+                  Primary Skill: {employeeData.primarySkill}
+                </Typography>
+              )}
+              {employeeData.totalExperience != null && (
+                <Typography variant="body2" color="text.secondary">
+                  Total Experience: {employeeData.totalExperience} Years
+                </Typography>
+              )}
+            </Stack>
+            <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
+            <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
+            <Stack spacing={1} justifyContent="center" sx={{ minWidth: 200 }}>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="body2" color="text.secondary">Utilization</Typography>
+                <Typography variant="body2" fontWeight={700}>{totalAllocated}%</Typography>
               </Stack>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="body2" fontWeight={600}>
-                  Utilization: {summary.allocatedCapacity}%
-                </Typography>
-                <Typography variant="body2" fontWeight={600} color="success.main">
-                  Available: {summary.availableCapacity}%
-                </Typography>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="body2" color="text.secondary">Available</Typography>
+                <Typography variant="body2" fontWeight={700} color="success.main">{availableCapacity}%</Typography>
+              </Stack>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2" color="text.secondary">Status</Typography>
                 <Chip
-                  label={summary.resourceStatus}
+                  label={resourceStatus}
                   size="small"
-                  color={summary.resourceStatus === 'Available' ? 'success' : summary.resourceStatus === 'Partially Allocated' ? 'info' : summary.resourceStatus === 'Fully Allocated' ? 'warning' : 'error'}
+                  color={resourceStatus === 'Available' ? 'success' : resourceStatus === 'Partially Allocated' ? 'info' : resourceStatus === 'Fully Allocated' ? 'warning' : 'error'}
                   variant="outlined"
                 />
               </Stack>
@@ -364,14 +390,19 @@ export default function ResourceAllocationDetail() {
             {formError && <Alert severity="error" size="small">{formError}</Alert>}
             <Autocomplete
               options={projects}
-              getOptionLabel={(option) => `${option.projectCode} - ${option.projectName}`}
+              getOptionLabel={(option) => option.projectCode}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedProject}
               onChange={(_, value) => {
+                const matchedClient = value?.clientName
+                  ? clients.find((c) => c.name.toLowerCase() === value.clientName.toLowerCase())
+                  : null;
                 setFormData((prev) => ({
                   ...prev,
                   projectId: value?.id ?? 0,
                   projectName: value?.projectName ?? '',
+                  clientId: matchedClient?.id ?? null,
+                  clientName: matchedClient?.name ?? value?.clientName ?? '',
                 }));
               }}
               fullWidth
@@ -380,7 +411,7 @@ export default function ResourceAllocationDetail() {
                 <TextField
                   {...params}
                   label="Project Code *"
-                  placeholder="Search by project code or name"
+                  placeholder="Search project code"
                 />
               )}
             />
@@ -391,6 +422,28 @@ export default function ResourceAllocationDetail() {
               value={formData.projectName}
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
+            />
+            <Autocomplete
+              options={clients}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={selectedClient}
+              onChange={(_, value) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  clientId: value?.id ?? null,
+                  clientName: value?.name ?? '',
+                }));
+              }}
+              fullWidth
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Client *"
+                  placeholder="Search client"
+                />
+              )}
             />
             <TextField
               label="Start Date"

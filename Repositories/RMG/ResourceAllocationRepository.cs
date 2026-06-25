@@ -75,7 +75,8 @@ namespace HRMS.Api.Repositories.RMG
         {
             return await _dbContext.ResourceAllocations
                 .AsNoTracking()
-                .Include(ra => ra.Project)
+                .Include(ra => ra.Project).ThenInclude(p => p.Client)
+                .Include(ra => ra.Client)
                 .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released")
                 .ToListAsync(cancellationToken);
         }
