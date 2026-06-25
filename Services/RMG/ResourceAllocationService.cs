@@ -355,6 +355,104 @@ namespace HRMS.Api.Services.RMG
             });
         }
 
+        public async Task<EmployeeResourceDetailsDto> GetEmployeeDetailsAsync(int employeeId, CancellationToken cancellationToken = default)
+        {
+            var employee = await _dbContext.Employees
+                .AsNoTracking()
+                .Include(e => e.Designation)
+                .Include(e => e.Practice).ThenInclude(p => p.PracticeHead)
+                .Include(e => e.Location)
+                .Include(e => e.EmploymentType)
+                .Include(e => e.EmployeeStatus)
+                .Include(e => e.ReportingManager)
+                .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill)
+                .FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken)
+                ?? throw new InvalidOperationException("Employee not found.");
+
+            var activeAllocations = await _dbContext.ResourceAllocations
+                .AsNoTracking()
+                .Include(ra => ra.Project).ThenInclude(p => p.Client)
+                .Include(ra => ra.Project).ThenInclude(p => p.ProjectType)
+                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released")
+                .ToListAsync(cancellationToken);
+
+            var totalAllocated = activeAllocations.Sum(a => a.AllocationPercentage);
+            var isUtilised = activeAllocations.Any();
+            var isBillable = activeAllocations.Any(a => a.BillableStatus == "Billable");
+
+            var totalExperience = employee.ExperienceYears ?? employee.PriorExperience + (employee.RelevantExperience ?? 0);
+            var nvExperience = totalExperience - employee.PriorExperience;
+            if (nvExperience < 0) nvExperience = 0;
+
+            var skills = employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).ToList() ?? new List<string>();
+            var primarySkill = skills.FirstOrDefault();
+            var skillString = skills.Any() ? string.Join(", ", skills) : null;
+
+            var today = DateTime.UtcNow.Date;
+
+            return new EmployeeResourceDetailsDto
+            {
+                EmployeeId = employee.Id,
+                EmployeeCode = employee.EmployeeCode,
+                EmployeeName = employee.FullName,
+                Email = employee.Email,
+                Role = employee.Designation?.Name,
+                Practice = employee.Practice?.Name,
+                SubPractice = null,
+                PrimarySkill = primarySkill,
+                Skill = skillString,
+                Active = !employee.IsDeleted,
+                Location = employee.Location?.Name,
+                L1Manager = employee.ReportingManager?.FullName,
+                PracticeHead = employee.Practice?.PracticeHead?.FullName,
+                DOJ = employee.DOJ,
+
+                PriorExperience = employee.PriorExperience,
+                NVExperience = Math.Round(nvExperience, 1),
+                TotalExperience = Math.Round(totalExperience, 1),
+                ExperienceRange = GetExperienceRange(totalExperience),
+
+                FteConsultant = employee.EmploymentType?.Name,
+                Utilised = isUtilised ? "Yes" : "No",
+                Billable = isBillable ? "Yes" : "No",
+                Status = employee.EmployeeStatus?.Name ?? (employee.IsDeleted ? "Inactive" : "Active"),
+
+                ProjectAllocations = activeAllocations.Select(a =>
+                {
+                    var startDate = a.StartDate;
+                    var endDate = a.EndDate ?? today;
+                    var durationDays = (endDate - startDate).Days;
+                    var ageingDays = (today - startDate).Days;
+
+                    return new ProjectAllocationDetailDto
+                    {
+                        ProjectCode = a.ProjectId,
+                        Client = a.Project?.Client?.Name,
+                        Project = a.Project?.ProjectName,
+                        ProjectType = a.Project?.ProjectType?.Name,
+                        ProjectStatus = a.BillableStatus,
+                        StartDate = a.StartDate,
+                        EndDate = a.EndDate,
+                        AllocationPercentage = a.AllocationPercentage,
+                        BillablePercentage = a.BillableStatus == "Billable" ? a.AllocationPercentage : 0,
+                        Engineering = employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null,
+                        DurationInProject = $"{durationDays} Days",
+                        Ageing = $"{Math.Max(0, ageingDays)} Days",
+                        Remarks = a.Notes
+                    };
+                }).ToList()
+            };
+        }
+
+        private static string GetExperienceRange(decimal totalExperience)
+        {
+            if (totalExperience <= 2) return "0 - 2 Years";
+            if (totalExperience <= 6) return "3 - 6 Years";
+            if (totalExperience <= 9) return "6 - 9 Years";
+            if (totalExperience <= 12) return "9 - 12 Years";
+            return "More than 12 Years";
+        }
+
         private async Task<decimal> GetTotalAllocatedAsync(int employeeId, int? excludeAllocationId = null, CancellationToken cancellationToken = default)
         {
             var query = _dbContext.ResourceAllocations

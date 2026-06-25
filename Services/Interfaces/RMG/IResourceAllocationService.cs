@@ -18,6 +18,7 @@ namespace HRMS.Api.Services.Interfaces.RMG
         Task<ProjectAllocationDto?> UpdateProjectAllocationAsync(int allocationId, UpdateProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default);
         Task<bool> DeleteProjectAllocationAsync(int allocationId, CancellationToken cancellationToken = default);
         Task<EmployeeCapacitySummaryDto> GetEmployeeCapacitySummaryAsync(int employeeId, CancellationToken cancellationToken = default);
+        Task<EmployeeResourceDetailsDto> GetEmployeeDetailsAsync(int employeeId, CancellationToken cancellationToken = default);
     }
 
     public class AllocationHistoryDto
