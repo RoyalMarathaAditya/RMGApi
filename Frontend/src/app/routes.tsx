@@ -8,6 +8,7 @@ import Project from '../features/projects/pages/Project';
 import ProjectEdit from '../features/projects/pages/ProjectEdit';
 import ProjectList from '../features/projects/pages/ProjectList';
 import EmployeeList from '../features/employees/pages/EmployeeList';
+import EmployeeProfile from '../features/employees/pages/EmployeeProfile';
 import EmployeeSkillMapping from '../features/skills/pages/EmployeeSkillMapping';
 import ResourceSearchBySkill from '../features/skills/pages/ResourceSearchBySkill';
 import SkillCreate from '../features/skills/pages/SkillCreate';
@@ -57,6 +58,7 @@ export function AppRoutes() {
           <Route path="/home" element={<Home />} />*/}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/employees" element={<EmployeeList />} />
+          <Route path="/employees/:employeeId" element={<EmployeeProfile />} />
           <Route path="/projects" element={<ProjectList />} />
           <Route path="/projects/create" element={<ProjectCreate />} />
           <Route path="/projects/dashboard" element={<ProjectDashboard />} />

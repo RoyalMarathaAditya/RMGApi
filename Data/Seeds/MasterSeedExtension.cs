@@ -18,6 +18,8 @@ namespace HRMS.Api.Data.Seeds
             ProjectTypeMasterSeed.Seed(modelBuilder);
             DepartmentTypeMasterSeed.Seed(modelBuilder);
             DesignationMasterSeed.Seed(modelBuilder);
+            ProjectStatusMasterSeed.Seed(modelBuilder);
+            ProbableNextAssignmentMasterSeed.Seed(modelBuilder);
         }
     }
 }
