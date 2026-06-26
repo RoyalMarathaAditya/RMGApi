@@ -1,7 +1,7 @@
 
 import { Box } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import type { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import type { GridColDef, GridPaginationModel, GridRowParams } from '@mui/x-data-grid';
 import type { Employee } from '../types/employee';
 
 interface EmployeeGridProps {
@@ -10,6 +10,7 @@ interface EmployeeGridProps {
   paginationModel: GridPaginationModel;
   rows: Employee[];
   onPaginationModelChange: (model: GridPaginationModel) => void;
+  onRowClick?: (params: GridRowParams<Employee>) => void;
 }
 
 export default function EmployeeGrid({
@@ -18,6 +19,7 @@ export default function EmployeeGrid({
   paginationModel,
   rows,
   onPaginationModelChange,
+  onRowClick,
 }: EmployeeGridProps) {
   const visibleRows = Math.max(1, Math.min(rows.length, paginationModel.pageSize));
   const gridHeight = 112 + visibleRows * 52;
@@ -26,9 +28,9 @@ export default function EmployeeGrid({
     <Box sx={{ height: gridHeight, maxHeight: 560, minHeight: 220, width: '100%' }}>
       <DataGrid
         columns={columns}
-        disableRowSelectionOnClick
         loading={loading}
         onPaginationModelChange={onPaginationModelChange}
+        onRowClick={onRowClick}
         pageSizeOptions={[5, 10, 25]}
         paginationModel={paginationModel}
         rows={rows}
