@@ -162,7 +162,7 @@ export default function EmployeeProfile() {
         >
           Back to Employees
         </Button>
-        <Typography sx={{ fontSize: 36, fontWeight: 700, color: '#111827', lineHeight: 1.15, mb: 2 }}>
+        <Typography sx={{ fontSize: 32, fontWeight: 700, color: '#111827', lineHeight: 1.15, mb: 2 }}>
           Employee Profile
         </Typography>
 
@@ -216,7 +216,7 @@ export default function EmployeeProfile() {
         {/* TAB 0: EMPLOYEE INFORMATION                      */}
         {/* ──────────────────────────────────────────────── */}
         {tabValue === 0 && (
-          <Box sx={{ mt: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Box sx={{ mt: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Personal Information */}
             <InfoSection {...sectionConfig.personal}>
               <InfoGrid>
@@ -255,7 +255,7 @@ export default function EmployeeProfile() {
         {/* TAB 1: EXPERIENCE                                */}
         {/* ──────────────────────────────────────────────── */}
         {tabValue === 1 && (
-          <Box sx={{ mt: '20px' }}>
+          <Box sx={{ mt: '16px' }}>
             <InfoSection {...sectionConfig.experience}>
               <InfoGrid>
                 <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Experience" value={`${data.totalExperience} yrs`} />
@@ -273,7 +273,7 @@ export default function EmployeeProfile() {
         {/* TAB 2: EMPLOYMENT                                */}
         {/* ──────────────────────────────────────────────── */}
         {tabValue === 2 && (
-          <Box sx={{ mt: '20px' }}>
+          <Box sx={{ mt: '16px' }}>
             <InfoSection {...sectionConfig.employment}>
               <InfoGrid>
                 <InfoField icon={<AssignmentOutlinedIcon sx={{ fontSize: 16 }} />} label="Employment Status" value={data.status ?? '—'} />
@@ -293,7 +293,7 @@ export default function EmployeeProfile() {
         {/* TAB 3: ALLOCATION HISTORY                        */}
         {/* ──────────────────────────────────────────────── */}
         {tabValue === 3 && (
-          <Box sx={{ mt: '20px' }}>
+          <Box sx={{ mt: '16px' }}>
             <InfoSection {...sectionConfig.allocation}>
               <InfoGrid>
                 <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Allocation" value={`${totalAllocated}%`} />
@@ -309,7 +309,7 @@ export default function EmployeeProfile() {
         {/* TAB 4: DOCUMENTS                                 */}
         {/* ──────────────────────────────────────────────── */}
         {tabValue === 4 && (
-          <Box sx={{ mt: '20px' }}>
+          <Box sx={{ mt: '16px' }}>
             <Box sx={{ borderRadius: '12px', border: '1px solid #E5E7EB', bgcolor: '#FFF', p: 6, textAlign: 'center' }}>
               <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#6B7280', mb: 1 }}>Documents</Typography>
               <Typography sx={{ fontSize: 14, color: '#9CA3AF' }}>No documents available for this employee.</Typography>

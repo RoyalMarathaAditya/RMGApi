@@ -13,17 +13,17 @@ export default function InfoField({ icon, label, value, colSpan }: InfoFieldProp
     <Box
       sx={{
         gridColumn: colSpan ? `span ${colSpan}` : undefined,
-        py: '4px',
+        py: '3px',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: '2px' }}>
-        <Box sx={{ color: '#6B7280', display: 'flex', fontSize: '0.9rem', lineHeight: 0 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: '2px' }}>
+        <Box sx={{ color: '#6B7280', display: 'flex', fontSize: '0.85rem', lineHeight: 0 }}>
           {icon}
         </Box>
         <Typography
           component="span"
           sx={{
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: 500,
             color: '#4B5563',
             textTransform: 'uppercase',
@@ -36,7 +36,7 @@ export default function InfoField({ icon, label, value, colSpan }: InfoFieldProp
       </Box>
       <Typography
         sx={{
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: 500,
           color: '#111827',
           lineHeight: 1.4,

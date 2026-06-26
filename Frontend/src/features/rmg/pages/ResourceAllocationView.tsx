@@ -190,7 +190,7 @@ export default function ResourceAllocationView() {
           Back to Dashboard
         </Button>
 
-        <Typography sx={{ fontSize: 36, fontWeight: 700, color: '#111827', lineHeight: 1.15, mb: 2 }}>
+        <Typography sx={{ fontSize: 32, fontWeight: 700, color: '#111827', lineHeight: 1.15, mb: 2 }}>
           Resource Allocation Preview
         </Typography>
 
@@ -220,7 +220,7 @@ export default function ResourceAllocationView() {
 
         {/* ── TAB 0: EMPLOYEE INFORMATION ── */}
         {tabValue === 0 && (
-          <Box sx={{ mt: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Box sx={{ mt: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <InfoSection {...sectionConfig.personal}>
               <InfoGrid>
                 <InfoField icon={<BadgeOutlinedIcon sx={{ fontSize: 16 }} />} label="Employee Code" value={data.employeeCode} />
@@ -255,7 +255,7 @@ export default function ResourceAllocationView() {
 
         {/* ── TAB 1: EXPERIENCE DETAILS ── */}
         {tabValue === 1 && (
-          <Box sx={{ mt: '20px' }}>
+          <Box sx={{ mt: '16px' }}>
             <InfoSection {...sectionConfig.experience}>
               <InfoGrid>
                 <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Experience" value={`${data.totalExperience} yrs`} />
@@ -271,7 +271,7 @@ export default function ResourceAllocationView() {
 
         {/* ── TAB 2: EMPLOYMENT DETAILS ── */}
         {tabValue === 2 && (
-          <Box sx={{ mt: '20px' }}>
+          <Box sx={{ mt: '16px' }}>
             <InfoSection {...sectionConfig.employment}>
               <InfoGrid>
                 <InfoField icon={<AssignmentOutlinedIcon sx={{ fontSize: 16 }} />} label="Employment Status" value={data.status ?? '—'} />
@@ -289,7 +289,7 @@ export default function ResourceAllocationView() {
 
         {/* ── TAB 3: PROJECT ALLOCATION ── */}
         {tabValue === 3 && (
-          <Box sx={{ mt: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Box sx={{ mt: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <InfoSection {...sectionConfig.allocation}>
               <InfoGrid>
                 <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Allocation" value={`${totalAllocated}%`} />
@@ -301,10 +301,10 @@ export default function ResourceAllocationView() {
 
             {/* Allocations Table */}
             <Box sx={{ borderRadius: '14px', border: '1px solid #E5E7EB', overflow: 'hidden', bgcolor: '#FFF', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
-              <Box sx={{ px: '24px', py: 2, bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <TimelineOutlinedIcon sx={{ fontSize: '1.1rem', color: '#0891B2' }} />
-                <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>Project Allocations</Typography>
-                <Typography sx={{ fontSize: 12, fontWeight: 400, color: '#6B7280', ml: 'auto' }}>{data.projectAllocations.length} record(s)</Typography>
+              <Box sx={{ px: '20px', py: 1.5, bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <TimelineOutlinedIcon sx={{ fontSize: '1rem', color: '#0891B2' }} />
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>Project Allocations</Typography>
+                <Typography sx={{ fontSize: 11, fontWeight: 400, color: '#6B7280', ml: 'auto' }}>{data.projectAllocations.length} record(s)</Typography>
               </Box>
 
               {data.projectAllocations.length === 0 ? (
@@ -331,9 +331,9 @@ export default function ResourceAllocationView() {
                             <TableCell
                               key={col.label}
                               sx={{
-                                fontWeight: 600, fontSize: '0.75rem', color: '#6B7280',
+                                fontWeight: 600, fontSize: '0.7rem', color: '#6B7280',
                                 textTransform: 'uppercase', letterSpacing: '0.4px',
-                                bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', py: 1.5,
+                                bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', py: 1.25,
                               }}
                             >
                               {col.key ? (
@@ -358,39 +358,39 @@ export default function ResourceAllocationView() {
                               hover
                               sx={{ '&:hover': { bgcolor: '#F8FBFF' }, '&:last-child td': { borderBottom: 'none' } }}
                             >
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{pa.project ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#6B7280', fontFamily: 'monospace' }}>{pa.projectCode ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.client ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 14, fontWeight: 700, color: isOver ? '#DC2626' : (pa.allocationPercentage ?? 0) >= 100 ? '#F59E0B' : '#16A34A' }}>
                                   {pa.allocationPercentage != null ? `${pa.allocationPercentage}%` : '—'}
                                 </Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.startDate)}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.endDate)}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Chip
                                   label={pa.projectStatus ?? '—'}
                                   size="small"
                                   color={projectStatusColors[pa.projectStatus ?? ''] ?? 'default'}
                                   variant="outlined"
-                                  sx={{ fontWeight: 600, fontSize: '0.7rem', height: 22, borderRadius: '999px' }}
+                                  sx={{ fontWeight: 600, fontSize: '0.65rem', height: 20, borderRadius: '999px' }}
                                 />
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.durationInProject ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1.5 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
                                 <Button
                                   size="small"
                                   startIcon={<VisibilityOutlinedIcon sx={{ fontSize: 14 }} />}

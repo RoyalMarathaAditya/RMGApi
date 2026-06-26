@@ -37,29 +37,29 @@ export default function InfoSection({ icon, title, subtitle, headerBg, accentCol
       />
       <Box
         sx={{
-          height: 60,
-          px: '24px',
-          pl: '36px',
+          height: 52,
+          px: '20px',
+          pl: '32px',
           bgcolor: headerBg,
           borderBottom: '1px solid #E5E7EB',
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1.25,
         }}
       >
-        <Box sx={{ color: accentColor, display: 'flex', lineHeight: 0 }}>
+        <Box sx={{ color: accentColor, display: 'flex', lineHeight: 0, '& .MuiSvgIcon-root': { fontSize: '1.1rem' } }}>
           {icon}
         </Box>
         <Box>
-          <Typography sx={{ fontSize: 20, fontWeight: 600, color: '#111827', lineHeight: 1.25 }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 600, color: '#111827', lineHeight: 1.25 }}>
             {title}
           </Typography>
-          <Typography sx={{ fontSize: 11, fontWeight: 400, color: '#6B7280', lineHeight: 1.3 }}>
+          <Typography sx={{ fontSize: 10, fontWeight: 400, color: '#6B7280', lineHeight: 1.3 }}>
             {subtitle}
           </Typography>
         </Box>
       </Box>
-      <Box sx={{ py: 1 }}>
+      <Box sx={{ py: 0.75 }}>
         {children}
       </Box>
     </Box>

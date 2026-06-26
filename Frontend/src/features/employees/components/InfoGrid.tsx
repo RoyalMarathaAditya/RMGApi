@@ -13,7 +13,7 @@ export default function InfoGrid({ children }: InfoGridProps) {
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2,1fr)', md: 'repeat(4, 1fr)' },
         gap: 0,
         '& > *': {
-          px: '20px',
+          px: '16px',
           py: 0,
           borderBottom: '1px solid #F1F5F9',
           borderRight: { xs: 'none', md: '1px solid #EEF2F7' },
