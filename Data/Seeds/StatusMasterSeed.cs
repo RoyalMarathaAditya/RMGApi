@@ -9,7 +9,11 @@ namespace HRMS.Api.Data.Seeds
         {
             modelBuilder.Entity<StatusMaster>().HasData(
                 new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000001"), Name = "Active", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-                new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000002"), Name = "Inactive", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+                new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000002"), Name = "Inactive", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000003"), Name = "Planned", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), Name = "Completed", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000005"), Name = "Released", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new StatusMaster { Id = Guid.Parse("10000000-0000-0000-0000-000000000006"), Name = "Cancelled", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
             );
         }
     }

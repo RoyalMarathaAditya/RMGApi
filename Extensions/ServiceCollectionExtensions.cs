@@ -38,6 +38,8 @@ namespace HRMS.Api.Extensions
             services.AddScoped<ILeaveRepository, LeaveRepository>();
             services.AddScoped<IPipRepository, PipRepository>();
             services.AddScoped<IDesignationRepository, DesignationRepository>();
+            services.AddScoped<IProjectStatusRepository, ProjectStatusRepository>();
+            services.AddScoped<IProbableNextAssignmentRepository, ProbableNextAssignmentRepository>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -48,6 +50,8 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IBulkImportService, BulkImportService>();
             services.AddScoped<IDesignationService, DesignationService>();
+            services.AddScoped<IProjectStatusService, ProjectStatusService>();
+            services.AddScoped<IProbableNextAssignmentService, ProbableNextAssignmentService>();
 
             services.AddScoped<IResourceAllocationRepository, ResourceAllocationRepository>();
             services.AddScoped<IResourceAllocationHistoryRepository, ResourceAllocationHistoryRepository>();
