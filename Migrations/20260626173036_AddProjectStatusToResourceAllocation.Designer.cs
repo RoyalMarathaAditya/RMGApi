@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626173036_AddProjectStatusToResourceAllocation")]
+    partial class AddProjectStatusToResourceAllocation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -455,7 +458,7 @@ namespace HRMS.Api.Migrations
                     b.Property<bool?>("DeloitteFitment")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("DepartmentTypeId")
+                    b.Property<Guid>("DepartmentTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DesignationId")
@@ -481,6 +484,10 @@ namespace HRMS.Api.Migrations
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -491,6 +498,10 @@ namespace HRMS.Api.Migrations
 
                     b.Property<DateTime?>("LWD")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("LocationId")
                         .HasColumnType("uniqueidentifier");
@@ -512,14 +523,10 @@ namespace HRMS.Api.Migrations
                     b.Property<int?>("PracticeHeadId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PracticeHeadName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<Guid>("PracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("PriorExperience")
+                    b.Property<decimal>("PriorExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
 
@@ -530,10 +537,6 @@ namespace HRMS.Api.Migrations
                     b.Property<int?>("ReportingManagerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ReportingManagerName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -543,10 +546,7 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SubPracticeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("WorkModelId")
+                    b.Property<Guid>("WorkModelId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -576,8 +576,6 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("ReportingManagerId");
 
                     b.HasIndex("StatusId");
-
-                    b.HasIndex("SubPracticeId");
 
                     b.HasIndex("WorkModelId");
 
@@ -1332,959 +1330,6 @@ namespace HRMS.Api.Migrations
                         });
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.ProbableNextAssignmentMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("ProbableNextAssignmentMasters", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 1,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Alcan Integration - Utilized, Pre sales - investment"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Already billable in ING"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 3,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Amdocs/Omnia Data"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 4,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "AutomatePro"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Axiad"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 6,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Bench"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 7,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Biolabs"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 8,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "BioLabs & Flightcheck"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 9,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "BIS"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000010"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 10,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "BIS: Client Portal and Data Lake Managed Platform Services"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000011"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 11,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "BresaTech"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000012"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 12,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "CBM Datalake Ph2"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000013"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 13,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Cloudops MSP, RFC2.0"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000014"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 14,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Cognida Tyler"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000015"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 15,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "CommScope M365"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000016"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 16,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Core Team"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000017"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 17,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Data Lens"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000018"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 18,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Datalens"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000019"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 19,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000020"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 20,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - 1$"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000021"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 21,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - Cars"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000022"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 22,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - Cortex"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000023"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 23,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - Dart"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000024"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 24,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - Levvia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000025"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 25,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - Project Work for Pillar 2"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000026"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 26,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte - TieOut Global"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000027"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 27,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte Levvia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000028"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 28,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte- Levvia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000029"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 29,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte- Levvia Automation"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000030"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 30,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte Myinsight"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000031"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 31,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte- RADC / Levvia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000032"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 32,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte-Learning POD"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000033"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 33,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Deloitte-RPA"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000034"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 34,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Dodge and Cox"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000035"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 35,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Dodge&Cox"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000036"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 36,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Doxa"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000037"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 37,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "DWP"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000038"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 38,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Echo360"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000039"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 39,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "ElevateBio"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000040"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 40,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Exit"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000041"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 41,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Exit/AutomatePro"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000042"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 42,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Finbraine"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000043"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 43,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GCS Advisory"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000044"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 44,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GDAS Services"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000045"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 45,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Global TieOut"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000046"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 46,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Global TieOut/Exit"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000047"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 47,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Global TieOut/Learning Coe"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000048"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 48,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GTS"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000049"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 49,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GTS - Impulse"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000050"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 50,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GTS Impulse"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000051"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 51,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GTS-Impulse"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000052"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 52,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "ING"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000053"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 53,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Internal IT"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000054"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 54,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "KM"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000055"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 55,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Learning Coe"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000056"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 56,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Levvia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000057"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 57,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Levvia Automation"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000058"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 58,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Levvia Bootcamp"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000059"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 59,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Levvia Production Support"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000060"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 60,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Levvia Rhino"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000061"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 61,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Levvia Transformation"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000062"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 62,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Ludi"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000063"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 63,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Ludi Offshore"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000064"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 64,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Management"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000065"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 65,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Milliman"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000066"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 66,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Miyahuna"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000067"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 67,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "ML return"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000068"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 68,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "ML start"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000069"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 69,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "NA"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000070"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 70,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Nitish Shivankar - rep"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000071"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 71,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Omnia data"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000072"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 72,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Omnia Data (Cortex) - Manual - Forecasted"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000073"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 73,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Omnia Data Cortex Automation"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000074"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 74,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Omnia Serengeti Additional POD"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000075"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 75,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Omnia Serengiti"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000076"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 76,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "PIP"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000077"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 77,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "PIP/Exit"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000078"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 78,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RFC 2 Maintainance"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000079"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 79,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RFC 2.0 phase 2"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000080"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 80,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RKON"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000081"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 81,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RKON -Strada"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000082"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 82,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RSM"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000083"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 83,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RTUK - Sportsmedia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000084"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 84,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RTUK RTHub"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000085"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 85,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Saras Analytics/SeaSalt"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000086"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 86,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SeaSalt - Buffer"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000087"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 87,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SeaSalt - DWH Dev"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000088"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 88,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Serengeti"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000089"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 89,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SFC"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000090"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 90,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SKPT - Wireless Upgrade"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000091"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 91,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SKPT Databrick phase 2"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000092"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 92,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SNOW ServiceNow Integrations"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000093"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 93,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SNOW ServiceNow Integrations/Exit"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000094"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 94,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SoftServ - Atlassian"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000095"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 95,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SoftServ - BNY"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000096"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 96,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SoftServ - Cisco"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000097"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 97,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SoftServ- Atlassian"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000098"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 98,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SoftServe - Expedia"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000099"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 99,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "SoftServe - NasDaq"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000100"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 100,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "USP"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000000-0000-0000-0000-000000000101"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 101,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Votal"
-                        });
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -2619,12 +1664,6 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<DateTime?>("ProbableNextAssignmentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("ProbableNextAssignmentId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
@@ -2640,20 +1679,13 @@ namespace HRMS.Api.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("StatusId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
 
-                    b.HasIndex("ProbableNextAssignmentId");
-
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("ProjectStatusId");
-
-                    b.HasIndex("StatusId");
 
                     b.HasIndex("EmployeeId", "ProjectId", "AllocationStatus");
 
@@ -3142,83 +2174,7 @@ namespace HRMS.Api.Migrations
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Inactive"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Planned"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Completed"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Released"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Cancelled"
                         });
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.SubPracticeMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("PracticeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PracticeId");
-
-                    b.HasIndex("Name", "PracticeId")
-                        .IsUnique();
-
-                    b.ToTable("SubPracticeMasters", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.User", b =>
@@ -3349,7 +2305,8 @@ namespace HRMS.Api.Migrations
                     b.HasOne("HRMS.Api.Models.DepartmentTypeMaster", "DepartmentType")
                         .WithMany()
                         .HasForeignKey("DepartmentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("HRMS.Api.Models.DesignationMaster", "Designation")
                         .WithMany()
@@ -3395,15 +2352,11 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HRMS.Api.Models.SubPracticeMaster", "SubPractice")
-                        .WithMany("Employees")
-                        .HasForeignKey("SubPracticeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("HRMS.Api.Models.WorkModelMaster", "WorkModel")
                         .WithMany()
                         .HasForeignKey("WorkModelId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Client");
 
@@ -3424,8 +2377,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("PracticeHead");
 
                     b.Navigation("ReportingManager");
-
-                    b.Navigation("SubPractice");
 
                     b.Navigation("WorkModel");
                 });
@@ -3555,10 +2506,6 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HRMS.Api.Models.ProbableNextAssignmentMaster", "ProbableNextAssignment")
-                        .WithMany()
-                        .HasForeignKey("ProbableNextAssignmentId");
-
                     b.HasOne("HRMS.Api.Models.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
@@ -3569,21 +2516,13 @@ namespace HRMS.Api.Migrations
                         .WithMany()
                         .HasForeignKey("ProjectStatusId");
 
-                    b.HasOne("HRMS.Api.Models.StatusMaster", "Status")
-                        .WithMany()
-                        .HasForeignKey("StatusId");
-
                     b.Navigation("Client");
 
                     b.Navigation("Employee");
 
-                    b.Navigation("ProbableNextAssignment");
-
                     b.Navigation("Project");
 
                     b.Navigation("ProjectStatus");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceRequest", b =>
@@ -3623,17 +2562,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.SubPracticeMaster", b =>
-                {
-                    b.HasOne("HRMS.Api.Models.Practice", "Practice")
-                        .WithMany()
-                        .HasForeignKey("PracticeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Practice");
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
                 {
                     b.Navigation("Projects");
@@ -3671,11 +2599,6 @@ namespace HRMS.Api.Migrations
             modelBuilder.Entity("HRMS.Api.Models.Skill", b =>
                 {
                     b.Navigation("EmployeeSkills");
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.SubPracticeMaster", b =>
-                {
-                    b.Navigation("Employees");
                 });
 #pragma warning restore 612, 618
         }

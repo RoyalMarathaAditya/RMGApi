@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626182750_AddProbableNextAssignmentDate")]
+    partial class AddProbableNextAssignmentDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -455,7 +458,7 @@ namespace HRMS.Api.Migrations
                     b.Property<bool?>("DeloitteFitment")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("DepartmentTypeId")
+                    b.Property<Guid>("DepartmentTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DesignationId")
@@ -481,6 +484,10 @@ namespace HRMS.Api.Migrations
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -491,6 +498,10 @@ namespace HRMS.Api.Migrations
 
                     b.Property<DateTime?>("LWD")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("LocationId")
                         .HasColumnType("uniqueidentifier");
@@ -512,14 +523,10 @@ namespace HRMS.Api.Migrations
                     b.Property<int?>("PracticeHeadId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PracticeHeadName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<Guid>("PracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("PriorExperience")
+                    b.Property<decimal>("PriorExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
 
@@ -530,10 +537,6 @@ namespace HRMS.Api.Migrations
                     b.Property<int?>("ReportingManagerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ReportingManagerName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -543,10 +546,7 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SubPracticeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("WorkModelId")
+                    b.Property<Guid>("WorkModelId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -576,8 +576,6 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("ReportingManagerId");
 
                     b.HasIndex("StatusId");
-
-                    b.HasIndex("SubPracticeId");
 
                     b.HasIndex("WorkModelId");
 
@@ -3177,50 +3175,6 @@ namespace HRMS.Api.Migrations
                         });
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.SubPracticeMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("PracticeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PracticeId");
-
-                    b.HasIndex("Name", "PracticeId")
-                        .IsUnique();
-
-                    b.ToTable("SubPracticeMasters", (string)null);
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -3349,7 +3303,8 @@ namespace HRMS.Api.Migrations
                     b.HasOne("HRMS.Api.Models.DepartmentTypeMaster", "DepartmentType")
                         .WithMany()
                         .HasForeignKey("DepartmentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("HRMS.Api.Models.DesignationMaster", "Designation")
                         .WithMany()
@@ -3395,15 +3350,11 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HRMS.Api.Models.SubPracticeMaster", "SubPractice")
-                        .WithMany("Employees")
-                        .HasForeignKey("SubPracticeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("HRMS.Api.Models.WorkModelMaster", "WorkModel")
                         .WithMany()
                         .HasForeignKey("WorkModelId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Client");
 
@@ -3424,8 +3375,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("PracticeHead");
 
                     b.Navigation("ReportingManager");
-
-                    b.Navigation("SubPractice");
 
                     b.Navigation("WorkModel");
                 });
@@ -3623,17 +3572,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.SubPracticeMaster", b =>
-                {
-                    b.HasOne("HRMS.Api.Models.Practice", "Practice")
-                        .WithMany()
-                        .HasForeignKey("PracticeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Practice");
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
                 {
                     b.Navigation("Projects");
@@ -3671,11 +3609,6 @@ namespace HRMS.Api.Migrations
             modelBuilder.Entity("HRMS.Api.Models.Skill", b =>
                 {
                     b.Navigation("EmployeeSkills");
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.SubPracticeMaster", b =>
-                {
-                    b.Navigation("Employees");
                 });
 #pragma warning restore 612, 618
         }

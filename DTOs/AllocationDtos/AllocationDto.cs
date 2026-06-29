@@ -56,6 +56,10 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string ProjectName { get; set; } = string.Empty;
         public int? ClientId { get; set; }
         public string? ClientName { get; set; }
+        public Guid? ProjectStatusId { get; set; }
+        public Guid? StatusId { get; set; }
+        public Guid? ProbableNextAssignmentId { get; set; }
+        public DateTime? ProbableNextAssignmentDate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
@@ -69,6 +73,10 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public int EmployeeId { get; set; }
         public int ProjectId { get; set; }
         public int? ClientId { get; set; }
+        public Guid? ProjectStatusId { get; set; }
+        public Guid? StatusId { get; set; }
+        public Guid? ProbableNextAssignmentId { get; set; }
+        public DateTime? ProbableNextAssignmentDate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
@@ -81,6 +89,10 @@ namespace HRMS.Api.DTOs.AllocationDtos
     {
         public int? ProjectId { get; set; }
         public int? ClientId { get; set; }
+        public Guid? ProjectStatusId { get; set; }
+        public Guid? StatusId { get; set; }
+        public Guid? ProbableNextAssignmentId { get; set; }
+        public DateTime? ProbableNextAssignmentDate { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal? AllocationPercentage { get; set; }

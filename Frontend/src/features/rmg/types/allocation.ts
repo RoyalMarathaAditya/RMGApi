@@ -50,6 +50,10 @@ export interface ProjectAllocationDto {
   projectName: string;
   clientId: number | null;
   clientName: string | null;
+  projectStatusId: string | null;
+  statusId: string | null;
+  probableNextAssignmentId: string | null;
+  probableNextAssignmentDate: string | null;
   startDate: string;
   endDate: string | null;
   allocationPercentage: number;
@@ -62,6 +66,10 @@ export interface AddProjectAllocationDto {
   employeeId: number;
   projectId: number;
   clientId?: number | null;
+  projectStatusId?: string | null;
+  statusId?: string | null;
+  probableNextAssignmentId?: string | null;
+  probableNextAssignmentDate?: string | null;
   startDate: string;
   endDate: string | null;
   allocationPercentage: number;
@@ -73,6 +81,10 @@ export interface AddProjectAllocationDto {
 export interface UpdateProjectAllocationDto {
   projectId?: number;
   clientId?: number | null;
+  projectStatusId?: string | null;
+  statusId?: string | null;
+  probableNextAssignmentId?: string | null;
+  probableNextAssignmentDate?: string | null;
   startDate?: string;
   endDate?: string | null;
   allocationPercentage?: number;

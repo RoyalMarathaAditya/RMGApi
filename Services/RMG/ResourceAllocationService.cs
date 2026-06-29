@@ -224,15 +224,29 @@ namespace HRMS.Api.Services.RMG
             if (totalAllocated + dto.AllocationPercentage > 100)
                 throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation: {totalAllocated}%.");
 
+            string statusName = dto.AllocationStatus ?? "Active";
+            if (dto.StatusId.HasValue)
+            {
+                var statusMaster = await _dbContext.StatusMasters
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(sm => sm.Id == dto.StatusId.Value, cancellationToken);
+                if (statusMaster is not null)
+                    statusName = statusMaster.Name;
+            }
+
             var allocation = new ResourceAllocation
             {
                 EmployeeId = dto.EmployeeId,
                 ProjectId = dto.ProjectId,
                 ClientId = dto.ClientId,
+                ProjectStatusId = dto.ProjectStatusId,
+                StatusId = dto.StatusId,
+                ProbableNextAssignmentId = dto.ProbableNextAssignmentId,
+                ProbableNextAssignmentDate = dto.ProbableNextAssignmentDate,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
-                AllocationStatus = dto.AllocationStatus ?? "Active",
+                AllocationStatus = statusName,
                 AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
                 CreatedBy = userName
@@ -252,6 +266,18 @@ namespace HRMS.Api.Services.RMG
 
             if (dto.ProjectId.HasValue) allocation.ProjectId = dto.ProjectId.Value;
             if (dto.ClientId.HasValue) allocation.ClientId = dto.ClientId.Value;
+            if (dto.ProjectStatusId.HasValue) allocation.ProjectStatusId = dto.ProjectStatusId.Value;
+            if (dto.StatusId.HasValue)
+            {
+                allocation.StatusId = dto.StatusId.Value;
+                var statusMaster = await _dbContext.StatusMasters
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(sm => sm.Id == dto.StatusId.Value, cancellationToken);
+                if (statusMaster is not null)
+                    allocation.AllocationStatus = statusMaster.Name;
+            }
+            if (dto.ProbableNextAssignmentId.HasValue) allocation.ProbableNextAssignmentId = dto.ProbableNextAssignmentId.Value;
+            if (dto.ProbableNextAssignmentDate.HasValue) allocation.ProbableNextAssignmentDate = dto.ProbableNextAssignmentDate;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
             if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
@@ -536,6 +562,10 @@ namespace HRMS.Api.Services.RMG
                 ProjectName = project?.ProjectName ?? "",
                 ClientId = allocation.ClientId ?? project?.ClientId,
                 ClientName = allocation.Client?.Name ?? project?.Client?.Name,
+                ProjectStatusId = allocation.ProjectStatusId,
+                StatusId = allocation.StatusId,
+                ProbableNextAssignmentId = allocation.ProbableNextAssignmentId,
+                ProbableNextAssignmentDate = allocation.ProbableNextAssignmentDate,
                 StartDate = allocation.StartDate,
                 EndDate = allocation.EndDate,
                 AllocationPercentage = allocation.AllocationPercentage,

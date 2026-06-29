@@ -16,6 +16,17 @@ namespace HRMS.Api.Models.RMG
         public int? ClientId { get; set; }
         public Client? Client { get; set; }
 
+        public Guid? ProjectStatusId { get; set; }
+        public ProjectStatusMaster? ProjectStatus { get; set; }
+
+        public Guid? StatusId { get; set; }
+        public StatusMaster? Status { get; set; }
+
+        public Guid? ProbableNextAssignmentId { get; set; }
+        public ProbableNextAssignmentMaster? ProbableNextAssignment { get; set; }
+
+        public DateTime? ProbableNextAssignmentDate { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 

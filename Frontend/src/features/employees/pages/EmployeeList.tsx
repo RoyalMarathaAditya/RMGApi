@@ -2,8 +2,9 @@
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import { Alert, Box, Button, InputAdornment, Stack, TextField, Typography } from '@mui/material';
-import type { GridPaginationModel } from '@mui/x-data-grid';
+import type { GridPaginationModel, GridRowParams } from '@mui/x-data-grid';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
 // Redux: dispatches thunks for employee CRUD, reads employee list and filter state
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
@@ -24,6 +25,7 @@ import type { Employee, EmployeeFormValues } from '../types/employee';
 
 export default function EmployeeList() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { employees, error, filters, loading } = useAppSelector((state) => state.employees);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -89,6 +91,13 @@ export default function EmployeeList() {
     dispatch(fetchEmployees());
   }, [dispatch]);
 
+  const handleRowClick = useCallback(
+    (params: GridRowParams<Employee>) => {
+      navigate(`/employees/${params.row.id}`);
+    },
+    [navigate],
+  );
+
   return (
     <PageContainer title="Employee Management">
       <Stack spacing={2.5}>
@@ -136,6 +145,7 @@ export default function EmployeeList() {
           columns={columns}
           loading={loading}
           onPaginationModelChange={setPaginationModel}
+          onRowClick={handleRowClick}
           paginationModel={paginationModel}
           rows={filteredEmployees}
         />

@@ -54,6 +54,8 @@ namespace HRMS.Api.Profiles
             CreateMap<Location, MasterDto>();
             CreateMap<Practice, MasterDto>();
             CreateMap<Skill, MasterDto>();
+            CreateMap<ProjectStatusMaster, MasterDto>();
+            CreateMap<ProbableNextAssignmentMaster, MasterDto>();
             #endregion
 
             #region Leave
