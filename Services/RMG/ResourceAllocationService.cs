@@ -406,8 +406,9 @@ namespace HRMS.Api.Services.RMG
             var isUtilised = activeAllocations.Any();
             var isBillable = activeAllocations.Any(a => a.BillableStatus == "Billable");
 
-            var totalExperience = employee.ExperienceYears ?? employee.PriorExperience + (employee.RelevantExperience ?? 0);
-            var nvExperience = totalExperience - employee.PriorExperience;
+            var priorExp = employee.PriorExperience ?? 0;
+            var totalExperience = employee.ExperienceYears ?? priorExp + (employee.RelevantExperience ?? 0);
+            var nvExperience = totalExperience - priorExp;
             if (nvExperience < 0) nvExperience = 0;
 
             var skills = employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).ToList() ?? new List<string>();
@@ -433,7 +434,7 @@ namespace HRMS.Api.Services.RMG
                 PracticeHead = employee.Practice?.PracticeHead?.FullName,
                 DOJ = employee.DOJ,
 
-                PriorExperience = employee.PriorExperience,
+                PriorExperience = employee.PriorExperience ?? 0,
                 NVExperience = Math.Round(nvExperience, 1),
                 TotalExperience = Math.Round(totalExperience, 1),
                 ExperienceRange = GetExperienceRange(totalExperience),
@@ -577,7 +578,7 @@ namespace HRMS.Api.Services.RMG
         private static decimal CalculateTotalExperience(Employee employee)
         {
             var doj = employee.DOJ;
-            var priorExperience = employee.PriorExperience;
+            var priorExperience = employee.PriorExperience ?? 0;
             var yearsSinceDoj = (decimal)(DateTime.UtcNow - doj).TotalDays / 365.25m;
             return Math.Round(yearsSinceDoj + priorExperience, 1);
         }

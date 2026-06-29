@@ -31,12 +31,12 @@ function normalizeEmployee(data: any): Employee {
     departmentType: data.departmentType ?? '',
     statusId: data.statusId ?? '',
     employeeStatus: data.employeeStatus ?? '',
-    reportingManagerId: data.reportingManagerId ?? null,
     reportingManagerName: data.reportingManagerName ?? null,
-    practiceHeadId: data.practiceHeadId ?? null,
     practiceHeadName: data.practiceHeadName ?? null,
     designationId: data.designationId ?? null,
     designation: data.designation ?? null,
+    subPracticeId: data.subPracticeId ?? null,
+    subPractice: data.subPractice ?? null,
     skills: data.skills ?? [],
   };
 }
@@ -61,10 +61,11 @@ export const employeeService = {
       locationId: values.locationId,
       workModelId: values.workModelId,
       practiceId: values.practiceId,
+      subPracticeId: values.subPracticeId || null,
       departmentTypeId: values.departmentTypeId,
       statusId: values.statusId,
-      reportingManagerId: values.reportingManagerId || null,
-      practiceHeadId: values.practiceHeadId || null,
+      reportingManagerName: values.reportingManagerName || null,
+      practiceHeadName: values.practiceHeadName || null,
       designationId: values.designationId || null,
       deloitteFitment: values.deloitteFitment ?? null,
       engineering: values.engineering ?? null,
@@ -87,10 +88,11 @@ export const employeeService = {
       locationId: values.locationId,
       workModelId: values.workModelId,
       practiceId: values.practiceId,
+      subPracticeId: values.subPracticeId || null,
       departmentTypeId: values.departmentTypeId,
       statusId: values.statusId,
-      reportingManagerId: values.reportingManagerId || null,
-      practiceHeadId: values.practiceHeadId || null,
+      reportingManagerName: values.reportingManagerName || null,
+      practiceHeadName: values.practiceHeadName || null,
       designationId: values.designationId || null,
       deloitteFitment: values.deloitteFitment ?? null,
       engineering: values.engineering ?? null,
@@ -124,6 +126,22 @@ export const employeeService = {
       failedRows: number;
       errors: Array<{ rowNumber: number; employeeName: string | null; email: string | null; errorMessage: string }>;
       errorFileUrl: string | null;
+      importedRows: Array<{
+        rowNumber: number;
+        employeeCode: string | null;
+        fullName: string;
+        employeeType: string;
+        designation: string;
+        practice: string;
+        subPractice: string | null;
+        nvLocation: string | null;
+        reportingManager: string | null;
+        practiceHead: string | null;
+        email: string;
+        activeStatus: string | null;
+        doj: string | null;
+        lwd: string | null;
+      }> | null;
     };
   },
 

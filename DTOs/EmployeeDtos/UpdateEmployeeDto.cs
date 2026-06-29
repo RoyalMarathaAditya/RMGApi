@@ -13,10 +13,11 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public Guid LocationId { get; set; }
         public Guid WorkModelId { get; set; }
         public Guid PracticeId { get; set; }
+        public Guid? SubPracticeId { get; set; }
         public Guid DepartmentTypeId { get; set; }
         public Guid StatusId { get; set; }
-        public int? ReportingManagerId { get; set; }
-        public int? PracticeHeadId { get; set; }
+        public string? ReportingManagerName { get; set; }
+        public string? PracticeHeadName { get; set; }
         public bool? DeloitteFitment { get; set; }
         public bool? Engineering { get; set; }
         public string? MobileNumber { get; set; }
