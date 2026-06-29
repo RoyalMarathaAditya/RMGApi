@@ -47,9 +47,14 @@ export default function EmployeeList() {
         employee.employmentType,
         employee.designation,
         employee.practice,
+        employee.subPractice,
         employee.location,
+        employee.reportingManagerName,
+        employee.practiceHeadName,
         employee.departmentType,
         employee.employeeStatus,
+        employee.doj,
+        employee.lwd,
       ]
         .join(' ')
         .toLowerCase();
@@ -57,17 +62,7 @@ export default function EmployeeList() {
     });
   }, [employees, filters.search]);
 
-  const columns = useMemo(
-    () =>
-      getEmployeeColumns({
-        onDelete: (employee) => setDeleteTarget(employee),
-        onEdit: (employee) => {
-          setSelectedEmployee(employee);
-          setDialogOpen(true);
-        },
-      }),
-    [],
-  );
+  const columns = useMemo(() => getEmployeeColumns(), []);
 
   const handleAdd = () => {
     setSelectedEmployee(null);

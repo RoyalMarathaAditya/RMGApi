@@ -174,6 +174,7 @@ namespace HRMS.Api.Services.Interfaces
                 .Include(e => e.Location)
                 .Include(e => e.WorkModel)
                 .Include(e => e.Practice)
+                .Include(e => e.SubPractice)
                 .Include(e => e.DepartmentType)
                 .Include(e => e.EmployeeStatus)
                 .Include(e => e.ReportingManager)

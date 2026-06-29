@@ -11,10 +11,7 @@ interface MasterItem {
   id: string;
   name: string;
 }
-interface LeaderItem {
-  id: number;
-  fullName: string;
-}
+
 
 const schema = yup.object({
   employeeCode: yup.string().trim().required('Required').max(20, 'Max 20 characters'),
@@ -47,7 +44,6 @@ export default function EmployeeForm({
   const [departmentTypes, setDepartmentTypes] = useState<MasterItem[]>([]);
   const [designations, setDesignations] = useState<MasterItem[]>([]);
   const [statuses, setStatuses] = useState<MasterItem[]>([]);
-  const [leaders, setLeaders] = useState<LeaderItem[]>([]);
   const [skills, setSkills] = useState<MasterItem[]>([]);
 
   const { control, handleSubmit, setValue, reset } = useForm<EmployeeFormValues>({
@@ -66,8 +62,8 @@ export default function EmployeeForm({
       departmentTypeId: '',
       designationId: '',
       statusId: '',
-      reportingManagerId: null,
-      practiceHeadId: null,
+      reportingManagerName: null,
+      practiceHeadName: null,
       deloitteFitment: null,
       engineering: null,
       mobileNumber: '',
@@ -85,7 +81,6 @@ export default function EmployeeForm({
     apiGet('/master/departmenttypes').then(setDepartmentTypes);
     apiGet('/master/designations').then(setDesignations);
     apiGet('/master/statuses').then(setStatuses);
-    api.get('/employees/leaders').then((r) => setLeaders(r.data as LeaderItem[]));
     apiGet('/master/skills').then(setSkills);
   }, []);
 
@@ -106,8 +101,8 @@ export default function EmployeeForm({
         departmentTypeId: employee.departmentTypeId,
         designationId: employee.designationId ?? '',
         statusId: employee.statusId,
-        reportingManagerId: employee.reportingManagerId ?? null,
-        practiceHeadId: employee.practiceHeadId ?? null,
+        reportingManagerName: employee.reportingManagerName ?? null,
+        practiceHeadName: employee.practiceHeadName ?? null,
         deloitteFitment: employee.deloitteFitment ?? null,
         engineering: employee.engineering ?? null,
         mobileNumber: employee.mobileNumber ?? '',
@@ -217,21 +212,11 @@ export default function EmployeeForm({
         </Stack>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller control={control} name="reportingManagerId" render={({ field }) => (
-            <TextField {...field} select fullWidth label="Reporting Manager" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}>
-              <MenuItem value="">None</MenuItem>
-              {leaders.map((m) => (
-                <MenuItem key={m.id} value={m.id}>{m.fullName}</MenuItem>
-              ))}
-            </TextField>
+          <Controller control={control} name="reportingManagerName" render={({ field }) => (
+            <TextField {...field} fullWidth label="Reporting Manager" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} />
           )} />
-          <Controller control={control} name="practiceHeadId" render={({ field }) => (
-            <TextField {...field} select fullWidth label="Practice Head" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}>
-              <MenuItem value="">None</MenuItem>
-              {leaders.map((m) => (
-                <MenuItem key={m.id} value={m.id}>{m.fullName}</MenuItem>
-              ))}
-            </TextField>
+          <Controller control={control} name="practiceHeadName" render={({ field }) => (
+            <TextField {...field} fullWidth label="Practice Head" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value || null)} />
           )} />
         </Stack>
 

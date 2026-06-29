@@ -23,7 +23,7 @@ export default function EmployeeGrid({
   const gridHeight = 112 + visibleRows * 52;
 
   return (
-    <Box sx={{ height: gridHeight, maxHeight: 560, minHeight: 220, width: '100%' }}>
+    <Box sx={{ height: gridHeight, maxHeight: 560, minHeight: 220, width: '100%', overflowX: 'auto' }}>
       <DataGrid
         columns={columns}
         disableRowSelectionOnClick
@@ -34,8 +34,15 @@ export default function EmployeeGrid({
         rows={rows}
         sx={{
           border: 0,
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+          },
           '& .MuiDataGrid-columnHeaders': {
             backgroundColor: 'grey.50',
+          },
+          '& .MuiDataGrid-cell': {
+            whiteSpace: 'nowrap',
           },
         }}
       />

@@ -9,6 +9,7 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public int DeletedRows { get; set; }
         public List<EmployeeImportErrorDto> Errors { get; set; } = new();
         public string? ErrorFileUrl { get; set; }
+        public List<EmployeeImportRowDto>? ImportedRows { get; set; }
     }
 
     public class EmployeeImportErrorDto

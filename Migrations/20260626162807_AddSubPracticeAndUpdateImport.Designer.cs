@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626162807_AddSubPracticeAndUpdateImport")]
+    partial class AddSubPracticeAndUpdateImport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -455,7 +458,7 @@ namespace HRMS.Api.Migrations
                     b.Property<bool?>("DeloitteFitment")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("DepartmentTypeId")
+                    b.Property<Guid>("DepartmentTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DesignationId")
@@ -481,6 +484,10 @@ namespace HRMS.Api.Migrations
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -491,6 +498,10 @@ namespace HRMS.Api.Migrations
 
                     b.Property<DateTime?>("LWD")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("LocationId")
                         .HasColumnType("uniqueidentifier");
@@ -512,14 +523,10 @@ namespace HRMS.Api.Migrations
                     b.Property<int?>("PracticeHeadId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PracticeHeadName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<Guid>("PracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("PriorExperience")
+                    b.Property<decimal>("PriorExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
 
@@ -529,10 +536,6 @@ namespace HRMS.Api.Migrations
 
                     b.Property<int?>("ReportingManagerId")
                         .HasColumnType("int");
-
-                    b.Property<string>("ReportingManagerName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -546,7 +549,7 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid?>("SubPracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("WorkModelId")
+                    b.Property<Guid>("WorkModelId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -2221,7 +2224,8 @@ namespace HRMS.Api.Migrations
                     b.HasOne("HRMS.Api.Models.DepartmentTypeMaster", "DepartmentType")
                         .WithMany()
                         .HasForeignKey("DepartmentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("HRMS.Api.Models.DesignationMaster", "Designation")
                         .WithMany()
@@ -2275,7 +2279,8 @@ namespace HRMS.Api.Migrations
                     b.HasOne("HRMS.Api.Models.WorkModelMaster", "WorkModel")
                         .WithMany()
                         .HasForeignKey("WorkModelId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Client");
 

@@ -1,39 +1,24 @@
 
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import { Chip } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
-import { GridActionsCellItem } from '@mui/x-data-grid';
 import type { Employee } from '../types/employee';
 
-interface EmployeeColumnHandlers {
-  onEdit: (employee: Employee) => void;
-  onDelete: (employee: Employee) => void;
-}
-
-export function getEmployeeColumns({ onEdit, onDelete }: EmployeeColumnHandlers): GridColDef<Employee>[] {
+export function getEmployeeColumns(): GridColDef<Employee>[] {
   return [
-    { field: 'employeeCode', headerName: 'Code', minWidth: 100, flex: 0.6 },
-    { field: 'fullName', headerName: 'Name', minWidth: 180, flex: 1.2 },
-    { field: 'email', headerName: 'Email', minWidth: 200, flex: 1.2 },
-    { field: 'designation', headerName: 'Designation', minWidth: 160, flex: 1 },
-    { field: 'employmentType', headerName: 'Emp Type', minWidth: 120, flex: 0.8 },
-    { field: 'practice', headerName: 'Practice', minWidth: 150, flex: 1 },
-    { field: 'workModel', headerName: 'Work Model', minWidth: 120, flex: 0.8 },
-    { field: 'location', headerName: 'Location', minWidth: 120, flex: 0.8 },
-    {
-      field: 'priorExperience',
-      headerName: 'Prior Exp.',
-      align: 'right',
-      headerAlign: 'right',
-      minWidth: 100,
-      type: 'number',
-      valueFormatter: (value) => value ? `${value} yrs` : '',
-    },
+    { field: 'employeeCode', headerName: 'Emp Id', width: 100 },
+    { field: 'fullName', headerName: 'Full Name', width: 180 },
+    { field: 'employmentType', headerName: 'FTE/ Consultant', width: 130 },
+    { field: 'designation', headerName: 'Role/Designation', width: 160 },
+    { field: 'practice', headerName: 'OU 4 - Practice', width: 160 },
+    { field: 'subPractice', headerName: 'OU 5 - Sub-practice', width: 150 },
+    { field: 'location', headerName: 'Location', width: 130 },
+    { field: 'reportingManagerName', headerName: 'L1 Manager', width: 160 },
+    { field: 'practiceHeadName', headerName: 'Practice Head', width: 160 },
+    { field: 'email', headerName: 'Email ID', width: 220 },
     {
       field: 'employeeStatus',
-      headerName: 'Status',
-      minWidth: 110,
+      headerName: 'Active',
+      width: 100,
       renderCell: ({ row }) => (
         <Chip
           color={row.employeeStatus === 'Active' ? 'success' : 'default'}
@@ -44,20 +29,16 @@ export function getEmployeeColumns({ onEdit, onDelete }: EmployeeColumnHandlers)
       ),
     },
     {
-      field: 'actions',
-      headerName: '',
-      type: 'actions',
-      width: 96,
-      getActions: ({ row }) => [
-        <GridActionsCellItem icon={<EditIcon />} key="edit" label="Edit" onClick={() => onEdit(row)} />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          key="delete"
-          label="Delete"
-          onClick={() => onDelete(row)}
-          showInMenu
-        />,
-      ],
+      field: 'doj',
+      headerName: 'DOJ',
+      width: 130,
+      valueFormatter: (value) => value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
+    },
+    {
+      field: 'lwd',
+      headerName: 'LWD',
+      width: 150,
+      valueFormatter: (value) => value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
     },
   ];
 }

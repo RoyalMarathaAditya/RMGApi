@@ -11,8 +11,6 @@ namespace HRMS.Api.Configurations
             builder.ToTable("Employees");
 
             builder.Property(e => e.EmployeeCode).HasMaxLength(50).IsRequired();
-            builder.Property(e => e.FirstName).HasMaxLength(100);
-            builder.Property(e => e.LastName).HasMaxLength(100);
             builder.Property(e => e.FullName).HasMaxLength(200).IsRequired();
             builder.Property(e => e.Email).HasMaxLength(150).IsRequired();
             builder.Property(e => e.MobileNumber).HasMaxLength(20);
@@ -84,6 +82,11 @@ namespace HRMS.Api.Configurations
             builder.HasOne(e => e.OnboardingType)
                 .WithMany()
                 .HasForeignKey(e => e.OnboardingTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(e => e.SubPractice)
+                .WithMany(sp => sp.Employees)
+                .HasForeignKey(e => e.SubPracticeId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
