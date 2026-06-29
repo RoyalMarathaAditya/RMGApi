@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
 import { allocationService } from '../services/allocationService';
 import type { AllocationDto } from '../types/allocation';
+import { toastService } from '../../../services/toastService';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
   Active: 'success',
@@ -55,8 +56,10 @@ export default function ResourceAllocationList() {
     try {
       await allocationService.delete(id);
       setAllocations((prev) => prev.filter((a) => a.id !== id));
+      toastService.success('Allocation deleted successfully.');
     } catch {
       console.error('Failed to delete allocation');
+      toastService.error('Failed to delete allocation');
     }
   };
 

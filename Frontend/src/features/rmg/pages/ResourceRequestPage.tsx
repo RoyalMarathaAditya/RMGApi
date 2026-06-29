@@ -25,6 +25,7 @@ import * as yup from 'yup';
 import PageContainer from '../../../components/common/PageContainer';
 import { requestService } from '../services/requestService';
 import type { ResourceRequestDto } from '../types/request';
+import { toastService } from '../../../services/toastService';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
   Submitted: 'info',
@@ -75,7 +76,7 @@ export default function ResourceRequestPage() {
       reset();
       loadRequests();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to create request');
+      toastService.error(err.response?.data?.message || 'Failed to create request');
     }
   };
 

@@ -12,7 +12,6 @@ import {
   DialogTitle,
   IconButton,
   Paper,
-  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -34,6 +33,7 @@ import {
   updateDesignation,
 } from '../../../redux/slices/designationSlice';
 import type { Designation, DesignationFormValues } from '../types/designation';
+import { toastService } from '../../../services/toastService';
 
 const defaultFormValues: DesignationFormValues = {
   name: '',
@@ -49,8 +49,7 @@ export default function DesignationList() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDesignation, setEditingDesignation] = useState<Designation | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Designation | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   const [formValues, setFormValues] = useState<DesignationFormValues>(defaultFormValues);
   const [formError, setFormError] = useState('');
 
@@ -86,13 +85,12 @@ export default function DesignationList() {
     try {
       if (editingDesignation) {
         await dispatch(updateDesignation({ id: editingDesignation.id, values: formValues })).unwrap();
-        setSnackbarMessage('Designation updated successfully');
+        toastService.success('Designation updated successfully');
       } else {
         await dispatch(createDesignation(formValues)).unwrap();
-        setSnackbarMessage('Designation created successfully');
+        toastService.success('Designation created successfully');
       }
       setDialogOpen(false);
-      setSnackbarOpen(true);
     } catch (err: any) {
       setFormError(err?.message || 'Failed to save designation');
     }
@@ -103,11 +101,9 @@ export default function DesignationList() {
     try {
       await dispatch(deleteDesignation(deleteTarget.id)).unwrap();
       setDeleteTarget(null);
-      setSnackbarMessage('Designation deleted successfully');
-      setSnackbarOpen(true);
+      toastService.success('Designation deleted successfully');
     } catch {
-      setSnackbarMessage('Failed to delete designation');
-      setSnackbarOpen(true);
+      toastService.error('Failed to delete designation');
     }
   };
 
@@ -239,9 +235,6 @@ export default function DesignationList() {
         </DialogActions>
       </Dialog>
 
-      <Snackbar autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} open={snackbarOpen}>
-        <Alert severity="success" variant="filled">{snackbarMessage}</Alert>
-      </Snackbar>
     </PageContainer>
   );
 }

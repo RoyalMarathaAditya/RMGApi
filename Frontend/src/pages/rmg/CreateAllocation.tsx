@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/common/PageContainer';
 import { allocationService } from '../../features/rmg/services/allocationService';
 import { ALLOCATION_STATUSES } from '../../features/rmg/types/allocation';
+import { toastService } from '../../services/toastService';
 
 const schema = yup.object({
   employeeId: yup.number().required('Employee ID is required').positive(),
@@ -53,7 +54,7 @@ export default function CreateAllocation() {
       await allocationService.create(values);
       navigate('/rmg');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to create allocation');
+      toastService.error(err.response?.data?.message || 'Failed to create allocation');
     } finally {
       setSubmitting(false);
     }

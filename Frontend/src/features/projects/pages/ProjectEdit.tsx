@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 // Redux: dispatches updateProject, reads current project list to find the one being edited
@@ -6,13 +6,13 @@ import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ProjectForm from '../components/ProjectForm';
 import { updateProject } from '../../../redux/slices/projectSlice';
 import type { ProjectFormValues } from '../types/project.types';
+import { toastService } from '../../../services/toastService';
 
 export default function ProjectEdit() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
   const projects = useAppSelector((state) => state.projects.projects);
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const project = useMemo(() => projects.find((item) => item.id === Number(id)), [id, projects]);
 
   if (!project) {
@@ -33,7 +33,7 @@ export default function ProjectEdit() {
 
   const handleSubmit = (values: ProjectFormValues) => {
     dispatch(updateProject({ id: project.id, ...values }));
-    setIsSnackbarOpen(true);
+    toastService.success('Project updated successfully.');
     window.setTimeout(() => navigate('/projects'), 500);
   };
 
@@ -46,11 +46,6 @@ export default function ProjectEdit() {
         <Typography color="text.secondary">Update project scope, client details, status, and resource summary.</Typography>
       </Stack>
       <ProjectForm initialValues={project} mode="edit" onCancel={() => navigate('/projects')} onSubmit={handleSubmit} />
-      <Snackbar autoHideDuration={3000} onClose={() => setIsSnackbarOpen(false)} open={isSnackbarOpen}>
-        <Alert severity="success" variant="filled">
-          Project updated successfully.
-        </Alert>
-      </Snackbar>
     </Stack>
   );
 }

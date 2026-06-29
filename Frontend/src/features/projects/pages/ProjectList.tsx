@@ -12,7 +12,6 @@ import {
   DialogTitle,
   MenuItem,
   Paper,
-  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -25,6 +24,7 @@ import ProjectTable from '../components/ProjectTable';
 import { projectStatuses } from '../mock/projects';
 import { deleteProject } from '../../../redux/slices/projectSlice';
 import type { Project, ProjectStatus } from '../types/project.types';
+import { toastService } from '../../../services/toastService';
 
 export default function ProjectList() {
   const dispatch = useAppDispatch();
@@ -33,7 +33,6 @@ export default function ProjectList() {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'All'>('All');
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
 
   const filteredProjects = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -58,7 +57,7 @@ export default function ProjectList() {
 
     dispatch(deleteProject(projectToDelete.id));
     setProjectToDelete(null);
-    setIsSnackbarOpen(true);
+    toastService.success('Project deleted successfully.');
   };
 
   return (
@@ -143,11 +142,6 @@ export default function ProjectList() {
         </DialogActions>
       </Dialog>
 
-      <Snackbar autoHideDuration={3000} onClose={() => setIsSnackbarOpen(false)} open={isSnackbarOpen}>
-        <Alert severity="success" variant="filled">
-          Project deleted successfully.
-        </Alert>
-      </Snackbar>
     </Stack>
   );
 }

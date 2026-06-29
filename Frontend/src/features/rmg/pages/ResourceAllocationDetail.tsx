@@ -28,7 +28,6 @@ import {
   Tooltip,
   Typography,
   Alert,
-  Snackbar,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -45,6 +44,7 @@ import PageContainer from '../../../components/common/PageContainer';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { fetchEmployees } from '../../../redux/slices/employeeSlice';
 import api from '../../../services/api';
+import { toastService } from '../../../services/toastService';
 import { allocationService } from '../services/allocationService';
 import type { EmployeeAllocationDto, ProjectAllocationDto, AddProjectAllocationDto, UpdateProjectAllocationDto } from '../types/allocation';
 import { ALLOCATION_TYPES, BILLABLE_STATUSES } from '../types/allocation';
@@ -130,7 +130,6 @@ export default function ResourceAllocationDetail() {
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
-  const [successMessage, setSuccessMessage] = useState('');
   const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<{ id: string; name: string }[]>([]);
   const [statuses, setStatuses] = useState<{ id: string; name: string }[]>([]);
@@ -292,7 +291,7 @@ export default function ResourceAllocationDetail() {
       const data = await allocationService.getEmployeeAllocations(employeeId);
       setEmployeeData(data);
     } catch {
-      setError('Failed to load employee allocation data');
+      toastService.error('Failed to load employee allocation data');
     } finally {
       setLoading(false);
     }
@@ -346,8 +345,9 @@ export default function ResourceAllocationDetail() {
     try {
       await allocationService.deleteProjectAllocation(allocationId);
       await loadEmployeeData();
+      toastService.success('Project allocation deleted successfully.');
     } catch {
-      setError('Failed to delete allocation');
+      toastService.error('Failed to delete allocation');
     }
   };
 
@@ -361,61 +361,61 @@ export default function ResourceAllocationDetail() {
     setFormError('');
 
     if (!formData.projectId) {
-      setFormError('Project Code is required');
+      toastService.warning('Project Code is required');
       return;
     }
     if (!formData.clientId) {
-      setFormError('Client is required');
+      toastService.warning('Client is required');
       return;
     }
     if (!formData.startDate) {
-      setFormError('Start date is required');
+      toastService.warning('Start date is required');
       return;
     }
     if (!formData.endDate) {
-      setFormError('End date is required');
+      toastService.warning('End date is required');
       return;
     }
     if (formData.endDate < formData.startDate) {
-      setFormError('End date cannot be earlier than start date');
+      toastService.warning('End date cannot be earlier than start date');
       return;
     }
     if (formData.allocationPercentage <= 0 || formData.allocationPercentage > 100) {
-      setFormError('Allocation percentage must be between 1 and 100');
+      toastService.warning('Allocation percentage must be between 1 and 100');
       return;
     }
     if (!formData.projectStatusId) {
-      setFormError('Project Status is required');
+      toastService.warning('Project Status is required');
       return;
     }
     if (!formData.statusId) {
-      setFormError('Status is required');
+      toastService.warning('Status is required');
       return;
     }
     if (!formData.probableNextAssignmentId) {
-      setFormError('Probable Next Assignment is required');
+      toastService.warning('Probable Next Assignment is required');
       return;
     }
     if (!formData.billableDateProbabilityId) {
-      setFormError('Billable Date Probability is required');
+      toastService.warning('Billable Date Probability is required');
       return;
     }
     if (!formData.currentBillingStatusId) {
-      setFormError('Current Billing Status is required');
+      toastService.warning('Current Billing Status is required');
       return;
     }
     if (!formData.billingBucketId) {
-      setFormError('Billing Bucket is required');
+      toastService.warning('Billing Bucket is required');
       return;
     }
     if (!formData.ageingBucketId) {
-      setFormError('Ageing Bucket is required');
+      toastService.warning('Ageing Bucket is required');
       return;
     }
 
     const otherTotal = getOtherAllocationsTotal(editingAllocation?.id);
     if (otherTotal + formData.allocationPercentage > 100) {
-      setFormError(`Total allocation cannot exceed 100%. Current allocation: ${otherTotal}%. Adding ${formData.allocationPercentage}% would make it ${otherTotal + formData.allocationPercentage}%.`);
+      toastService.warning(`Total allocation cannot exceed 100%. Current allocation: ${otherTotal}%. Adding ${formData.allocationPercentage}% would make it ${otherTotal + formData.allocationPercentage}%.`);
       return;
     }
 
@@ -471,8 +471,9 @@ export default function ResourceAllocationDetail() {
       }
       setDialogOpen(false);
       await loadEmployeeData();
+      toastService.success(editingAllocation ? 'Project allocation updated successfully.' : 'Project allocation saved successfully.');
     } catch (err: any) {
-      setFormError(err.response?.data?.message || 'Failed to save allocation');
+      toastService.error(err.response?.data?.message || 'Failed to save allocation');
     } finally {
       setSaving(false);
     }
@@ -502,10 +503,10 @@ export default function ResourceAllocationDetail() {
           isActive: freshData.isActive,
         });
         setIsEditMode(false);
-        setSuccessMessage('Employee details saved successfully.');
+        toastService.success('Employee details saved successfully.');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save allocation details');
+      toastService.error(err.response?.data?.message || 'Failed to save allocation details');
     } finally {
       setSaving(false);
     }
@@ -532,17 +533,7 @@ export default function ResourceAllocationDetail() {
           Back to Dashboard
         </Button>
 
-        {error && (
-          <Alert severity="error" sx={{ borderRadius: '12px', mb: 2, border: '1px solid #FECACA' }}>{error}</Alert>
-        )}
-        <Snackbar
-          open={!!successMessage}
-          autoHideDuration={3000}
-          onClose={() => setSuccessMessage('')}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <Alert severity="success" sx={{ borderRadius: '12px', border: '1px solid #BBF7D0' }}>{successMessage}</Alert>
-        </Snackbar>
+
 
         <Box component="form" noValidate onSubmit={handleFormSubmit(onFormSubmit)}>
           {/* ── MAIN EDIT CARD ── */}
@@ -927,7 +918,6 @@ export default function ResourceAllocationDetail() {
           {editingAllocation ? 'Edit Project Allocation' : 'Add Project Allocation'}
         </DialogTitle>
         <DialogContent sx={{ px: 3, py: 2.5, overflowY: 'auto' }}>
-          {formError && <Alert severity="error" size="small" sx={{ mb: 2.5 }}>{formError}</Alert>}
           <Box
             sx={{
               display: 'grid',

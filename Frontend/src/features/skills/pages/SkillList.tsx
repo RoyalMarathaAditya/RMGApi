@@ -12,7 +12,6 @@ import {
   DialogContentText,
   DialogTitle,
   Paper,
-  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -25,6 +24,7 @@ import SkillFilterPanel from '../components/SkillFilterPanel';
 import SkillTable from '../components/SkillTable';
 import { deleteSkill } from '../../../redux/slices/skillSlice';
 import type { Skill } from '../types';
+import { toastService } from '../../../services/toastService';
 
 export default function SkillList() {
   const dispatch = useAppDispatch();
@@ -35,7 +35,6 @@ export default function SkillList() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [filterOpen, setFilterOpen] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const filteredSkills = useMemo(() => {
     const normalized = searchText.trim().toLowerCase();
@@ -53,7 +52,7 @@ export default function SkillList() {
     }
     dispatch(deleteSkill(skillToDelete.id));
     setSkillToDelete(null);
-    setSnackbarOpen(true);
+    toastService.success('Skill deleted successfully.');
   };
 
   return (
@@ -140,11 +139,6 @@ export default function SkillList() {
         </DialogActions>
       </Dialog>
 
-      <Snackbar autoHideDuration={3000} onClose={() => setSnackbarOpen(false)} open={snackbarOpen}>
-        <Alert severity="success" variant="filled">
-          Skill deleted successfully.
-        </Alert>
-      </Snackbar>
     </Stack>
   );
 }

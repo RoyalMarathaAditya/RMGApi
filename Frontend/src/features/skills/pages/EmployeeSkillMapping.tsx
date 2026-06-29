@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import { Alert, Autocomplete, Button, Card, CardContent, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Button, Card, CardContent, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 // Redux: reads skills from store for skill mapping dropdown
@@ -10,6 +10,7 @@ import { mockEmployeeSkills } from '../mock/mockEmployeeSkills';
 import { proficiencyLevels } from '../types';
 import type { EmployeeSkillFormValues } from '../types';
 import { employeeSkillValidationSchema } from '../validations/employeeSkillValidation';
+import { toastService } from '../../../services/toastService';
 
 const employees = Array.from(new Set(mockEmployeeSkills.map((item) => item.employeeName)));
 
@@ -23,7 +24,6 @@ const defaultValues: EmployeeSkillFormValues = {
 
 export default function EmployeeSkillMapping() {
   const skills = useAppSelector((state) => state.skills.skills);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const {
     control,
     formState: { errors, isSubmitting },
@@ -36,7 +36,7 @@ export default function EmployeeSkillMapping() {
   });
 
   function onSubmit() {
-    setSnackbarOpen(true);
+    toastService.success('Skill assigned successfully.');
     reset(defaultValues);
   }
 
@@ -132,11 +132,6 @@ export default function EmployeeSkillMapping() {
           <EmployeeSkillGrid employeeSkills={mockEmployeeSkills} />
         </CardContent>
       </Card>
-      <Snackbar autoHideDuration={2500} onClose={() => setSnackbarOpen(false)} open={snackbarOpen}>
-        <Alert severity="success" variant="filled">
-          Skill assigned successfully.
-        </Alert>
-      </Snackbar>
     </Stack>
   );
 }

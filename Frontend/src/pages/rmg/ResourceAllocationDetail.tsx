@@ -20,6 +20,7 @@ import PageContainer from '../../components/common/PageContainer';
 import { allocationService } from '../../features/rmg/services/allocationService';
 import { ALLOCATION_STATUSES } from '../../features/rmg/types/allocation';
 import type { AllocationDto } from '../../features/rmg/types/allocation';
+import { toastService } from '../../services/toastService';
 
 const schema = yup.object({
   projectId: yup.number().positive(),
@@ -72,7 +73,7 @@ export default function ResourceAllocationDetail() {
       await allocationService.update(Number(id), values);
       navigate('/rmg');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update allocation');
+      toastService.error(err.response?.data?.message || 'Failed to update allocation');
     }
   };
 
