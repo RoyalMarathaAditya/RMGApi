@@ -119,6 +119,21 @@ namespace HRMS.Api.Controllers
             }
         }
 
+        [HttpPut("employee/{employeeId}/details")]
+        public async Task<IActionResult> UpdateEmployeeDetails(int employeeId, UpdateEmployeeDetailsDto dto, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _service.UpdateEmployeeDetailsAsync(employeeId, dto, cancellationToken);
+                if (!result) return NotFound(new { message = "Employee not found." });
+                return Ok(new { message = "Employee details updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message, innerException = ex.InnerException?.Message });
+            }
+        }
+
         [HttpPut("project/{allocationId}")]
         public async Task<IActionResult> UpdateProjectAllocation(int allocationId, UpdateProjectAllocationDto dto, CancellationToken cancellationToken)
         {

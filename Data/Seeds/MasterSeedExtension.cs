@@ -20,6 +20,11 @@ namespace HRMS.Api.Data.Seeds
             DesignationMasterSeed.Seed(modelBuilder);
             ProjectStatusMasterSeed.Seed(modelBuilder);
             ProbableNextAssignmentMasterSeed.Seed(modelBuilder);
+            BillableDateProbabilityMasterSeed.Seed(modelBuilder);
+            CurrentBillingStatusMasterSeed.Seed(modelBuilder);
+            BillingBucketMasterSeed.Seed(modelBuilder);
+            OnboardingStatusMasterSeed.Seed(modelBuilder);
+            AgeingBucketMasterSeed.Seed(modelBuilder);
         }
     }
 }

@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629074344_UpdateBillableDateProbabilitySeedData")]
+    partial class UpdateBillableDateProbabilitySeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -276,7 +279,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billing Team"
+                            Name = "Bucket 1"
                         },
                         new
                         {
@@ -285,7 +288,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Core Team"
+                            Name = "Bucket 2"
                         },
                         new
                         {
@@ -294,7 +297,16 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Corporate"
+                            Name = "Bucket 3"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0030000-0000-0000-0000-000000000004"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bucket 4"
                         });
                 });
 
@@ -406,7 +418,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Available Pool"
+                            Name = "Billable"
                         },
                         new
                         {
@@ -415,7 +427,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billable"
+                            Name = "Non-Billable"
                         },
                         new
                         {
@@ -424,7 +436,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billable - Cost Covered"
+                            Name = "Shadow"
                         },
                         new
                         {
@@ -433,61 +445,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Buffer"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Confirmed"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 6,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Core Team"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 7,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Corporate"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 8,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Long Leave"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 9,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Most Likely Billable"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-00000000000a"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 10,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "To Be Optimised / Exit / PIP"
+                            Name = "To Be Confirmed"
                         });
                 });
 
@@ -3120,9 +3078,8 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("OnboardingStatus")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<Guid?>("OnboardingStatusId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ProbableNextAssignmentDate")
                         .HasColumnType("datetime2");
@@ -3163,6 +3120,8 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("ClientId");
 
                     b.HasIndex("CurrentBillingStatusId");
+
+                    b.HasIndex("OnboardingStatusId");
 
                     b.HasIndex("ProbableNextAssignmentId");
 
@@ -4039,6 +3998,10 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("HRMS.Api.Models.OnboardingStatusMaster", "OnboardingStatus")
+                        .WithMany()
+                        .HasForeignKey("OnboardingStatusId");
+
                     b.HasOne("HRMS.Api.Models.ProbableNextAssignmentMaster", "ProbableNextAssignment")
                         .WithMany()
                         .HasForeignKey("ProbableNextAssignmentId");
@@ -4068,6 +4031,8 @@ namespace HRMS.Api.Migrations
                     b.Navigation("CurrentBillingStatus");
 
                     b.Navigation("Employee");
+
+                    b.Navigation("OnboardingStatus");
 
                     b.Navigation("ProbableNextAssignment");
 

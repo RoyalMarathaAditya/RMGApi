@@ -55,6 +55,11 @@ namespace HRMS.Api.Profiles
             CreateMap<Skill, MasterDto>();
             CreateMap<ProjectStatusMaster, MasterDto>();
             CreateMap<ProbableNextAssignmentMaster, MasterDto>();
+            CreateMap<BillableDateProbabilityMaster, MasterDto>();
+            CreateMap<CurrentBillingStatusMaster, MasterDto>();
+            CreateMap<BillingBucketMaster, MasterDto>();
+            CreateMap<OnboardingStatusMaster, MasterDto>();
+            CreateMap<AgeingBucketMaster, MasterDto>();
             #endregion
 
             #region Leave

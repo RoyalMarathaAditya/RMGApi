@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629075637_UpdateBillingBucketSeedData")]
+    partial class UpdateBillingBucketSeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3120,9 +3123,8 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("OnboardingStatus")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<Guid?>("OnboardingStatusId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ProbableNextAssignmentDate")
                         .HasColumnType("datetime2");
@@ -3163,6 +3165,8 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("ClientId");
 
                     b.HasIndex("CurrentBillingStatusId");
+
+                    b.HasIndex("OnboardingStatusId");
 
                     b.HasIndex("ProbableNextAssignmentId");
 
@@ -4039,6 +4043,10 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("HRMS.Api.Models.OnboardingStatusMaster", "OnboardingStatus")
+                        .WithMany()
+                        .HasForeignKey("OnboardingStatusId");
+
                     b.HasOne("HRMS.Api.Models.ProbableNextAssignmentMaster", "ProbableNextAssignment")
                         .WithMany()
                         .HasForeignKey("ProbableNextAssignmentId");
@@ -4068,6 +4076,8 @@ namespace HRMS.Api.Migrations
                     b.Navigation("CurrentBillingStatus");
 
                     b.Navigation("Employee");
+
+                    b.Navigation("OnboardingStatus");
 
                     b.Navigation("ProbableNextAssignment");
 

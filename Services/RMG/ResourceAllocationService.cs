@@ -204,12 +204,23 @@ namespace HRMS.Api.Services.RMG
                     ProjectName = a.Project?.ProjectName ?? "",
                     ClientId = a.ClientId ?? a.Project?.ClientId,
                     ClientName = a.Client?.Name ?? a.Project?.Client?.Name,
+                    ProjectStatusId = a.ProjectStatusId,
+                    StatusId = a.StatusId,
+                    ProbableNextAssignmentId = a.ProbableNextAssignmentId,
+                    ProbableNextAssignmentDate = a.ProbableNextAssignmentDate,
+                    BillableDateProbabilityId = a.BillableDateProbabilityId,
+                    CurrentBillingStatusId = a.CurrentBillingStatusId,
+                    BillingBucketId = a.BillingBucketId,
+                    OnboardingStatus = a.OnboardingStatus,
+                    AgeingBucketId = a.AgeingBucketId,
                     StartDate = a.StartDate,
                     EndDate = a.EndDate,
                     AllocationPercentage = a.AllocationPercentage,
                     BillableStatus = a.BillableStatus,
                     AllocationType = a.AllocationType,
-                    AllocationStatus = a.AllocationStatus
+                    AllocationStatus = a.AllocationStatus,
+                    ActionItem = a.ActionItem,
+                    Remarks = a.Remarks
                 }).ToList()
             };
         }
@@ -243,12 +254,19 @@ namespace HRMS.Api.Services.RMG
                 StatusId = dto.StatusId,
                 ProbableNextAssignmentId = dto.ProbableNextAssignmentId,
                 ProbableNextAssignmentDate = dto.ProbableNextAssignmentDate,
+                BillableDateProbabilityId = dto.BillableDateProbabilityId,
+                CurrentBillingStatusId = dto.CurrentBillingStatusId,
+                BillingBucketId = dto.BillingBucketId,
+                OnboardingStatus = dto.OnboardingStatus,
+                AgeingBucketId = dto.AgeingBucketId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
                 AllocationStatus = statusName,
                 AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
+                ActionItem = dto.ActionItem,
+                Remarks = dto.Remarks,
                 CreatedBy = userName
             };
 
@@ -278,11 +296,18 @@ namespace HRMS.Api.Services.RMG
             }
             if (dto.ProbableNextAssignmentId.HasValue) allocation.ProbableNextAssignmentId = dto.ProbableNextAssignmentId.Value;
             if (dto.ProbableNextAssignmentDate.HasValue) allocation.ProbableNextAssignmentDate = dto.ProbableNextAssignmentDate;
+            if (dto.BillableDateProbabilityId.HasValue) allocation.BillableDateProbabilityId = dto.BillableDateProbabilityId.Value;
+            if (dto.CurrentBillingStatusId.HasValue) allocation.CurrentBillingStatusId = dto.CurrentBillingStatusId.Value;
+            if (dto.BillingBucketId.HasValue) allocation.BillingBucketId = dto.BillingBucketId.Value;
+            if (dto.OnboardingStatus is not null) allocation.OnboardingStatus = dto.OnboardingStatus;
+            if (dto.AgeingBucketId.HasValue) allocation.AgeingBucketId = dto.AgeingBucketId.Value;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
             if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
             if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
+            if (dto.ActionItem is not null) allocation.ActionItem = dto.ActionItem;
+            if (dto.Remarks is not null) allocation.Remarks = dto.Remarks;
             if (!string.IsNullOrEmpty(dto.AllocationStatus)) allocation.AllocationStatus = dto.AllocationStatus;
             allocation.ModifiedBy = userName;
             allocation.ModifiedOn = DateTime.UtcNow;
@@ -379,6 +404,23 @@ namespace HRMS.Api.Services.RMG
                     AllocationStatus = ra.AllocationStatus
                 }).ToList()
             });
+        }
+
+        public async Task<bool> UpdateEmployeeDetailsAsync(int employeeId, UpdateEmployeeDetailsDto dto, CancellationToken cancellationToken = default)
+        {
+            var employee = await _dbContext.Employees
+                .Include(e => e.EmployeeSkills)
+                .FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
+
+            if (employee is null) return false;
+
+            employee.RelevantExperience = dto.ExperienceInNV;
+            employee.ReportingManagerId = dto.ProjectManagerId;
+            employee.IsDeleted = !dto.IsActive;
+            employee.ModifiedOn = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return true;
         }
 
         public async Task<EmployeeResourceDetailsDto> GetEmployeeDetailsAsync(int employeeId, CancellationToken cancellationToken = default)
@@ -565,12 +607,19 @@ namespace HRMS.Api.Services.RMG
                 StatusId = allocation.StatusId,
                 ProbableNextAssignmentId = allocation.ProbableNextAssignmentId,
                 ProbableNextAssignmentDate = allocation.ProbableNextAssignmentDate,
+                BillableDateProbabilityId = allocation.BillableDateProbabilityId,
+                CurrentBillingStatusId = allocation.CurrentBillingStatusId,
+                BillingBucketId = allocation.BillingBucketId,
+                OnboardingStatus = allocation.OnboardingStatus,
+                AgeingBucketId = allocation.AgeingBucketId,
                 StartDate = allocation.StartDate,
                 EndDate = allocation.EndDate,
                 AllocationPercentage = allocation.AllocationPercentage,
                 BillableStatus = allocation.BillableStatus,
                 AllocationType = allocation.AllocationType,
-                AllocationStatus = allocation.AllocationStatus
+                AllocationStatus = allocation.AllocationStatus,
+                ActionItem = allocation.ActionItem,
+                Remarks = allocation.Remarks
             };
         }
 

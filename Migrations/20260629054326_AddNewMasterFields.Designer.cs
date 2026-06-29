@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629054326_AddNewMasterFields")]
+    partial class AddNewMasterFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,95 +24,6 @@ namespace HRMS.Api.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("HRMS.Api.Models.AgeingBucketMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("AgeingBucketMasters", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("d0040001-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 1,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "0-30 Days"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0040001-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "31-60 Days"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0040001-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 3,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "61-90 Days"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0040001-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 4,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "91-120 Days"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0040001-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "120+ Days"
-                        });
-                });
 
             modelBuilder.Entity("HRMS.Api.Models.BillableDateProbabilityMaster", b =>
                 {
@@ -160,7 +74,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billable"
+                            Name = "High"
                         },
                         new
                         {
@@ -169,7 +83,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billable - Cost covered"
+                            Name = "Medium"
                         },
                         new
                         {
@@ -178,7 +92,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Confirmed"
+                            Name = "Low"
                         },
                         new
                         {
@@ -187,43 +101,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Core Team"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0010000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Corporate"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0010000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 6,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Long Leave"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0010000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 7,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Most Likely Billable"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0010000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 8,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Non-Billable"
+                            Name = "Not Applicable"
                         });
                 });
 
@@ -276,7 +154,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billing Team"
+                            Name = "Bucket 1"
                         },
                         new
                         {
@@ -285,7 +163,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Core Team"
+                            Name = "Bucket 2"
                         },
                         new
                         {
@@ -294,7 +172,16 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Corporate"
+                            Name = "Bucket 3"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0030000-0000-0000-0000-000000000004"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bucket 4"
                         });
                 });
 
@@ -406,7 +293,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Available Pool"
+                            Name = "Billable"
                         },
                         new
                         {
@@ -415,7 +302,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billable"
+                            Name = "Non-Billable"
                         },
                         new
                         {
@@ -424,7 +311,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Billable - Cost Covered"
+                            Name = "Shadow"
                         },
                         new
                         {
@@ -433,61 +320,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Buffer"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Confirmed"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 6,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Core Team"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 7,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Corporate"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 8,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Long Leave"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 9,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Most Likely Billable"
-                        },
-                        new
-                        {
-                            Id = new Guid("d0020000-0000-0000-0000-00000000000a"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 10,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "To Be Optimised / Exit / PIP"
+                            Name = "To Be Confirmed"
                         });
                 });
 
@@ -3057,13 +2890,6 @@ namespace HRMS.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ActionItem")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<Guid?>("AgeingBucketId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("AllocationPercentage")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
@@ -3120,9 +2946,8 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("OnboardingStatus")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<Guid?>("OnboardingStatusId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ProbableNextAssignmentDate")
                         .HasColumnType("datetime2");
@@ -3135,10 +2960,6 @@ namespace HRMS.Api.Migrations
 
                     b.Property<Guid?>("ProjectStatusId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -3154,8 +2975,6 @@ namespace HRMS.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AgeingBucketId");
-
                     b.HasIndex("BillableDateProbabilityId");
 
                     b.HasIndex("BillingBucketId");
@@ -3163,6 +2982,8 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("ClientId");
 
                     b.HasIndex("CurrentBillingStatusId");
+
+                    b.HasIndex("OnboardingStatusId");
 
                     b.HasIndex("ProbableNextAssignmentId");
 
@@ -4012,10 +3833,6 @@ namespace HRMS.Api.Migrations
 
             modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceAllocation", b =>
                 {
-                    b.HasOne("HRMS.Api.Models.AgeingBucketMaster", "AgeingBucket")
-                        .WithMany()
-                        .HasForeignKey("AgeingBucketId");
-
                     b.HasOne("HRMS.Api.Models.BillableDateProbabilityMaster", "BillableDateProbability")
                         .WithMany()
                         .HasForeignKey("BillableDateProbabilityId");
@@ -4039,6 +3856,10 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("HRMS.Api.Models.OnboardingStatusMaster", "OnboardingStatus")
+                        .WithMany()
+                        .HasForeignKey("OnboardingStatusId");
+
                     b.HasOne("HRMS.Api.Models.ProbableNextAssignmentMaster", "ProbableNextAssignment")
                         .WithMany()
                         .HasForeignKey("ProbableNextAssignmentId");
@@ -4057,8 +3878,6 @@ namespace HRMS.Api.Migrations
                         .WithMany()
                         .HasForeignKey("StatusId");
 
-                    b.Navigation("AgeingBucket");
-
                     b.Navigation("BillableDateProbability");
 
                     b.Navigation("BillingBucket");
@@ -4068,6 +3887,8 @@ namespace HRMS.Api.Migrations
                     b.Navigation("CurrentBillingStatus");
 
                     b.Navigation("Employee");
+
+                    b.Navigation("OnboardingStatus");
 
                     b.Navigation("ProbableNextAssignment");
 

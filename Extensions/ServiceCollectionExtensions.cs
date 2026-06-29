@@ -40,6 +40,11 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IDesignationRepository, DesignationRepository>();
             services.AddScoped<IProjectStatusRepository, ProjectStatusRepository>();
             services.AddScoped<IProbableNextAssignmentRepository, ProbableNextAssignmentRepository>();
+            services.AddScoped<IBillableDateProbabilityRepository, BillableDateProbabilityRepository>();
+            services.AddScoped<ICurrentBillingStatusRepository, CurrentBillingStatusRepository>();
+            services.AddScoped<IBillingBucketRepository, BillingBucketRepository>();
+            services.AddScoped<IOnboardingStatusRepository, OnboardingStatusRepository>();
+            services.AddScoped<IAgeingBucketRepository, AgeingBucketRepository>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -52,6 +57,11 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IDesignationService, DesignationService>();
             services.AddScoped<IProjectStatusService, ProjectStatusService>();
             services.AddScoped<IProbableNextAssignmentService, ProbableNextAssignmentService>();
+            services.AddScoped<IBillableDateProbabilityService, BillableDateProbabilityService>();
+            services.AddScoped<ICurrentBillingStatusService, CurrentBillingStatusService>();
+            services.AddScoped<IBillingBucketService, BillingBucketService>();
+            services.AddScoped<IOnboardingStatusService, OnboardingStatusService>();
+            services.AddScoped<IAgeingBucketService, AgeingBucketService>();
 
             services.AddScoped<IResourceAllocationRepository, ResourceAllocationRepository>();
             services.AddScoped<IResourceAllocationHistoryRepository, ResourceAllocationHistoryRepository>();

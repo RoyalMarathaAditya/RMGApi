@@ -28,6 +28,7 @@ import {
   Tooltip,
   Typography,
   Alert,
+  Snackbar,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -112,6 +113,13 @@ export default function ResourceAllocationDetail() {
     statusId: null as string | null,
     probableNextAssignmentId: null as string | null,
     probableNextAssignmentDate: null as string | null,
+    billableDateProbabilityId: null as string | null,
+    currentBillingStatusId: null as string | null,
+    billingBucketId: null as string | null,
+    onboardingStatus: null as string | null,
+    ageingBucketId: null as string | null,
+    actionItem: null as string | null,
+    remarks: null as string | null,
     startDate: '',
     endDate: '',
     allocationPercentage: 0,
@@ -121,10 +129,16 @@ export default function ResourceAllocationDetail() {
   });
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(true);
+  const [successMessage, setSuccessMessage] = useState('');
   const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<{ id: string; name: string }[]>([]);
   const [statuses, setStatuses] = useState<{ id: string; name: string }[]>([]);
   const [probableNextAssignments, setProbableNextAssignments] = useState<{ id: string; name: string }[]>([]);
+  const [billableDateProbabilities, setBillableDateProbabilities] = useState<{ id: string; name: string }[]>([]);
+  const [currentBillingStatuses, setCurrentBillingStatuses] = useState<{ id: string; name: string }[]>([]);
+  const [billingBuckets, setBillingBuckets] = useState<{ id: string; name: string }[]>([]);
+  const [ageingBuckets, setAgeingBuckets] = useState<{ id: string; name: string }[]>([]);
 
   const employeeId = Number(id);
   const projects = useAppSelector((state) => state.projects.projects);
@@ -171,6 +185,10 @@ export default function ResourceAllocationDetail() {
     fetchProjectStatuses();
     fetchStatuses();
     fetchProbableNextAssignments();
+    fetchBillableDateProbabilities();
+    fetchCurrentBillingStatuses();
+    fetchBillingBuckets();
+    fetchAgeingBuckets();
   }, [id]);
 
   useEffect(() => {
@@ -215,6 +233,42 @@ export default function ResourceAllocationDetail() {
     }
   };
 
+  const fetchBillableDateProbabilities = async () => {
+    try {
+      const res = await api.get('/billable-date-probabilities');
+      setBillableDateProbabilities(res.data.data);
+    } catch {
+      console.error('Failed to load billable date probabilities');
+    }
+  };
+
+  const fetchCurrentBillingStatuses = async () => {
+    try {
+      const res = await api.get('/current-billing-statuses');
+      setCurrentBillingStatuses(res.data.data);
+    } catch {
+      console.error('Failed to load current billing statuses');
+    }
+  };
+
+  const fetchBillingBuckets = async () => {
+    try {
+      const res = await api.get('/billing-buckets');
+      setBillingBuckets(res.data.data);
+    } catch {
+      console.error('Failed to load billing buckets');
+    }
+  };
+
+  const fetchAgeingBuckets = async () => {
+    try {
+      const res = await api.get('/ageing-buckets');
+      setAgeingBuckets(res.data.data);
+    } catch {
+      console.error('Failed to load ageing buckets');
+    }
+  };
+
   const loadEmployeeData = async () => {
     setLoading(true);
     setError('');
@@ -234,7 +288,7 @@ export default function ResourceAllocationDetail() {
 
   const openAddDialog = () => {
     setEditingAllocation(null);
-    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'Active' });
+    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, onboardingStatus: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'Active' });
     setFormError('');
     setDialogOpen(true);
   };
@@ -253,6 +307,13 @@ export default function ResourceAllocationDetail() {
       statusId: allocation.statusId ?? null,
       probableNextAssignmentId: allocation.probableNextAssignmentId ?? null,
       probableNextAssignmentDate: allocation.probableNextAssignmentDate ?? null,
+      billableDateProbabilityId: allocation.billableDateProbabilityId ?? null,
+      currentBillingStatusId: allocation.currentBillingStatusId ?? null,
+      billingBucketId: allocation.billingBucketId ?? null,
+      onboardingStatus: allocation.onboardingStatus ?? null,
+      ageingBucketId: allocation.ageingBucketId ?? null,
+      actionItem: allocation.actionItem ?? null,
+      remarks: allocation.remarks ?? null,
       startDate: allocation.startDate.split('T')[0],
       endDate: allocation.endDate ? allocation.endDate.split('T')[0] : '',
       allocationPercentage: allocation.allocationPercentage,
@@ -319,6 +380,22 @@ export default function ResourceAllocationDetail() {
       setFormError('Probable Next Assignment is required');
       return;
     }
+    if (!formData.billableDateProbabilityId) {
+      setFormError('Billable Date Probability is required');
+      return;
+    }
+    if (!formData.currentBillingStatusId) {
+      setFormError('Current Billing Status is required');
+      return;
+    }
+    if (!formData.billingBucketId) {
+      setFormError('Billing Bucket is required');
+      return;
+    }
+    if (!formData.ageingBucketId) {
+      setFormError('Ageing Bucket is required');
+      return;
+    }
 
     const otherTotal = getOtherAllocationsTotal(editingAllocation?.id);
     if (otherTotal + formData.allocationPercentage > 100) {
@@ -336,6 +413,13 @@ export default function ResourceAllocationDetail() {
           statusId: formData.statusId,
           probableNextAssignmentId: formData.probableNextAssignmentId,
           probableNextAssignmentDate: formData.probableNextAssignmentDate,
+          billableDateProbabilityId: formData.billableDateProbabilityId,
+          currentBillingStatusId: formData.currentBillingStatusId,
+          billingBucketId: formData.billingBucketId,
+          onboardingStatus: formData.onboardingStatus,
+          ageingBucketId: formData.ageingBucketId,
+          actionItem: formData.actionItem,
+          remarks: formData.remarks,
           startDate: formData.startDate,
           endDate: formData.endDate || null,
           allocationPercentage: formData.allocationPercentage,
@@ -353,6 +437,13 @@ export default function ResourceAllocationDetail() {
           statusId: formData.statusId,
           probableNextAssignmentId: formData.probableNextAssignmentId,
           probableNextAssignmentDate: formData.probableNextAssignmentDate,
+          billableDateProbabilityId: formData.billableDateProbabilityId,
+          currentBillingStatusId: formData.currentBillingStatusId,
+          billingBucketId: formData.billingBucketId,
+          onboardingStatus: formData.onboardingStatus,
+          ageingBucketId: formData.ageingBucketId,
+          actionItem: formData.actionItem,
+          remarks: formData.remarks,
           startDate: formData.startDate,
           endDate: formData.endDate || null,
           allocationPercentage: formData.allocationPercentage,
@@ -388,6 +479,8 @@ export default function ResourceAllocationDetail() {
         await api.put(`/resource-allocations/employee/${employeeId}/details`, payload);
         reset();
         await loadEmployeeData();
+        setIsEditMode(false);
+        setSuccessMessage('Employee details saved successfully.');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to save allocation details');
@@ -420,6 +513,14 @@ export default function ResourceAllocationDetail() {
         {error && (
           <Alert severity="error" sx={{ borderRadius: '12px', mb: 2, border: '1px solid #FECACA' }}>{error}</Alert>
         )}
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={3000}
+          onClose={() => setSuccessMessage('')}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert severity="success" sx={{ borderRadius: '12px', border: '1px solid #BBF7D0' }}>{successMessage}</Alert>
+        </Snackbar>
 
         <Box component="form" noValidate onSubmit={handleFormSubmit(onFormSubmit)}>
           {/* ── MAIN EDIT CARD ── */}
@@ -502,6 +603,8 @@ export default function ResourceAllocationDetail() {
                       error={!!formErrors.experienceInNV}
                       helperText={formErrors.experienceInNV?.message}
                       inputProps={{ min: 0 }}
+                      slotProps={{ input: { readOnly: !isEditMode } }}
+                      sx={!isEditMode ? { '& .MuiInputBase-root': { bgcolor: 'action.hover' } } : undefined}
                     />
                   )}
                 />
@@ -528,6 +631,7 @@ export default function ResourceAllocationDetail() {
                         onChange={(_, value) => field.onChange(value?.id ?? null)}
                         size="small"
                         fullWidth
+                        disabled={!isEditMode}
                         renderInput={(params) => (
                           <TextField
                             {...params}
@@ -556,6 +660,7 @@ export default function ResourceAllocationDetail() {
                         limitTags={2}
                         size="small"
                         fullWidth
+                        disabled={!isEditMode}
                         renderOption={(props, option, { selected: isSelected }) => (
                           <li {...props}>
                             <Checkbox
@@ -592,6 +697,7 @@ export default function ResourceAllocationDetail() {
                         onChange={(_, value) => field.onChange(value?.id ?? null)}
                         size="small"
                         fullWidth
+                        disabled={!isEditMode}
                         renderInput={(params) => (
                           <TextField
                             {...params}
@@ -612,6 +718,7 @@ export default function ResourceAllocationDetail() {
                         <Checkbox
                           checked={field.value ?? false}
                           onChange={(e) => field.onChange(e.target.checked)}
+                          disabled={!isEditMode}
                         />
                       }
                       label={<Typography sx={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Is Active</Typography>}
@@ -632,7 +739,11 @@ export default function ResourceAllocationDetail() {
                         size="small"
                         fullWidth
                         value={field.value ?? ''}
-                        sx={{ '& .MuiInputBase-root': { resize: 'vertical', overflow: 'auto' } }}
+                        slotProps={{ input: { readOnly: !isEditMode } }}
+                        sx={{
+                          '& .MuiInputBase-root': { resize: 'vertical', overflow: 'auto' },
+                          ...(!isEditMode ? { '& .MuiInputBase-root': { bgcolor: 'action.hover' } } : {}),
+                        }}
                       />
                     )}
                   />
@@ -667,15 +778,26 @@ export default function ResourceAllocationDetail() {
               >
                 Back
               </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={saving}
-                startIcon={<SaveOutlinedIcon />}
-                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 3, bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' } }}
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
+              {isEditMode ? (
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={saving}
+                  startIcon={<SaveOutlinedIcon />}
+                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 3, bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' } }}
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={() => setIsEditMode(true)}
+                  startIcon={<EditOutlinedIcon />}
+                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 3, bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' } }}
+                >
+                  Edit
+                </Button>
+              )}
             </Box>
           </Paper>
         </Box>
@@ -864,6 +986,10 @@ export default function ResourceAllocationDetail() {
                 <TextField
                   {...params}
                   label="Project Status *"
+                  placeholder="Select Project Status"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
                 />
               )}
             />
@@ -935,6 +1061,10 @@ export default function ResourceAllocationDetail() {
                 <TextField
                   {...params}
                   label="Status *"
+                  placeholder="Select Status"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
                 />
               )}
             />
@@ -955,6 +1085,10 @@ export default function ResourceAllocationDetail() {
                 <TextField
                   {...params}
                   label="Probable Next Assignment *"
+                  placeholder="Select Probable Next Assignment"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
                 />
               )}
             />
@@ -973,10 +1107,159 @@ export default function ResourceAllocationDetail() {
                   textField: {
                     fullWidth: true,
                     size: 'small',
+                    placeholder: 'Select Date',
+                    slotProps: {
+                      inputLabel: { shrink: true },
+                    },
                   },
                 }}
               />
             </LocalizationProvider>
+            <Autocomplete
+              options={billableDateProbabilities}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={billableDateProbabilities.find((s) => s.id === formData.billableDateProbabilityId) ?? null}
+              onChange={(_, value) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  billableDateProbabilityId: value?.id ?? null,
+                }));
+              }}
+              fullWidth
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Billable Date Probability *"
+                  placeholder="Select Billable Date Probability"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
+                />
+              )}
+            />
+            <Autocomplete
+              options={currentBillingStatuses}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={currentBillingStatuses.find((s) => s.id === formData.currentBillingStatusId) ?? null}
+              onChange={(_, value) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  currentBillingStatusId: value?.id ?? null,
+                }));
+              }}
+              fullWidth
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Current Billing Status *"
+                  placeholder="Select Current Billing Status"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
+                />
+              )}
+            />
+            <Autocomplete
+              options={billingBuckets}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={billingBuckets.find((s) => s.id === formData.billingBucketId) ?? null}
+              onChange={(_, value) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  billingBucketId: value?.id ?? null,
+                }));
+              }}
+              fullWidth
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Billing Bucket *"
+                  placeholder="Select Billing Bucket"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
+                />
+              )}
+            />
+            <Autocomplete
+              options={ageingBuckets}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={ageingBuckets.find((s) => s.id === formData.ageingBucketId) ?? null}
+              onChange={(_, value) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  ageingBucketId: value?.id ?? null,
+                }));
+              }}
+              fullWidth
+              size="small"
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Ageing Bucket *"
+                  placeholder="Select Ageing Bucket"
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
+                />
+              )}
+            />
+            <Box
+              sx={{
+                gridColumn: { xs: '1', sm: '1 / -1', md: '1 / -1' },
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                gap: '16px',
+              }}
+            >
+              <TextField
+                label="Action Item"
+                fullWidth
+                size="small"
+                multiline
+                minRows={3}
+                maxRows={4}
+                value={formData.actionItem ?? ''}
+                onChange={(e) => setFormData({ ...formData, actionItem: e.target.value })}
+                placeholder="Enter Action Item"
+                slotProps={{ inputLabel: { shrink: true } }}
+                inputProps={{ maxLength: 500 }}
+              />
+              <TextField
+                label="Remark"
+                fullWidth
+                size="small"
+                multiline
+                minRows={3}
+                maxRows={4}
+                value={formData.remarks ?? ''}
+                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                placeholder="Enter Remark"
+                slotProps={{ inputLabel: { shrink: true } }}
+                inputProps={{ maxLength: 1000 }}
+              />
+              <TextField
+                label="Onboarding Status"
+                fullWidth
+                size="small"
+                multiline
+                minRows={3}
+                maxRows={4}
+                value={formData.onboardingStatus ?? ''}
+                onChange={(e) => {
+                  setFormData((prev) => ({ ...prev, onboardingStatus: e.target.value || null }));
+                }}
+                placeholder="Enter Onboarding Status"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', flexShrink: 0 }}>

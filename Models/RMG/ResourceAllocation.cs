@@ -27,6 +27,21 @@ namespace HRMS.Api.Models.RMG
 
         public DateTime? ProbableNextAssignmentDate { get; set; }
 
+        public Guid? BillableDateProbabilityId { get; set; }
+        public BillableDateProbabilityMaster? BillableDateProbability { get; set; }
+
+        public Guid? CurrentBillingStatusId { get; set; }
+        public CurrentBillingStatusMaster? CurrentBillingStatus { get; set; }
+
+        public Guid? BillingBucketId { get; set; }
+        public BillingBucketMaster? BillingBucket { get; set; }
+
+        [MaxLength(500)]
+        public string? OnboardingStatus { get; set; }
+
+        public Guid? AgeingBucketId { get; set; }
+        public AgeingBucketMaster? AgeingBucket { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
@@ -40,6 +55,12 @@ namespace HRMS.Api.Models.RMG
 
         [MaxLength(50)]
         public string? BillableStatus { get; set; }
+
+        [MaxLength(500)]
+        public string? ActionItem { get; set; }
+
+        [MaxLength(1000)]
+        public string? Remarks { get; set; }
 
         [MaxLength(1000)]
         public string? Notes { get; set; }

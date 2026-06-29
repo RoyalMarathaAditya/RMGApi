@@ -33,6 +33,11 @@ namespace HRMS.Api.Data
         public DbSet<DesignationMaster> DesignationMasters { get; set; }
         public DbSet<ProjectStatusMaster> ProjectStatusMasters { get; set; }
         public DbSet<ProbableNextAssignmentMaster> ProbableNextAssignmentMasters { get; set; }
+        public DbSet<BillableDateProbabilityMaster> BillableDateProbabilityMasters { get; set; }
+        public DbSet<CurrentBillingStatusMaster> CurrentBillingStatusMasters { get; set; }
+        public DbSet<BillingBucketMaster> BillingBucketMasters { get; set; }
+        public DbSet<OnboardingStatusMaster> OnboardingStatusMasters { get; set; }
+        public DbSet<AgeingBucketMaster> AgeingBucketMasters { get; set; }
         public DbSet<OnboardingTypeMaster> OnboardingTypeMasters { get; set; }
         public DbSet<ImportAudit> ImportAudits { get; set; }
 
