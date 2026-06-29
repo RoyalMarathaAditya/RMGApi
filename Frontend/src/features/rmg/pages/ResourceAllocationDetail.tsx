@@ -1,7 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -151,6 +151,7 @@ export default function ResourceAllocationDetail() {
     formState: { errors: formErrors },
     watch,
     reset,
+    getValues,
   } = useForm<AllocationFormValues>({
     resolver: yupResolver(allocationFormSchema),
     defaultValues: defaultFormValues,
@@ -179,6 +180,8 @@ export default function ResourceAllocationDetail() {
     }
   }, [selectedProject]);
 
+  const initialFormPopulated = useRef(false);
+
   useEffect(() => {
     if (id) loadEmployeeData();
     fetchClients();
@@ -190,6 +193,19 @@ export default function ResourceAllocationDetail() {
     fetchBillingBuckets();
     fetchAgeingBuckets();
   }, [id]);
+
+  useEffect(() => {
+    if (employeeData && !initialFormPopulated.current) {
+      initialFormPopulated.current = true;
+      const current = getValues();
+      reset({
+        ...current,
+        experienceInNV: employeeData.relevantExperience ?? null,
+        projectManagerId: employeeData.reportingManagerId ?? null,
+        isActive: employeeData.isActive,
+      });
+    }
+  }, [employeeData, reset, getValues]);
 
   useEffect(() => {
     if (employees.length === 0) {
@@ -477,8 +493,14 @@ export default function ResourceAllocationDetail() {
           remarks: values.remarks ?? '',
         };
         await api.put(`/resource-allocations/employee/${employeeId}/details`, payload);
-        reset();
-        await loadEmployeeData();
+        const freshData = await allocationService.getEmployeeAllocations(employeeId);
+        setEmployeeData(freshData);
+        reset({
+          ...values,
+          experienceInNV: freshData.relevantExperience ?? null,
+          projectManagerId: freshData.reportingManagerId ?? null,
+          isActive: freshData.isActive,
+        });
         setIsEditMode(false);
         setSuccessMessage('Employee details saved successfully.');
       }

@@ -132,6 +132,9 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? Skills { get; set; }
         public string? PrimarySkill { get; set; }
         public decimal? TotalExperience { get; set; }
+        public decimal? RelevantExperience { get; set; }
+        public bool IsActive { get; set; }
+        public int? ReportingManagerId { get; set; }
         public decimal CurrentUtilization { get; set; }
         public decimal AvailableCapacity { get; set; }
         public string ResourceStatus { get; set; } = string.Empty;

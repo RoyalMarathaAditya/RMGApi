@@ -123,6 +123,9 @@ export interface EmployeeAllocationDto {
   skills: string | null;
   primarySkill: string | null;
   totalExperience: number | null;
+  relevantExperience: number | null;
+  isActive: boolean;
+  reportingManagerId: number | null;
   currentUtilization: number;
   availableCapacity: number;
   resourceStatus: string;
