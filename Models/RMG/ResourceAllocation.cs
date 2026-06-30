@@ -36,9 +36,6 @@ namespace HRMS.Api.Models.RMG
         public Guid? BillingBucketId { get; set; }
         public BillingBucketMaster? BillingBucket { get; set; }
 
-        [MaxLength(500)]
-        public string? OnboardingStatus { get; set; }
-
         public Guid? AgeingBucketId { get; set; }
         public AgeingBucketMaster? AgeingBucket { get; set; }
 

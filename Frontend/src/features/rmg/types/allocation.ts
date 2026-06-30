@@ -57,7 +57,6 @@ export interface ProjectAllocationDto {
   billableDateProbabilityId: string | null;
   currentBillingStatusId: string | null;
   billingBucketId: string | null;
-  onboardingStatus: string | null;
   ageingBucketId: string | null;
   actionItem: string | null;
   remarks: string | null;
@@ -80,7 +79,6 @@ export interface AddProjectAllocationDto {
   billableDateProbabilityId?: string | null;
   currentBillingStatusId?: string | null;
   billingBucketId?: string | null;
-  onboardingStatus?: string | null;
   ageingBucketId?: string | null;
   actionItem?: string | null;
   remarks?: string | null;
@@ -102,7 +100,6 @@ export interface UpdateProjectAllocationDto {
   billableDateProbabilityId?: string | null;
   currentBillingStatusId?: string | null;
   billingBucketId?: string | null;
-  onboardingStatus?: string | null;
   ageingBucketId?: string | null;
   actionItem?: string | null;
   remarks?: string | null;

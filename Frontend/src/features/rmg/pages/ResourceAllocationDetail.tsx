@@ -126,7 +126,6 @@ export default function ResourceAllocationDetail() {
     billableDateProbabilityId: null as string | null,
     currentBillingStatusId: null as string | null,
     billingBucketId: null as string | null,
-    onboardingStatus: null as string | null,
     ageingBucketId: null as string | null,
     actionItem: null as string | null,
     remarks: null as string | null,
@@ -313,7 +312,7 @@ export default function ResourceAllocationDetail() {
 
   const openAddDialog = () => {
     setEditingAllocation(null);
-    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, onboardingStatus: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'History' });
+    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'History' });
     setFormError('');
     setDialogOpen(true);
   };
@@ -335,7 +334,6 @@ export default function ResourceAllocationDetail() {
       billableDateProbabilityId: allocation.billableDateProbabilityId ?? null,
       currentBillingStatusId: allocation.currentBillingStatusId ?? null,
       billingBucketId: allocation.billingBucketId ?? null,
-      onboardingStatus: allocation.onboardingStatus ?? null,
       ageingBucketId: allocation.ageingBucketId ?? null,
       actionItem: allocation.actionItem ?? null,
       remarks: allocation.remarks ?? null,
@@ -443,7 +441,6 @@ export default function ResourceAllocationDetail() {
           billableDateProbabilityId: formData.billableDateProbabilityId,
           currentBillingStatusId: formData.currentBillingStatusId,
           billingBucketId: formData.billingBucketId,
-          onboardingStatus: formData.onboardingStatus,
           ageingBucketId: formData.ageingBucketId,
           actionItem: formData.actionItem,
           remarks: formData.remarks,
@@ -468,7 +465,6 @@ export default function ResourceAllocationDetail() {
           billableDateProbabilityId: formData.billableDateProbabilityId,
           currentBillingStatusId: formData.currentBillingStatusId,
           billingBucketId: formData.billingBucketId,
-          onboardingStatus: formData.onboardingStatus,
           ageingBucketId: formData.ageingBucketId,
           actionItem: formData.actionItem,
           remarks: formData.remarks,
@@ -940,7 +936,7 @@ export default function ResourceAllocationDetail() {
           >
             <Autocomplete
               options={projects}
-              getOptionLabel={(option) => option.projectCode}
+              getOptionLabel={(option) => option.projectName}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedProject}
               onChange={(_, value) => {
@@ -960,38 +956,26 @@ export default function ResourceAllocationDetail() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Project Code *"
+                  label="Project Name *"
+                  placeholder="Search project..."
                 />
               )}
             />
             <TextField
-              label="Project Name"
+              label="Project Code"
               fullWidth
               size="small"
-              value={formData.projectName}
+              value={selectedProject?.projectCode ?? ''}
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
-            <Autocomplete
-              options={clients}
-              getOptionLabel={(option) => option.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={selectedClient}
-              onChange={(_, value) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  clientId: value?.id ?? null,
-                  clientName: value?.name ?? '',
-                }));
-              }}
+            <TextField
+              label="Client"
               fullWidth
               size="small"
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Client *"
-                />
-              )}
+              value={formData.clientName}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
             <Autocomplete
               options={projectStatuses}
@@ -1247,7 +1231,7 @@ export default function ResourceAllocationDetail() {
               sx={{
                 gridColumn: { xs: '1', sm: '1 / -1', md: '1 / -1' },
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
                 gap: '16px',
               }}
             >
@@ -1276,20 +1260,6 @@ export default function ResourceAllocationDetail() {
                 placeholder="Enter Remark"
                 slotProps={{ inputLabel: { shrink: true } }}
                 inputProps={{ maxLength: 1000 }}
-              />
-              <TextField
-                label="Onboarding Status"
-                fullWidth
-                size="small"
-                multiline
-                minRows={3}
-                maxRows={4}
-                value={formData.onboardingStatus ?? ''}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, onboardingStatus: e.target.value || null }));
-                }}
-                placeholder="Enter Onboarding Status"
-                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Box>
           </Box>

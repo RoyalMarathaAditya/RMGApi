@@ -63,7 +63,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public Guid? BillableDateProbabilityId { get; set; }
         public Guid? CurrentBillingStatusId { get; set; }
         public Guid? BillingBucketId { get; set; }
-        public string? OnboardingStatus { get; set; }
         public Guid? AgeingBucketId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -87,7 +86,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public Guid? BillableDateProbabilityId { get; set; }
         public Guid? CurrentBillingStatusId { get; set; }
         public Guid? BillingBucketId { get; set; }
-        public string? OnboardingStatus { get; set; }
         public Guid? AgeingBucketId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -110,7 +108,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public Guid? BillableDateProbabilityId { get; set; }
         public Guid? CurrentBillingStatusId { get; set; }
         public Guid? BillingBucketId { get; set; }
-        public string? OnboardingStatus { get; set; }
         public Guid? AgeingBucketId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

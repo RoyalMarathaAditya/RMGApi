@@ -230,7 +230,6 @@ namespace HRMS.Api.Services.RMG
                     BillableDateProbabilityId = a.BillableDateProbabilityId,
                     CurrentBillingStatusId = a.CurrentBillingStatusId,
                     BillingBucketId = a.BillingBucketId,
-                    OnboardingStatus = a.OnboardingStatus,
                     AgeingBucketId = a.AgeingBucketId,
                     StartDate = a.StartDate,
                     EndDate = a.EndDate,
@@ -269,7 +268,6 @@ namespace HRMS.Api.Services.RMG
                 BillableDateProbabilityId = dto.BillableDateProbabilityId,
                 CurrentBillingStatusId = dto.CurrentBillingStatusId,
                 BillingBucketId = dto.BillingBucketId,
-                OnboardingStatus = dto.OnboardingStatus,
                 AgeingBucketId = dto.AgeingBucketId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
@@ -307,7 +305,6 @@ namespace HRMS.Api.Services.RMG
             if (dto.BillableDateProbabilityId.HasValue) allocation.BillableDateProbabilityId = dto.BillableDateProbabilityId.Value;
             if (dto.CurrentBillingStatusId.HasValue) allocation.CurrentBillingStatusId = dto.CurrentBillingStatusId.Value;
             if (dto.BillingBucketId.HasValue) allocation.BillingBucketId = dto.BillingBucketId.Value;
-            if (dto.OnboardingStatus is not null) allocation.OnboardingStatus = dto.OnboardingStatus;
             if (dto.AgeingBucketId.HasValue) allocation.AgeingBucketId = dto.AgeingBucketId.Value;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
             if (dto.EndDate.HasValue)
@@ -637,7 +634,6 @@ namespace HRMS.Api.Services.RMG
                 BillableDateProbabilityId = allocation.BillableDateProbabilityId,
                 CurrentBillingStatusId = allocation.CurrentBillingStatusId,
                 BillingBucketId = allocation.BillingBucketId,
-                OnboardingStatus = allocation.OnboardingStatus,
                 AgeingBucketId = allocation.AgeingBucketId,
                 StartDate = allocation.StartDate,
                 EndDate = allocation.EndDate,
