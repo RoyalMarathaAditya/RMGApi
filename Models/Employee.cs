@@ -11,12 +11,6 @@ namespace HRMS.Api.Models
         [MaxLength(50)]
         public string EmployeeCode { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string? FirstName { get; set; }
-
-        [MaxLength(100)]
-        public string? LastName { get; set; }
-
         [Required]
         [MaxLength(200)]
         public string FullName { get; set; } = string.Empty;
@@ -38,7 +32,7 @@ namespace HRMS.Api.Models
 
         public DateTime DOJ { get; set; }
         public DateTime? LWD { get; set; }
-        public decimal PriorExperience { get; set; }
+        public decimal? PriorExperience { get; set; }
         public decimal? RelevantExperience { get; set; }
 
         public Guid EmploymentTypeId { get; set; }
@@ -47,21 +41,30 @@ namespace HRMS.Api.Models
         public Guid LocationId { get; set; }
         public Location Location { get; set; } = null!;
 
-        public Guid WorkModelId { get; set; }
-        public WorkModelMaster WorkModel { get; set; } = null!;
+        public Guid? WorkModelId { get; set; }
+        public WorkModelMaster? WorkModel { get; set; }
 
         public Guid PracticeId { get; set; }
         public Practice Practice { get; set; } = null!;
 
-        public Guid DepartmentTypeId { get; set; }
-        public DepartmentTypeMaster DepartmentType { get; set; } = null!;
+        public Guid? SubPracticeId { get; set; }
+        public SubPracticeMaster? SubPractice { get; set; }
+
+        public Guid? DepartmentTypeId { get; set; }
+        public DepartmentTypeMaster? DepartmentType { get; set; }
 
         public Guid StatusId { get; set; }
         public StatusMaster EmployeeStatus { get; set; } = null!;
 
+        [MaxLength(200)]
+        public string? ReportingManagerName { get; set; }
+
         public int? ReportingManagerId { get; set; }
         public Employee? ReportingManager { get; set; }
         public ICollection<Employee> DirectReports { get; set; } = new List<Employee>();
+
+        [MaxLength(200)]
+        public string? PracticeHeadName { get; set; }
 
         public int? PracticeHeadId { get; set; }
         public Employee? PracticeHead { get; set; }

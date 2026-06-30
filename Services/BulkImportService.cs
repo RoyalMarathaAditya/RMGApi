@@ -13,17 +13,19 @@ namespace HRMS.Api.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly string _connectionString;
+        private readonly ILogger<BulkImportService> _logger;
 
         static BulkImportService()
         {
             ExcelPackage.License.SetNonCommercialOrganization("RMG HRMS");
         }
 
-        public BulkImportService(AppDbContext dbContext, IConfiguration configuration)
+        public BulkImportService(AppDbContext dbContext, IConfiguration configuration, ILogger<BulkImportService> logger)
         {
             _dbContext = dbContext;
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("DefaultConnection string not found");
+            _logger = logger;
         }
 
         public async Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken)
@@ -48,6 +50,7 @@ namespace HRMS.Api.Services
                 result.SuccessRows = result.TotalRows - result.FailedRows;
                 result.Errors = errors;
                 result.ErrorFileUrl = await SaveErrorReportAsync(errors, cancellationToken);
+                result.ImportedRows = rows;
                 return result;
             }
 
@@ -73,23 +76,18 @@ namespace HRMS.Api.Services
 
                 bulkCopy.ColumnMappings.Add("BatchId", "BatchId");
                 bulkCopy.ColumnMappings.Add("EmployeeCode", "EmployeeCode");
-                bulkCopy.ColumnMappings.Add("FirstName", "FirstName");
-                bulkCopy.ColumnMappings.Add("LastName", "LastName");
+                bulkCopy.ColumnMappings.Add("FullName", "FullName");
                 bulkCopy.ColumnMappings.Add("Email", "Email");
                 bulkCopy.ColumnMappings.Add("EmployeeType", "EmployeeType");
                 bulkCopy.ColumnMappings.Add("Designation", "Designation");
                 bulkCopy.ColumnMappings.Add("Practice", "Practice");
-                bulkCopy.ColumnMappings.Add("ReportingManager", "ReportingManager");
-                bulkCopy.ColumnMappings.Add("Location", "Location");
-                bulkCopy.ColumnMappings.Add("WorkModel", "WorkModel");
-                bulkCopy.ColumnMappings.Add("Experience", "Experience");
-                bulkCopy.ColumnMappings.Add("Skills", "Skills");
-                bulkCopy.ColumnMappings.Add("DOJ", "DOJ");
-                bulkCopy.ColumnMappings.Add("PhoneNumber", "PhoneNumber");
-                bulkCopy.ColumnMappings.Add("Client", "Client");
-                bulkCopy.ColumnMappings.Add("Onboarding", "Onboarding");
-                bulkCopy.ColumnMappings.Add("PracticeHead", "PracticeHead");
                 bulkCopy.ColumnMappings.Add("SubPractice", "SubPractice");
+                bulkCopy.ColumnMappings.Add("Location", "Location");
+                bulkCopy.ColumnMappings.Add("ReportingManager", "ReportingManager");
+                bulkCopy.ColumnMappings.Add("PracticeHead", "PracticeHead");
+                bulkCopy.ColumnMappings.Add("ActiveStatus", "ActiveStatus");
+                bulkCopy.ColumnMappings.Add("DOJ", "DOJ");
+                bulkCopy.ColumnMappings.Add("LWD", "LWD");
                 bulkCopy.ColumnMappings.Add("ImportedOn", "ImportedOn");
                 bulkCopy.ColumnMappings.Add("ImportedBy", "ImportedBy");
 
@@ -138,11 +136,17 @@ namespace HRMS.Api.Services
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
                 result.Success = true;
+                result.ImportedRows = rows;
             }
-            catch
+            catch (Exception ex)
             {
                 try { transaction.Rollback(); } catch { }
-                throw;
+                _logger.LogError(ex, "Bulk import failed for batch {BatchId}. Total rows: {TotalRows}", batchId, rows.Count);
+                result.Success = false;
+                result.TotalRows = rows.Count;
+                result.FailedRows = rows.Count;
+                result.Errors.Add(new EmployeeImportErrorDto { ErrorMessage = $"Database error: {ex.Message}" });
+                return result;
             }
 
             return result;
@@ -155,10 +159,10 @@ namespace HRMS.Api.Services
 
             var headers = new[]
             {
-                "Employee Code", "First Name", "Second Name", "Employee Type", "Designation",
-                "Practice Head", "Reporting Manager", "Practice", "Client",
-                "DOJ", "NV Location", "Work Model", "Onboarding",
-                "Phone Number", "E-mail ID", "Experience", "Skills", "SubPractice"
+                "Emp Id", "Full Name", "FTE/ Consultant", "Role",
+                "OU 4 - Practice", "OU 5 - Sub-practice", "Location",
+                "L1 Manager", "Practice Head", "email ID",
+                "Active", "DOJ", "LWD"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -224,28 +228,23 @@ namespace HRMS.Api.Services
                 var importRow = new EmployeeImportRowDto
                 {
                     RowNumber = row,
-                    EmployeeCode = GetString(worksheet, row, headerMap, "Employee Code") ?? GetString(worksheet, row, headerMap, "Emp Code"),
-                    FirstName = GetString(worksheet, row, headerMap, "First Name") ?? string.Empty,
-                    LastName = GetString(worksheet, row, headerMap, "Second Name"),
-                    EmployeeType = GetString(worksheet, row, headerMap, "Employee Type") ?? string.Empty,
-                    Designation = GetString(worksheet, row, headerMap, "Designation") ?? string.Empty,
+                    EmployeeCode = GetString(worksheet, row, headerMap, "Emp Id") ?? GetString(worksheet, row, headerMap, "Employee Code"),
+                    FullName = GetString(worksheet, row, headerMap, "Full Name") ?? string.Empty,
+                    EmployeeType = GetString(worksheet, row, headerMap, "FTE/ Consultant") ?? GetString(worksheet, row, headerMap, "Employee Type") ?? string.Empty,
+                    Designation = GetString(worksheet, row, headerMap, "Role") ?? GetString(worksheet, row, headerMap, "Designation") ?? string.Empty,
+                    Practice = GetString(worksheet, row, headerMap, "OU 4 - Practice") ?? GetString(worksheet, row, headerMap, "Practice") ?? string.Empty,
+                    SubPractice = GetString(worksheet, row, headerMap, "OU 5 - Sub-practice") ?? GetString(worksheet, row, headerMap, "SubPractice"),
+                    NVLocation = GetString(worksheet, row, headerMap, "Location") ?? GetString(worksheet, row, headerMap, "NV Location"),
+                    ReportingManager = GetString(worksheet, row, headerMap, "L1 Manager") ?? GetString(worksheet, row, headerMap, "Reporting Manager"),
                     PracticeHead = GetString(worksheet, row, headerMap, "Practice Head"),
-                    ReportingManager = GetString(worksheet, row, headerMap, "Reporting Manager"),
-                    Practice = GetString(worksheet, row, headerMap, "Practice") ?? string.Empty,
-                    Client = GetString(worksheet, row, headerMap, "Client"),
-                    NVLocation = GetString(worksheet, row, headerMap, "NV Location"),
-                    WorkModel = GetString(worksheet, row, headerMap, "Work Model"),
-                    Onboarding = GetString(worksheet, row, headerMap, "Onboarding"),
-                    PhoneNumber = GetString(worksheet, row, headerMap, "Phone Number"),
-                    Email = GetString(worksheet, row, headerMap, "E-mail ID") ?? GetString(worksheet, row, headerMap, "Email") ?? string.Empty,
-                    DOJ = ParseDate(GetString(worksheet, row, headerMap, "DOJ")),
-                    Experience = ParseDecimal(GetString(worksheet, row, headerMap, "Experience")),
-                    Skills = GetString(worksheet, row, headerMap, "Skills"),
-                    SubPractice = GetString(worksheet, row, headerMap, "SubPractice"),
+                    Email = GetString(worksheet, row, headerMap, "email ID") ?? GetString(worksheet, row, headerMap, "E-mail ID") ?? GetString(worksheet, row, headerMap, "Email") ?? string.Empty,
+                    ActiveStatus = GetString(worksheet, row, headerMap, "Active") ?? GetString(worksheet, row, headerMap, "Status"),
+                    DOJ = ParseDate(worksheet, row, headerMap, "DOJ"),
+                    LWD = ParseDate(worksheet, row, headerMap, "LWD"),
                 };
 
                 if (string.IsNullOrWhiteSpace(importRow.EmployeeCode) &&
-                    string.IsNullOrWhiteSpace(importRow.FirstName) &&
+                    string.IsNullOrWhiteSpace(importRow.FullName) &&
                     string.IsNullOrWhiteSpace(importRow.Email) &&
                     string.IsNullOrWhiteSpace(importRow.Practice) &&
                     string.IsNullOrWhiteSpace(importRow.Designation) &&
@@ -267,11 +266,24 @@ namespace HRMS.Api.Services
             return string.IsNullOrEmpty(value) ? null : value;
         }
 
-        private static DateTime? ParseDate(string? value)
+        private static DateTime? ParseDate(ExcelWorksheet ws, int row, Dictionary<string, int> headerMap, string key)
         {
-            if (string.IsNullOrWhiteSpace(value)) return null;
-            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-                return date;
+            if (!headerMap.TryGetValue(key, out var col)) return null;
+            var cell = ws.Cells[row, col];
+
+            if (cell.Value is DateTime dt)
+                return dt;
+
+            if (cell.Value is double oaDate && oaDate > 0)
+            {
+                try { return DateTime.FromOADate(oaDate); }
+                catch { }
+            }
+
+            var text = cell.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+                return parsed;
             return null;
         }
 
@@ -314,7 +326,7 @@ namespace HRMS.Api.Services
                     errors.Add(new EmployeeImportErrorDto
                     {
                         RowNumber = row.RowNumber,
-                        EmployeeName = $"{row.FirstName} {row.LastName}".Trim(),
+                        EmployeeName = row.FullName,
                         Email = row.Email,
                         ErrorMessage = string.Join("; ", rowErrors)
                     });
@@ -387,23 +399,18 @@ namespace HRMS.Api.Services
 
             table.Columns.Add("BatchId", typeof(Guid));
             table.Columns.Add("EmployeeCode", typeof(string));
-            table.Columns.Add("FirstName", typeof(string));
-            table.Columns.Add("LastName", typeof(string));
+            table.Columns.Add("FullName", typeof(string));
             table.Columns.Add("Email", typeof(string));
             table.Columns.Add("EmployeeType", typeof(string));
             table.Columns.Add("Designation", typeof(string));
             table.Columns.Add("Practice", typeof(string));
-            table.Columns.Add("ReportingManager", typeof(string));
-            table.Columns.Add("Location", typeof(string));
-            table.Columns.Add("WorkModel", typeof(string));
-            table.Columns.Add("Experience", typeof(decimal));
-            table.Columns.Add("Skills", typeof(string));
-            table.Columns.Add("DOJ", typeof(DateTime));
-            table.Columns.Add("PhoneNumber", typeof(string));
-            table.Columns.Add("Client", typeof(string));
-            table.Columns.Add("Onboarding", typeof(string));
-            table.Columns.Add("PracticeHead", typeof(string));
             table.Columns.Add("SubPractice", typeof(string));
+            table.Columns.Add("Location", typeof(string));
+            table.Columns.Add("ReportingManager", typeof(string));
+            table.Columns.Add("PracticeHead", typeof(string));
+            table.Columns.Add("ActiveStatus", typeof(string));
+            table.Columns.Add("DOJ", typeof(DateTime));
+            table.Columns.Add("LWD", typeof(DateTime));
             table.Columns.Add("ImportedOn", typeof(DateTime));
             table.Columns.Add("ImportedBy", typeof(string));
 
@@ -414,23 +421,18 @@ namespace HRMS.Api.Services
                 var dr = table.NewRow();
                 dr["BatchId"] = batchId;
                 dr["EmployeeCode"] = (object?)row.EmployeeCode ?? DBNull.Value;
-                dr["FirstName"] = (object?)row.FirstName ?? DBNull.Value;
-                dr["LastName"] = (object?)row.LastName ?? DBNull.Value;
+                dr["FullName"] = (object?)row.FullName ?? DBNull.Value;
                 dr["Email"] = (object?)row.Email ?? DBNull.Value;
                 dr["EmployeeType"] = (object?)row.EmployeeType ?? DBNull.Value;
                 dr["Designation"] = (object?)row.Designation ?? DBNull.Value;
                 dr["Practice"] = (object?)row.Practice ?? DBNull.Value;
-                dr["ReportingManager"] = (object?)row.ReportingManager ?? DBNull.Value;
-                dr["Location"] = (object?)row.NVLocation ?? DBNull.Value;
-                dr["WorkModel"] = (object?)row.WorkModel ?? DBNull.Value;
-                dr["Experience"] = (object?)row.Experience ?? DBNull.Value;
-                dr["Skills"] = (object?)row.Skills ?? DBNull.Value;
-                dr["DOJ"] = (object?)row.DOJ ?? DBNull.Value;
-                dr["PhoneNumber"] = (object?)row.PhoneNumber ?? DBNull.Value;
-                dr["Client"] = (object?)row.Client ?? DBNull.Value;
-                dr["Onboarding"] = (object?)row.Onboarding ?? DBNull.Value;
-                dr["PracticeHead"] = (object?)row.PracticeHead ?? DBNull.Value;
                 dr["SubPractice"] = (object?)row.SubPractice ?? DBNull.Value;
+                dr["Location"] = (object?)row.NVLocation ?? DBNull.Value;
+                dr["ReportingManager"] = (object?)row.ReportingManager ?? DBNull.Value;
+                dr["PracticeHead"] = (object?)row.PracticeHead ?? DBNull.Value;
+                dr["ActiveStatus"] = (object?)row.ActiveStatus ?? DBNull.Value;
+                dr["DOJ"] = (object?)row.DOJ ?? DBNull.Value;
+                dr["LWD"] = (object?)row.LWD ?? DBNull.Value;
                 dr["ImportedOn"] = now;
                 dr["ImportedBy"] = (object?)uploadedBy ?? DBNull.Value;
                 table.Rows.Add(dr);

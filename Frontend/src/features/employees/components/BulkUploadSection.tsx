@@ -89,12 +89,11 @@ export default function BulkUploadSection({ onImportComplete }: { onImportComple
     }
   };
 
-  const handleDownloadTemplate = () => employeeService.downloadTemplate();
-
   const handleClear = () => {
     setFile(null);
     setResult(null);
     setProgress(0);
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   return (
@@ -145,10 +144,7 @@ export default function BulkUploadSection({ onImportComplete }: { onImportComple
             Selected File: <strong>{file.name}</strong> ({(file.size / 1024).toFixed(1)} KB)
           </Typography>
 
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" size="small" onClick={handleDownloadTemplate}>
-              Download Template
-            </Button>
+            <Stack direction="row" spacing={1}>
             <Button variant="contained" size="small" onClick={handleUpload} disabled={uploading}>
               {uploading ? 'Uploading...' : 'Upload'}
             </Button>

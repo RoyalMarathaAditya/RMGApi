@@ -38,6 +38,7 @@ export default function MainLayout() {
           pt: { xs: 11, md: 12 },
           transition: (theme) => theme.transitions.create('width'),
           width: { md: `calc(100% - ${drawerWidth}px)` },
+          overflow: 'auto',
         }}
       >
         <Outlet />

@@ -23,12 +23,12 @@ export interface Employee {
   departmentType: string;
   statusId: string;
   employeeStatus: string;
-  reportingManagerId?: number | null;
   reportingManagerName?: string | null;
-  practiceHeadId?: number | null;
   practiceHeadName?: string | null;
   designationId?: string | null;
   designation?: string | null;
+  subPracticeId?: string | null;
+  subPractice?: string | null;
   skills: Array<{ id: string; name: string }>;
 }
 
@@ -46,9 +46,10 @@ export interface EmployeeFormValues {
   practiceId: string;
   departmentTypeId: string;
   statusId: string;
-  reportingManagerId?: number | null;
-  practiceHeadId?: number | null;
+  reportingManagerName?: string | null;
+  practiceHeadName?: string | null;
   designationId?: string | null;
+  subPracticeId?: string | null;
   deloitteFitment?: boolean | null;
   engineering?: boolean | null;
   mobileNumber?: string | null;

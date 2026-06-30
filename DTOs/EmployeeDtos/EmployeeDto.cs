@@ -23,6 +23,8 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public string WorkModel { get; set; } = string.Empty;
         public Guid PracticeId { get; set; }
         public string Practice { get; set; } = string.Empty;
+        public Guid? SubPracticeId { get; set; }
+        public string? SubPractice { get; set; }
         public Guid DepartmentTypeId { get; set; }
         public string DepartmentType { get; set; } = string.Empty;
         public Guid StatusId { get; set; }
