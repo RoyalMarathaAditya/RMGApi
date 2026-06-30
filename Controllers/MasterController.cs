@@ -2,6 +2,7 @@ using HRMS.Api.Data;
 using HRMS.Api.DTOs.MasterDtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace HRMS.Api.Controllers
 {
@@ -10,15 +11,18 @@ namespace HRMS.Api.Controllers
     public class MasterController : ControllerBase
     {
         private readonly AppDbContext _db;
+        private readonly ILogger<MasterController> _logger;
 
-        public MasterController(AppDbContext db)
+        public MasterController(AppDbContext db, ILogger<MasterController> logger)
         {
             _db = db;
+            _logger = logger;
         }
 
         [HttpGet("{type}")]
         public async Task<IActionResult> GetMasterData(string type, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Fetching master data for {Type}...", type);
             IQueryable<MasterDto>? query = type.ToLower() switch
             {
                 "roles" => _db.RoleMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),

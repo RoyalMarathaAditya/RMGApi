@@ -8,10 +8,12 @@ namespace HRMS.Api.Repositories.RMG
     public class ResourceAllocationRepository : IResourceAllocationRepository
     {
         private readonly AppDbContext _dbContext;
+        private readonly ILogger<ResourceAllocationRepository> _logger;
 
-        public ResourceAllocationRepository(AppDbContext dbContext)
+        public ResourceAllocationRepository(AppDbContext dbContext, ILogger<ResourceAllocationRepository> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<ResourceAllocation>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -53,6 +55,7 @@ namespace HRMS.Api.Repositories.RMG
         {
             _dbContext.ResourceAllocations.Add(allocation);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("ResourceAllocation {AllocationId} created", allocation.Id);
             return allocation;
         }
 
@@ -60,15 +63,21 @@ namespace HRMS.Api.Repositories.RMG
         {
             _dbContext.ResourceAllocations.Update(allocation);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("ResourceAllocation {AllocationId} updated", allocation.Id);
             return allocation;
         }
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
             var allocation = await _dbContext.ResourceAllocations.FindAsync(new object[] { id }, cancellationToken);
-            if (allocation is null) return;
+            if (allocation is null)
+            {
+                _logger.LogWarning("ResourceAllocation {AllocationId} not found for delete", id);
+                return;
+            }
             allocation.IsDeleted = true;
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("ResourceAllocation {AllocationId} soft-deleted", id);
         }
 
         public async Task<List<ResourceAllocation>> GetActiveByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default)

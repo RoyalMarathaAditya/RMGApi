@@ -8,10 +8,12 @@ namespace HRMS.Api.Repositories.RMG
     public class ResourceAllocationHistoryRepository : IResourceAllocationHistoryRepository
     {
         private readonly AppDbContext _dbContext;
+        private readonly ILogger<ResourceAllocationHistoryRepository> _logger;
 
-        public ResourceAllocationHistoryRepository(AppDbContext dbContext)
+        public ResourceAllocationHistoryRepository(AppDbContext dbContext, ILogger<ResourceAllocationHistoryRepository> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<ResourceAllocationHistory>> GetByAllocationIdAsync(int allocationId, CancellationToken cancellationToken = default)
@@ -36,6 +38,7 @@ namespace HRMS.Api.Repositories.RMG
         {
             _dbContext.ResourceAllocationHistory.Add(history);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug("ResourceAllocationHistory {HistoryId} created for AllocationId={AllocationId}", history.Id, history.ResourceAllocationId);
             return history;
         }
     }

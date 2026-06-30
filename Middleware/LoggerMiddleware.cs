@@ -78,6 +78,13 @@ namespace HRMS.Api.Middleware
                         context.Response.StatusCode, stopwatch.ElapsedMilliseconds, responseText);
                 }
 
+                // Warn on slow requests (>2s)
+                if (stopwatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogWarning("Slow request detected {Method} {Path} ElapsedMs={ElapsedMs} StatusCode={StatusCode}",
+                        context.Request.Method, context.Request.Path, stopwatch.ElapsedMilliseconds, context.Response.StatusCode);
+                }
+
                 // Copy the contents of the new memory stream (which contains the response) to the original stream.
                 context.Response.Body.Seek(0, SeekOrigin.Begin);
                 await responseBody.CopyToAsync(originalBodyStream);

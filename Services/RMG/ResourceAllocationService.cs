@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AutoMapper;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.AllocationDtos;
@@ -15,17 +16,20 @@ namespace HRMS.Api.Services.RMG
         private readonly IResourceAllocationHistoryRepository _historyRepository;
         private readonly AppDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly ILogger<ResourceAllocationService> _logger;
 
         public ResourceAllocationService(
             IResourceAllocationRepository repository,
             IResourceAllocationHistoryRepository historyRepository,
             AppDbContext dbContext,
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<ResourceAllocationService> logger)
         {
             _repository = repository;
             _historyRepository = historyRepository;
             _dbContext = dbContext;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<AllocationDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -47,6 +51,9 @@ namespace HRMS.Api.Services.RMG
 
         public async Task<AllocationDto> CreateAsync(CreateAllocationDto dto, string userName, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Creating allocation: EmployeeId={EmployeeId} ProjectId={ProjectId} User={User}",
+                dto.EmployeeId, dto.ProjectId, userName);
+            var sw = Stopwatch.StartNew();
             var employee = await _dbContext.Employees
                 .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId, cancellationToken)
                 ?? throw new InvalidOperationException("Employee not found.");
@@ -70,12 +77,16 @@ namespace HRMS.Api.Services.RMG
             };
 
             var created = await _repository.CreateAsync(allocation, cancellationToken);
+            sw.Stop();
+            _logger.LogInformation("Allocation {AllocationId} created in {ElapsedMs}ms", created.Id, sw.ElapsedMilliseconds);
             await SaveHistoryAsync(created, "Created", userName, dto.Notes, cancellationToken);
             return await ToDtoAsync(created, cancellationToken);
         }
 
         public async Task<AllocationDto?> UpdateAsync(int id, UpdateAllocationDto dto, string userName, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Updating allocation {AllocationId} by user {User}", id, userName);
+            var sw = Stopwatch.StartNew();
             var allocation = await _repository.GetByIdAsync(id, cancellationToken);
             if (allocation is null) return null;
 
@@ -99,6 +110,8 @@ namespace HRMS.Api.Services.RMG
                 throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation excluding this: {totalAllocated}%.");
 
             var updated = await _repository.UpdateAsync(allocation, cancellationToken);
+            sw.Stop();
+            _logger.LogInformation("Allocation {AllocationId} updated in {ElapsedMs}ms", id, sw.ElapsedMilliseconds);
 
             var historyNotes = $"Updated: {(dto.AllocationPercentage.HasValue ? $"{oldPercentage}% → {allocation.AllocationPercentage}%" : "")} {(dto.AllocationStatus != null ? $"Status: {oldStatus} → {allocation.AllocationStatus}" : "")}".Trim();
             if (string.IsNullOrEmpty(historyNotes)) historyNotes = dto.Notes ?? "Updated allocation";
@@ -230,6 +243,9 @@ namespace HRMS.Api.Services.RMG
 
         public async Task<ProjectAllocationDto> AddProjectAllocationAsync(AddProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Adding project allocation: EmployeeId={EmployeeId} ProjectId={ProjectId} User={User}",
+                dto.EmployeeId, dto.ProjectId, userName);
+            var sw = Stopwatch.StartNew();
             var employee = await _dbContext.Employees
                 .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId, cancellationToken)
                 ?? throw new InvalidOperationException("Employee not found.");
@@ -274,12 +290,16 @@ namespace HRMS.Api.Services.RMG
             };
 
             var created = await _repository.CreateAsync(allocation, cancellationToken);
+            sw.Stop();
+            _logger.LogInformation("Project allocation {AllocationId} created in {ElapsedMs}ms", created.Id, sw.ElapsedMilliseconds);
             await SaveHistoryAsync(created, "Created", userName, null, cancellationToken);
             return await ToProjectAllocationDtoAsync(created, cancellationToken);
         }
 
         public async Task<ProjectAllocationDto?> UpdateProjectAllocationAsync(int allocationId, UpdateProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Updating project allocation {AllocationId} by user {User}", allocationId, userName);
+            var sw = Stopwatch.StartNew();
             var allocation = await _repository.GetByIdAsync(allocationId, cancellationToken);
             if (allocation is null) return null;
 
@@ -320,6 +340,8 @@ namespace HRMS.Api.Services.RMG
                 throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation excluding this: {totalAllocated}%.");
 
             var updated = await _repository.UpdateAsync(allocation, cancellationToken);
+            sw.Stop();
+            _logger.LogInformation("Project allocation {AllocationId} updated in {ElapsedMs}ms", allocationId, sw.ElapsedMilliseconds);
             await SaveHistoryAsync(updated, "Updated", userName, null, cancellationToken);
             return await ToProjectAllocationDtoAsync(updated, cancellationToken);
         }
@@ -411,11 +433,17 @@ namespace HRMS.Api.Services.RMG
 
         public async Task<bool> UpdateEmployeeDetailsAsync(int employeeId, UpdateEmployeeDetailsDto dto, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Updating employee details for EmployeeId={EmployeeId}", employeeId);
+            var sw = Stopwatch.StartNew();
             var employee = await _dbContext.Employees
                 .Include(e => e.EmployeeSkills)
                 .FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
 
-            if (employee is null) return false;
+            if (employee is null)
+            {
+                _logger.LogWarning("Employee {EmployeeId} not found for details update", employeeId);
+                return false;
+            }
 
             employee.RelevantExperience = dto.ExperienceInNV;
             employee.ReportingManagerId = dto.ProjectManagerId;
@@ -423,6 +451,8 @@ namespace HRMS.Api.Services.RMG
             employee.ModifiedOn = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+            sw.Stop();
+            _logger.LogInformation("Employee {EmployeeId} details updated in {ElapsedMs}ms", employeeId, sw.ElapsedMilliseconds);
             return true;
         }
 
