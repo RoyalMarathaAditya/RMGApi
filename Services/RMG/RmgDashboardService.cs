@@ -132,6 +132,10 @@ namespace HRMS.Api.Services.RMG
                 if (!string.IsNullOrEmpty(filter?.AllocationStatus) && allocationStatus != filter.AllocationStatus)
                     continue;
 
+                var totalExperience = Math.Round(
+                    ((decimal)(DateTime.UtcNow - emp.DOJ).TotalDays / 365.25m) + (emp.PriorExperience ?? 0),
+                    1);
+
                 result.Add(new DashboardGridDto
                 {
                     EmployeeId = emp.Id,
@@ -142,6 +146,7 @@ namespace HRMS.Api.Services.RMG
                     Practice = emp.Practice?.Name ?? "",
                     PracticeHead = emp.Practice?.PracticeHead?.FullName,
                     SubPractice = emp.SubPractice?.Name,
+                    TotalExperience = totalExperience,
                     Skills = emp.EmployeeSkills != null ? string.Join(", ", emp.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name)) : null,
                     CurrentProject = currentProject,
                     Projects = projectNames,

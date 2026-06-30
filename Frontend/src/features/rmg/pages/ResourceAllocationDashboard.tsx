@@ -201,9 +201,9 @@ export default function ResourceAllocationDashboard() {
                   <TableCell sx={{ fontWeight: 700 }}>Employee</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Code</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Total Experience</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Practice</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Sub Practice</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Project Manager</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Allocation %</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Availability %</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -223,6 +223,7 @@ export default function ResourceAllocationDashboard() {
                     </TableCell>
                     <TableCell>{row.employeeCode}</TableCell>
                     <TableCell>{row.designation ?? '-'}</TableCell>
+                    <TableCell>{row.totalExperience > 0 ? `${row.totalExperience} Years` : '-'}</TableCell>
                     <TableCell>{row.practice}</TableCell>
                     <TableCell>
                       {row.subPractice ? (
@@ -244,7 +245,6 @@ export default function ResourceAllocationDashboard() {
                         '-'
                       )}
                     </TableCell>
-                    <TableCell>{row.projectManager ?? '-'}</TableCell>
                     <TableCell>
                       <Typography fontWeight={600} color={row.allocationPercentage > 100 ? 'error.main' : row.allocationPercentage >= 100 ? 'warning.main' : 'text.primary'}>
                         {row.allocationPercentage}%

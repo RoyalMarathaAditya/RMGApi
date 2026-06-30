@@ -421,10 +421,6 @@ export default function ResourceAllocationDetail() {
       toastService.warning('Status is required');
       return;
     }
-    if (!formData.probableNextAssignmentId) {
-      toastService.warning('Probable Next Assignment is required');
-      return;
-    }
     if (!formData.billableDateProbabilityId) {
       toastService.warning('Billable Date Probability is required');
       return;
@@ -1110,7 +1106,7 @@ export default function ResourceAllocationDetail() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Probable Next Assignment *"
+                  label="Probable Next Assignment"
                   placeholder="Select Probable Next Assignment"
                   slotProps={{
                     inputLabel: { shrink: true },
