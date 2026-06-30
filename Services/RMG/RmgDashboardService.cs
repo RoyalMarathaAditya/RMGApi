@@ -72,6 +72,7 @@ namespace HRMS.Api.Services.RMG
                 .Include(e => e.Designation)
                 .Include(e => e.DepartmentType)
                 .Include(e => e.Practice).ThenInclude(p => p.PracticeHead)
+                .Include(e => e.SubPractice)
                 .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill)
                 .Include(e => e.EmployeeLeaves)
                 .Where(e => !e.IsDeleted);
@@ -109,7 +110,7 @@ namespace HRMS.Api.Services.RMG
             foreach (var emp in employeeList)
             {
                 var activeAllocations = await _dbContext.ResourceAllocations
-                    .Where(ra => ra.EmployeeId == emp.Id && !ra.IsDeleted && ra.AllocationStatus == "Active")
+                    .Where(ra => ra.EmployeeId == emp.Id && !ra.IsDeleted && (ra.AllocationStatus == "Active" || ra.AllocationStatus == "Current"))
                     .ToListAsync(cancellationToken);
 
                 var projectNames = activeAllocations.Select(ra => ra.Project?.ProjectName ?? "").Where(n => !string.IsNullOrEmpty(n)).ToList();
@@ -140,6 +141,7 @@ namespace HRMS.Api.Services.RMG
                     Department = emp.DepartmentType?.Name,
                     Practice = emp.Practice?.Name ?? "",
                     PracticeHead = emp.Practice?.PracticeHead?.FullName,
+                    SubPractice = emp.SubPractice?.Name,
                     Skills = emp.EmployeeSkills != null ? string.Join(", ", emp.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name)) : null,
                     CurrentProject = currentProject,
                     Projects = projectNames,

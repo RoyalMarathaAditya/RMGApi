@@ -50,6 +50,8 @@ import type { EmployeeAllocationDto, ProjectAllocationDto, AddProjectAllocationD
 import { ALLOCATION_TYPES, BILLABLE_STATUSES } from '../types/allocation';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
+  Current: 'success',
+  History: 'default',
   Active: 'success',
   Planned: 'info',
   Completed: 'default',
@@ -58,6 +60,14 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
 };
 
 import CheckBoxOutlineBlankOutlinedIcon from '@mui/icons-material/CheckBoxOutlineBlankOutlined';
+
+function computeAllocationStatus(endDate: string): string {
+  if (!endDate) return 'History';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = new Date(endDate + 'T00:00:00');
+  return end >= today ? 'Current' : 'History';
+}
 import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 
 const allocationFormSchema = yup.object({
@@ -303,7 +313,7 @@ export default function ResourceAllocationDetail() {
 
   const openAddDialog = () => {
     setEditingAllocation(null);
-    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, onboardingStatus: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'Active' });
+    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, onboardingStatus: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'History' });
     setFormError('');
     setDialogOpen(true);
   };
@@ -422,6 +432,7 @@ export default function ResourceAllocationDetail() {
     setSaving(true);
     try {
       if (editingAllocation) {
+        const computedStatus = computeAllocationStatus(formData.endDate);
         const dto: UpdateProjectAllocationDto = {
           projectId: formData.projectId,
           clientId: formData.clientId,
@@ -441,10 +452,11 @@ export default function ResourceAllocationDetail() {
           allocationPercentage: formData.allocationPercentage,
           allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
-          allocationStatus: formData.allocationStatus,
+          allocationStatus: computedStatus,
         };
         await allocationService.updateProjectAllocation(editingAllocation.id, dto);
       } else {
+        const computedStatus = computeAllocationStatus(formData.endDate);
         const dto: AddProjectAllocationDto = {
           employeeId,
           projectId: formData.projectId,
@@ -465,7 +477,7 @@ export default function ResourceAllocationDetail() {
           allocationPercentage: formData.allocationPercentage,
           allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
-          allocationStatus: formData.allocationStatus,
+          allocationStatus: computedStatus,
         };
         await allocationService.addProjectAllocation(dto);
       }
@@ -842,7 +854,7 @@ export default function ResourceAllocationDetail() {
                   <TableCell sx={{ fontWeight: 700 }}>Allocation %</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Billable Status</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Allocation Type</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Allocation Status</TableCell>
                   <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -1022,6 +1034,14 @@ export default function ResourceAllocationDetail() {
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
               slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              label="Allocation Status"
+              fullWidth
+              size="small"
+              value={computeAllocationStatus(formData.endDate)}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
             <TextField
               label="Allocation %"

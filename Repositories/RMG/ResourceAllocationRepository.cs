@@ -86,7 +86,7 @@ namespace HRMS.Api.Repositories.RMG
                 .AsNoTracking()
                 .Include(ra => ra.Project).ThenInclude(p => p.Client)
                 .Include(ra => ra.Client)
-                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released")
+                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History")
                 .ToListAsync(cancellationToken);
         }
     }

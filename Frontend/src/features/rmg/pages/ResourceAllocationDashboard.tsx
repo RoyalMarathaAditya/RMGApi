@@ -95,8 +95,7 @@ export default function ResourceAllocationDashboard() {
       data = data.filter(
         (r) =>
           r.employeeName.toLowerCase().includes(term) ||
-          r.employeeCode.toLowerCase().includes(term) ||
-          r.skills?.toLowerCase().includes(term)
+          r.employeeCode.toLowerCase().includes(term)
       );
     }
     if (practiceFilter) {
@@ -163,7 +162,7 @@ export default function ResourceAllocationDashboard() {
             <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
               <TextField
                 size="small"
-                placeholder="Search name, code, skill..."
+                placeholder="Search name or code..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
                 slotProps={{
@@ -203,8 +202,8 @@ export default function ResourceAllocationDashboard() {
                   <TableCell sx={{ fontWeight: 700 }}>Code</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Practice</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Skills</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Current Project</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Sub Practice</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Project Manager</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Allocation %</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Availability %</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -226,29 +225,26 @@ export default function ResourceAllocationDashboard() {
                     <TableCell>{row.designation ?? '-'}</TableCell>
                     <TableCell>{row.practice}</TableCell>
                     <TableCell>
-                      <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 150, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {row.skills ?? '-'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      {row.currentProject && row.projects && row.projects.length > 1 ? (
-                        <Tooltip
-                          title={
-                            <Stack spacing={0.5}>
-                              {row.projects.map((p, i) => (
-                                <Typography key={i} variant="body2">{p}</Typography>
-                              ))}
-                            </Stack>
-                          }
-                        >
-                          <Typography variant="body2" sx={{ textDecoration: 'underline dotted', cursor: 'help' }}>
-                            {row.currentProject}
+                      {row.subPractice ? (
+                        <Tooltip title={row.subPractice}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              maxWidth: 150,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              display: 'block',
+                            }}
+                          >
+                            {row.subPractice}
                           </Typography>
                         </Tooltip>
                       ) : (
-                        <Typography variant="body2">{row.currentProject ?? '-'}</Typography>
+                        '-'
                       )}
                     </TableCell>
+                    <TableCell>{row.projectManager ?? '-'}</TableCell>
                     <TableCell>
                       <Typography fontWeight={600} color={row.allocationPercentage > 100 ? 'error.main' : row.allocationPercentage >= 100 ? 'warning.main' : 'text.primary'}>
                         {row.allocationPercentage}%
