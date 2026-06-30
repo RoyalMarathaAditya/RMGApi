@@ -68,10 +68,26 @@ function computeAllocationStatus(endDate: string): string {
   const end = new Date(endDate + 'T00:00:00');
   return end >= today ? 'Current' : 'History';
 }
+
+function formatYearsMonths(yearsDecimal: number): string {
+  const totalMonths = Math.round(yearsDecimal * 12);
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} Year${years > 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} Month${months > 1 ? 's' : ''}`);
+  return parts.join(' ') || '0 Years';
+}
+
+function calculateNVExperienceYears(doj: string, lwd?: string | null): number {
+  const from = new Date(doj);
+  const to = lwd ? new Date(lwd) : new Date();
+  const diffMs = to.getTime() - from.getTime();
+  return Math.max(0, diffMs / (365.25 * 24 * 60 * 60 * 1000));
+}
 import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 
 const allocationFormSchema = yup.object({
-  experienceInNV: yup.number().nullable().typeError('Must be a number').min(0, 'Cannot be negative'),
   primarySkillId: yup.number().nullable(),
   skillIds: yup.array(yup.number()).default([]),
   projectManagerId: yup.number().nullable(),
@@ -95,7 +111,6 @@ const sectionHeaderSx = {
 const sectionIconSx = { fontSize: '1.1rem' };
 
 const defaultFormValues: AllocationFormValues = {
-  experienceInNV: null,
   primarySkillId: null,
   skillIds: [],
   projectManagerId: null,
@@ -166,13 +181,20 @@ export default function ResourceAllocationDetail() {
     mode: 'onBlur',
   });
 
-  const priorExperience = useMemo(() => {
-    const emp = employees.find((e) => e.id === employeeId);
-    return emp?.priorExperience ?? 0;
-  }, [employees, employeeId]);
+  const emp = useMemo(() => employees.find((e) => e.id === employeeId) ?? null, [employees, employeeId]);
 
-  const expInNV = watch('experienceInNV');
-  const totalCalc = priorExperience + (expInNV ?? 0);
+  const priorExperienceYears = useMemo(() => emp?.priorExperience ?? 0, [emp]);
+
+  const nvExperienceYears = useMemo(() => {
+    if (!emp?.doj) return 0;
+    return calculateNVExperienceYears(emp.doj, emp.lwd);
+  }, [emp]);
+
+  const totalExperienceYears = useMemo(() => priorExperienceYears + nvExperienceYears, [priorExperienceYears, nvExperienceYears]);
+
+  const priorDisplay = useMemo(() => formatYearsMonths(priorExperienceYears), [priorExperienceYears]);
+  const nvDisplay = useMemo(() => formatYearsMonths(nvExperienceYears), [nvExperienceYears]);
+  const totalDisplay = useMemo(() => formatYearsMonths(totalExperienceYears), [totalExperienceYears]);
 
   const selectedProject = useMemo(() => {
     return projects.find((p) => p.id === formData.projectId) ?? null;
@@ -208,7 +230,6 @@ export default function ResourceAllocationDetail() {
       const current = getValues();
       reset({
         ...current,
-        experienceInNV: employeeData.relevantExperience ?? null,
         projectManagerId: employeeData.reportingManagerId ?? null,
         isActive: employeeData.isActive,
       });
@@ -494,7 +515,7 @@ export default function ResourceAllocationDetail() {
       if (employeeData) {
         const payload = {
           employeeId,
-          experienceInNV: values.experienceInNV ?? 0,
+          experienceInNV: nvExperienceYears,
           primarySkillId: values.primarySkillId,
           skillIds: values.skillIds,
           projectManagerId: values.projectManagerId,
@@ -506,7 +527,6 @@ export default function ResourceAllocationDetail() {
         setEmployeeData(freshData);
         reset({
           ...values,
-          experienceInNV: freshData.relevantExperience ?? null,
           projectManagerId: freshData.reportingManagerId ?? null,
           isActive: freshData.isActive,
         });
@@ -601,7 +621,7 @@ export default function ResourceAllocationDetail() {
               >
                 <TextField
                   label="Experience Prior to NV"
-                  value={priorExperience}
+                  value={priorDisplay}
                   size="small"
                   disabled
                   fullWidth
@@ -609,29 +629,19 @@ export default function ResourceAllocationDetail() {
                   slotProps={{ input: { readOnly: true } }}
                   sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
                 />
-                <Controller
-                  name="experienceInNV"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Experience in NV"
-                      type="number"
-                      size="small"
-                      fullWidth
-                      value={field.value ?? ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                      error={!!formErrors.experienceInNV}
-                      helperText={formErrors.experienceInNV?.message}
-                      inputProps={{ min: 0 }}
-                      slotProps={{ input: { readOnly: !isEditMode } }}
-                      sx={!isEditMode ? { '& .MuiInputBase-root': { bgcolor: 'action.hover' } } : undefined}
-                    />
-                  )}
+                <TextField
+                  label="Experience in NV"
+                  value={nvDisplay}
+                  size="small"
+                  disabled
+                  fullWidth
+                  helperText={emp?.doj ? 'Auto-calculated from Date of Joining' : 'Date of Joining not available'}
+                  slotProps={{ input: { readOnly: true } }}
+                  sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
                 />
                 <TextField
                   label="Total Experience (Prior + NV)"
-                  value={isNaN(totalCalc) ? '' : totalCalc}
+                  value={totalDisplay}
                   size="small"
                   disabled
                   fullWidth
