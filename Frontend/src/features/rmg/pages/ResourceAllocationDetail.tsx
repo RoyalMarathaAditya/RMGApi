@@ -975,13 +975,27 @@ export default function ResourceAllocationDetail() {
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
-            <TextField
-              label="Client"
+            <Autocomplete
+              options={clients}
+              getOptionLabel={(option) => option.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              value={selectedClient}
+              onChange={(_, value) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  clientId: value?.id ?? null,
+                  clientName: value?.name ?? '',
+                }));
+              }}
               fullWidth
               size="small"
-              value={formData.clientName}
-              slotProps={{ input: { readOnly: true } }}
-              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Client *"
+                  placeholder="Search client..."
+                />
+              )}
             />
             <Autocomplete
               options={projectStatuses}
