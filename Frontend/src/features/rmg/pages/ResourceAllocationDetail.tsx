@@ -50,6 +50,8 @@ import type { EmployeeAllocationDto, ProjectAllocationDto, AddProjectAllocationD
 import { ALLOCATION_TYPES, BILLABLE_STATUSES } from '../types/allocation';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
+  Current: 'success',
+  History: 'default',
   Active: 'success',
   Planned: 'info',
   Completed: 'default',
@@ -58,10 +60,34 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
 };
 
 import CheckBoxOutlineBlankOutlinedIcon from '@mui/icons-material/CheckBoxOutlineBlankOutlined';
+
+function computeAllocationStatus(endDate: string): string {
+  if (!endDate) return 'History';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = new Date(endDate + 'T00:00:00');
+  return end >= today ? 'Current' : 'History';
+}
+
+function formatYearsMonths(yearsDecimal: number): string {
+  const totalMonths = Math.round(yearsDecimal * 12);
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} Year${years > 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} Month${months > 1 ? 's' : ''}`);
+  return parts.join(' ') || '0 Years';
+}
+
+function calculateNVExperienceYears(doj: string, lwd?: string | null): number {
+  const from = new Date(doj);
+  const to = lwd ? new Date(lwd) : new Date();
+  const diffMs = to.getTime() - from.getTime();
+  return Math.max(0, diffMs / (365.25 * 24 * 60 * 60 * 1000));
+}
 import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 
 const allocationFormSchema = yup.object({
-  experienceInNV: yup.number().nullable().typeError('Must be a number').min(0, 'Cannot be negative'),
   primarySkillId: yup.number().nullable(),
   skillIds: yup.array(yup.number()).default([]),
   projectManagerId: yup.number().nullable(),
@@ -85,7 +111,6 @@ const sectionHeaderSx = {
 const sectionIconSx = { fontSize: '1.1rem' };
 
 const defaultFormValues: AllocationFormValues = {
-  experienceInNV: null,
   primarySkillId: null,
   skillIds: [],
   projectManagerId: null,
@@ -116,7 +141,6 @@ export default function ResourceAllocationDetail() {
     billableDateProbabilityId: null as string | null,
     currentBillingStatusId: null as string | null,
     billingBucketId: null as string | null,
-    onboardingStatus: null as string | null,
     ageingBucketId: null as string | null,
     actionItem: null as string | null,
     remarks: null as string | null,
@@ -157,13 +181,20 @@ export default function ResourceAllocationDetail() {
     mode: 'onBlur',
   });
 
-  const priorExperience = useMemo(() => {
-    const emp = employees.find((e) => e.id === employeeId);
-    return emp?.priorExperience ?? 0;
-  }, [employees, employeeId]);
+  const emp = useMemo(() => employees.find((e) => e.id === employeeId) ?? null, [employees, employeeId]);
 
-  const expInNV = watch('experienceInNV');
-  const totalCalc = priorExperience + (expInNV ?? 0);
+  const priorExperienceYears = useMemo(() => emp?.priorExperience ?? 0, [emp]);
+
+  const nvExperienceYears = useMemo(() => {
+    if (!emp?.doj) return 0;
+    return calculateNVExperienceYears(emp.doj, emp.lwd);
+  }, [emp]);
+
+  const totalExperienceYears = useMemo(() => priorExperienceYears + nvExperienceYears, [priorExperienceYears, nvExperienceYears]);
+
+  const priorDisplay = useMemo(() => formatYearsMonths(priorExperienceYears), [priorExperienceYears]);
+  const nvDisplay = useMemo(() => formatYearsMonths(nvExperienceYears), [nvExperienceYears]);
+  const totalDisplay = useMemo(() => formatYearsMonths(totalExperienceYears), [totalExperienceYears]);
 
   const selectedProject = useMemo(() => {
     return projects.find((p) => p.id === formData.projectId) ?? null;
@@ -199,7 +230,6 @@ export default function ResourceAllocationDetail() {
       const current = getValues();
       reset({
         ...current,
-        experienceInNV: employeeData.relevantExperience ?? null,
         projectManagerId: employeeData.reportingManagerId ?? null,
         isActive: employeeData.isActive,
       });
@@ -303,7 +333,7 @@ export default function ResourceAllocationDetail() {
 
   const openAddDialog = () => {
     setEditingAllocation(null);
-    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, onboardingStatus: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'Active' });
+    setFormData({ projectId: 0, projectName: '', clientId: null, clientName: '', projectStatusId: null, statusId: null, probableNextAssignmentId: null, probableNextAssignmentDate: null, billableDateProbabilityId: null, currentBillingStatusId: null, billingBucketId: null, ageingBucketId: null, actionItem: null, remarks: null, startDate: '', endDate: '', allocationPercentage: 0, allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'History' });
     setFormError('');
     setDialogOpen(true);
   };
@@ -325,7 +355,6 @@ export default function ResourceAllocationDetail() {
       billableDateProbabilityId: allocation.billableDateProbabilityId ?? null,
       currentBillingStatusId: allocation.currentBillingStatusId ?? null,
       billingBucketId: allocation.billingBucketId ?? null,
-      onboardingStatus: allocation.onboardingStatus ?? null,
       ageingBucketId: allocation.ageingBucketId ?? null,
       actionItem: allocation.actionItem ?? null,
       remarks: allocation.remarks ?? null,
@@ -392,10 +421,6 @@ export default function ResourceAllocationDetail() {
       toastService.warning('Status is required');
       return;
     }
-    if (!formData.probableNextAssignmentId) {
-      toastService.warning('Probable Next Assignment is required');
-      return;
-    }
     if (!formData.billableDateProbabilityId) {
       toastService.warning('Billable Date Probability is required');
       return;
@@ -422,6 +447,7 @@ export default function ResourceAllocationDetail() {
     setSaving(true);
     try {
       if (editingAllocation) {
+        const computedStatus = computeAllocationStatus(formData.endDate);
         const dto: UpdateProjectAllocationDto = {
           projectId: formData.projectId,
           clientId: formData.clientId,
@@ -432,7 +458,6 @@ export default function ResourceAllocationDetail() {
           billableDateProbabilityId: formData.billableDateProbabilityId,
           currentBillingStatusId: formData.currentBillingStatusId,
           billingBucketId: formData.billingBucketId,
-          onboardingStatus: formData.onboardingStatus,
           ageingBucketId: formData.ageingBucketId,
           actionItem: formData.actionItem,
           remarks: formData.remarks,
@@ -441,10 +466,11 @@ export default function ResourceAllocationDetail() {
           allocationPercentage: formData.allocationPercentage,
           allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
-          allocationStatus: formData.allocationStatus,
+          allocationStatus: computedStatus,
         };
         await allocationService.updateProjectAllocation(editingAllocation.id, dto);
       } else {
+        const computedStatus = computeAllocationStatus(formData.endDate);
         const dto: AddProjectAllocationDto = {
           employeeId,
           projectId: formData.projectId,
@@ -456,7 +482,6 @@ export default function ResourceAllocationDetail() {
           billableDateProbabilityId: formData.billableDateProbabilityId,
           currentBillingStatusId: formData.currentBillingStatusId,
           billingBucketId: formData.billingBucketId,
-          onboardingStatus: formData.onboardingStatus,
           ageingBucketId: formData.ageingBucketId,
           actionItem: formData.actionItem,
           remarks: formData.remarks,
@@ -465,7 +490,7 @@ export default function ResourceAllocationDetail() {
           allocationPercentage: formData.allocationPercentage,
           allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
-          allocationStatus: formData.allocationStatus,
+          allocationStatus: computedStatus,
         };
         await allocationService.addProjectAllocation(dto);
       }
@@ -486,7 +511,7 @@ export default function ResourceAllocationDetail() {
       if (employeeData) {
         const payload = {
           employeeId,
-          experienceInNV: values.experienceInNV ?? 0,
+          experienceInNV: nvExperienceYears,
           primarySkillId: values.primarySkillId,
           skillIds: values.skillIds,
           projectManagerId: values.projectManagerId,
@@ -498,7 +523,6 @@ export default function ResourceAllocationDetail() {
         setEmployeeData(freshData);
         reset({
           ...values,
-          experienceInNV: freshData.relevantExperience ?? null,
           projectManagerId: freshData.reportingManagerId ?? null,
           isActive: freshData.isActive,
         });
@@ -593,7 +617,7 @@ export default function ResourceAllocationDetail() {
               >
                 <TextField
                   label="Experience Prior to NV"
-                  value={priorExperience}
+                  value={priorDisplay}
                   size="small"
                   disabled
                   fullWidth
@@ -601,29 +625,19 @@ export default function ResourceAllocationDetail() {
                   slotProps={{ input: { readOnly: true } }}
                   sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
                 />
-                <Controller
-                  name="experienceInNV"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Experience in NV"
-                      type="number"
-                      size="small"
-                      fullWidth
-                      value={field.value ?? ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                      error={!!formErrors.experienceInNV}
-                      helperText={formErrors.experienceInNV?.message}
-                      inputProps={{ min: 0 }}
-                      slotProps={{ input: { readOnly: !isEditMode } }}
-                      sx={!isEditMode ? { '& .MuiInputBase-root': { bgcolor: 'action.hover' } } : undefined}
-                    />
-                  )}
+                <TextField
+                  label="Experience in NV"
+                  value={nvDisplay}
+                  size="small"
+                  disabled
+                  fullWidth
+                  helperText={emp?.doj ? 'Auto-calculated from Date of Joining' : 'Date of Joining not available'}
+                  slotProps={{ input: { readOnly: true } }}
+                  sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
                 />
                 <TextField
                   label="Total Experience (Prior + NV)"
-                  value={isNaN(totalCalc) ? '' : totalCalc}
+                  value={totalDisplay}
                   size="small"
                   disabled
                   fullWidth
@@ -842,7 +856,7 @@ export default function ResourceAllocationDetail() {
                   <TableCell sx={{ fontWeight: 700 }}>Allocation %</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Billable Status</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Allocation Type</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Allocation Status</TableCell>
                   <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -928,7 +942,7 @@ export default function ResourceAllocationDetail() {
           >
             <Autocomplete
               options={projects}
-              getOptionLabel={(option) => option.projectCode}
+              getOptionLabel={(option) => option.projectName}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedProject}
               onChange={(_, value) => {
@@ -948,15 +962,16 @@ export default function ResourceAllocationDetail() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Project Code *"
+                  label="Project Name *"
+                  placeholder="Search project..."
                 />
               )}
             />
             <TextField
-              label="Project Name"
+              label="Project Code"
               fullWidth
               size="small"
-              value={formData.projectName}
+              value={selectedProject?.projectCode ?? ''}
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
@@ -978,6 +993,7 @@ export default function ResourceAllocationDetail() {
                 <TextField
                   {...params}
                   label="Client *"
+                  placeholder="Search client..."
                 />
               )}
             />
@@ -1022,6 +1038,14 @@ export default function ResourceAllocationDetail() {
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
               slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              label="Allocation Status"
+              fullWidth
+              size="small"
+              value={computeAllocationStatus(formData.endDate)}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
             <TextField
               label="Allocation %"
@@ -1096,7 +1120,7 @@ export default function ResourceAllocationDetail() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Probable Next Assignment *"
+                  label="Probable Next Assignment"
                   placeholder="Select Probable Next Assignment"
                   slotProps={{
                     inputLabel: { shrink: true },
@@ -1227,7 +1251,7 @@ export default function ResourceAllocationDetail() {
               sx={{
                 gridColumn: { xs: '1', sm: '1 / -1', md: '1 / -1' },
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
                 gap: '16px',
               }}
             >
@@ -1256,20 +1280,6 @@ export default function ResourceAllocationDetail() {
                 placeholder="Enter Remark"
                 slotProps={{ inputLabel: { shrink: true } }}
                 inputProps={{ maxLength: 1000 }}
-              />
-              <TextField
-                label="Onboarding Status"
-                fullWidth
-                size="small"
-                multiline
-                minRows={3}
-                maxRows={4}
-                value={formData.onboardingStatus ?? ''}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, onboardingStatus: e.target.value || null }));
-                }}
-                placeholder="Enter Onboarding Status"
-                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Box>
           </Box>

@@ -57,7 +57,6 @@ export interface ProjectAllocationDto {
   billableDateProbabilityId: string | null;
   currentBillingStatusId: string | null;
   billingBucketId: string | null;
-  onboardingStatus: string | null;
   ageingBucketId: string | null;
   actionItem: string | null;
   remarks: string | null;
@@ -80,7 +79,6 @@ export interface AddProjectAllocationDto {
   billableDateProbabilityId?: string | null;
   currentBillingStatusId?: string | null;
   billingBucketId?: string | null;
-  onboardingStatus?: string | null;
   ageingBucketId?: string | null;
   actionItem?: string | null;
   remarks?: string | null;
@@ -102,7 +100,6 @@ export interface UpdateProjectAllocationDto {
   billableDateProbabilityId?: string | null;
   currentBillingStatusId?: string | null;
   billingBucketId?: string | null;
-  onboardingStatus?: string | null;
   ageingBucketId?: string | null;
   actionItem?: string | null;
   remarks?: string | null;
@@ -262,7 +259,7 @@ export interface ProjectAllocationDetailDto {
   remarks: string | null;
 }
 
-export const ALLOCATION_STATUSES = ['Planned', 'Active', 'Completed', 'Released', 'Cancelled'] as const;
+export const ALLOCATION_STATUSES = ['Current', 'History', 'Planned', 'Active', 'Completed', 'Released', 'Cancelled'] as const;
 export const RESOURCE_STATUSES = ['Available', 'Partially Allocated', 'Fully Allocated', 'Overallocated', 'Bench', 'On Leave'] as const;
 export const REQUEST_STATUSES = ['Draft', 'Submitted', 'Reviewing', 'Approved', 'Rejected', 'Fulfilled'] as const;
 export const ALLOCATION_TYPES = ['Full Time', 'Part Time', 'Contract', 'Sow'] as const;

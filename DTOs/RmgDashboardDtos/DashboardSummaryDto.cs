@@ -22,6 +22,8 @@ namespace HRMS.Api.DTOs.RmgDashboardDtos
         public string? Department { get; set; }
         public string Practice { get; set; } = string.Empty;
         public string? PracticeHead { get; set; }
+        public string? SubPractice { get; set; }
+        public decimal TotalExperience { get; set; }
         public string? Skills { get; set; }
         public string? CurrentProject { get; set; }
         public List<string> Projects { get; set; } = new();

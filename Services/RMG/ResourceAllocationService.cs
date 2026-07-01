@@ -69,7 +69,7 @@ namespace HRMS.Api.Services.RMG
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
-                AllocationStatus = dto.AllocationStatus ?? "Planned",
+                AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History",
                 AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
                 Notes = dto.Notes,
@@ -96,9 +96,12 @@ namespace HRMS.Api.Services.RMG
 
             if (dto.ProjectId.HasValue) allocation.ProjectId = dto.ProjectId.Value;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
-            if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
+            if (dto.EndDate.HasValue)
+            {
+                allocation.EndDate = dto.EndDate;
+                allocation.AllocationStatus = dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History";
+            }
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
-            if (!string.IsNullOrEmpty(dto.AllocationStatus)) allocation.AllocationStatus = dto.AllocationStatus;
             if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.Notes is not null) allocation.Notes = dto.Notes;
@@ -227,7 +230,6 @@ namespace HRMS.Api.Services.RMG
                     BillableDateProbabilityId = a.BillableDateProbabilityId,
                     CurrentBillingStatusId = a.CurrentBillingStatusId,
                     BillingBucketId = a.BillingBucketId,
-                    OnboardingStatus = a.OnboardingStatus,
                     AgeingBucketId = a.AgeingBucketId,
                     StartDate = a.StartDate,
                     EndDate = a.EndDate,
@@ -254,16 +256,6 @@ namespace HRMS.Api.Services.RMG
             if (totalAllocated + dto.AllocationPercentage > 100)
                 throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation: {totalAllocated}%.");
 
-            string statusName = dto.AllocationStatus ?? "Active";
-            if (dto.StatusId.HasValue)
-            {
-                var statusMaster = await _dbContext.StatusMasters
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(sm => sm.Id == dto.StatusId.Value, cancellationToken);
-                if (statusMaster is not null)
-                    statusName = statusMaster.Name;
-            }
-
             var allocation = new ResourceAllocation
             {
                 EmployeeId = dto.EmployeeId,
@@ -276,12 +268,11 @@ namespace HRMS.Api.Services.RMG
                 BillableDateProbabilityId = dto.BillableDateProbabilityId,
                 CurrentBillingStatusId = dto.CurrentBillingStatusId,
                 BillingBucketId = dto.BillingBucketId,
-                OnboardingStatus = dto.OnboardingStatus,
                 AgeingBucketId = dto.AgeingBucketId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
-                AllocationStatus = statusName,
+                AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History",
                 AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
                 ActionItem = dto.ActionItem,
@@ -308,30 +299,24 @@ namespace HRMS.Api.Services.RMG
             if (dto.ProjectId.HasValue) allocation.ProjectId = dto.ProjectId.Value;
             if (dto.ClientId.HasValue) allocation.ClientId = dto.ClientId.Value;
             if (dto.ProjectStatusId.HasValue) allocation.ProjectStatusId = dto.ProjectStatusId.Value;
-            if (dto.StatusId.HasValue)
-            {
-                allocation.StatusId = dto.StatusId.Value;
-                var statusMaster = await _dbContext.StatusMasters
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(sm => sm.Id == dto.StatusId.Value, cancellationToken);
-                if (statusMaster is not null)
-                    allocation.AllocationStatus = statusMaster.Name;
-            }
+            if (dto.StatusId.HasValue) allocation.StatusId = dto.StatusId.Value;
             if (dto.ProbableNextAssignmentId.HasValue) allocation.ProbableNextAssignmentId = dto.ProbableNextAssignmentId.Value;
             if (dto.ProbableNextAssignmentDate.HasValue) allocation.ProbableNextAssignmentDate = dto.ProbableNextAssignmentDate;
             if (dto.BillableDateProbabilityId.HasValue) allocation.BillableDateProbabilityId = dto.BillableDateProbabilityId.Value;
             if (dto.CurrentBillingStatusId.HasValue) allocation.CurrentBillingStatusId = dto.CurrentBillingStatusId.Value;
             if (dto.BillingBucketId.HasValue) allocation.BillingBucketId = dto.BillingBucketId.Value;
-            if (dto.OnboardingStatus is not null) allocation.OnboardingStatus = dto.OnboardingStatus;
             if (dto.AgeingBucketId.HasValue) allocation.AgeingBucketId = dto.AgeingBucketId.Value;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
-            if (dto.EndDate.HasValue) allocation.EndDate = dto.EndDate;
+            if (dto.EndDate.HasValue)
+            {
+                allocation.EndDate = dto.EndDate;
+                allocation.AllocationStatus = dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History";
+            }
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
             if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.ActionItem is not null) allocation.ActionItem = dto.ActionItem;
             if (dto.Remarks is not null) allocation.Remarks = dto.Remarks;
-            if (!string.IsNullOrEmpty(dto.AllocationStatus)) allocation.AllocationStatus = dto.AllocationStatus;
             allocation.ModifiedBy = userName;
             allocation.ModifiedOn = DateTime.UtcNow;
 
@@ -394,8 +379,10 @@ namespace HRMS.Api.Services.RMG
                 ColorCode = ra.AllocationStatus switch
                 {
                     "Active" => "#4caf50",
+                    "Current" => "#4caf50",
                     "Planned" => "#2196f3",
                     "Completed" => "#9e9e9e",
+                    "History" => "#9e9e9e",
                     "Released" => "#ff9800",
                     "Cancelled" => "#f44336",
                     _ => "#9e9e9e"
@@ -474,7 +461,7 @@ namespace HRMS.Api.Services.RMG
                 .AsNoTracking()
                 .Include(ra => ra.Project).ThenInclude(p => p.Client)
                 .Include(ra => ra.Project).ThenInclude(p => p.ProjectType)
-                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released")
+                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History")
                 .ToListAsync(cancellationToken);
 
             var totalAllocated = activeAllocations.Sum(a => a.AllocationPercentage);
@@ -558,7 +545,7 @@ namespace HRMS.Api.Services.RMG
         private async Task<decimal> GetTotalAllocatedAsync(int employeeId, int? excludeAllocationId = null, CancellationToken cancellationToken = default)
         {
             var query = _dbContext.ResourceAllocations
-                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released");
+                .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History");
 
             if (excludeAllocationId.HasValue)
                 query = query.Where(ra => ra.Id != excludeAllocationId.Value);
@@ -598,6 +585,9 @@ namespace HRMS.Api.Services.RMG
                 "Active" when myAllocation >= 100 => "Fully Allocated",
                 "Active" when myAllocation > 100 => "Overallocated",
                 "Active" => "Partially Allocated",
+                "Current" when myAllocation >= 100 => "Fully Allocated",
+                "Current" when myAllocation > 100 => "Overallocated",
+                "Current" => "Partially Allocated",
                 "Planned" => "Available",
                 _ => allocation.AllocationStatus
             };
@@ -644,7 +634,6 @@ namespace HRMS.Api.Services.RMG
                 BillableDateProbabilityId = allocation.BillableDateProbabilityId,
                 CurrentBillingStatusId = allocation.CurrentBillingStatusId,
                 BillingBucketId = allocation.BillingBucketId,
-                OnboardingStatus = allocation.OnboardingStatus,
                 AgeingBucketId = allocation.AgeingBucketId,
                 StartDate = allocation.StartDate,
                 EndDate = allocation.EndDate,
