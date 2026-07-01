@@ -31,107 +31,6 @@ namespace HRMS.Api.Data.Seeders
         private static readonly Guid SkillPBI = Guid.Parse("50000000-0000-0000-0000-000000000009");
         private static readonly Guid SkillTesting = Guid.Parse("50000000-0000-0000-0000-000000000010");
 
-        private static readonly Guid ManagedServicesPractice = Guid.Parse("40000000-0000-0000-0000-000000000010");
-        private static readonly Guid ProjectTypeInternal = Guid.Parse("80000000-0000-0000-0000-000000000003");
-        private static readonly Guid PricingTypeInternal = Guid.Parse("70000000-0000-0000-0000-000000000003");
-
-        private static readonly string[] ProjectNames =
-        [
-            "USP - CC&B - ConEd",
-            "Miyahuna - C2M Implementation",
-            "NAMA MDM Support",
-            "Marketing",
-            "Administration",
-            "Finance",
-            "Internal IT Support",
-            "Talent Acquisition",
-            "Presales",
-            "Sales and Marketing",
-            "BAS+ODS",
-            "PMO",
-            "Talent Management & Operations",
-            "Business Excellence",
-            "Senior Advisory Role",
-            "Management",
-            "Long-Leave",
-            "Neovance Cloud Operations and Engineering",
-            "Procom/Experis",
-            "ITIS practice Pool",
-            "CommScope ITSM Automations",
-            "Inside Sales",
-            "FlightCheck AMS",
-            "ACE System Upgrade",
-            "Ludi offshore",
-            "RTHub & RTUK Website Maintenance",
-            "SFC Pre-development functional updates",
-            "RFC2.0 Maintenance",
-            "SFC Refinement Phase",
-            "RFC 2.0 Phase -2",
-            "ServiceNow MSP",
-            "CommScope 365 Tenant to Tenant Migration",
-            "Doxa - Promont - App Support",
-            "FlightCheck Managed Service",
-            "Microsoft practice Pool",
-            "RPA practice Pool",
-            "Levvia Transformation - NV",
-            "Omnia Data - NV",
-            "DWP (Distributed Work Portal) Transformation Project - NV",
-            "Omnia Products - NV",
-            "GCS T&T Contractor SoW for NV",
-            "Levvia Production Support - NV",
-            "INK Transformation - NV",
-            "New Vision Consulting Services - RPA RUN SOW",
-            "DA practice Pool",
-            "DT Tax Solutions common SOW",
-            "DT Solutions - POD Team to support Global Learning",
-            "Tax myInsights POD Team - NV",
-            "Testing Framework Phase-1",
-            "CBM Datalake - phase 2",
-            "DPS practice Pool",
-            "Omnia Data - NV - Second SoW",
-            "Deloitte.com STK INV",
-            "DataLens - NV",
-            "Omnia Data Tie-Out - NV",
-            "Digital Platforms NV",
-            "QAP Testing Automation Maintenance - NV",
-            "GCS SR&T Contractor SOW for NV",
-            "CISCO staff-Aug",
-            "Project work for Pillar 2",
-            "Dayshape O&M",
-            "Automate Pro engagement ( ServiceNow COE)",
-            "DE practice Pool",
-            "TBD",
-            "GTS-StaffAug",
-            "Data practice Pool",
-            "Serengeti Playwright Automation",
-            "DTTL TAX INTELA- NV",
-            "Node Upgrade",
-            "Mobility practice Pool",
-            "KM-WPM",
-            "Votal Product development and enhancement",
-            "OnPremAnalytics (AERS) Data PG SOW",
-            "GTS - Impulse messaging platform project",
-            "KM-Management",
-            "KM-C2M Testing",
-            "Managed Data Operations",
-            "ElevateBio",
-            "BioLabs",
-            "SoftServe - Atlassian",
-            "SOW for DTFM Reporting",
-            "SoftServe account pool",
-            "Java practice Pool",
-            "GDAS CoRe services - QA automation",
-            "SFC MVP development",
-            "Axiad StaffAug",
-            "Finbraine - staff-aug",
-            "ALCAN Maps Integration and Convoy",
-            "RSM StaffAug",
-            "Neovance - API Integration between Amazon Connect and Engagement Platform",
-            "Wrench - Azure DevOps",
-            "Client Portal and Data Lake Managed Platform Services",
-            "Phase III NewDL Application"
-        ];
-
         private static readonly Guid PracDataAI = Guid.Parse("50000000-0000-0000-0000-000000000001");
         private static readonly Guid PracHR = Guid.Parse("50000000-0000-0000-0000-000000000002");
         private static readonly Guid PracInternalIT = Guid.Parse("50000000-0000-0000-0000-000000000003");
@@ -441,29 +340,7 @@ namespace HRMS.Api.Data.Seeders
                 await context.SaveChangesAsync();
             }
 
-            if (!await context.Projects.AnyAsync())
-            {
-                var clientId = await context.Clients
-                    .Where(c => c.Name == "Internal")
-                    .Select(c => (int?)c.Id)
-                    .FirstOrDefaultAsync() ?? 0;
-
-                var projects = ProjectNames.Select(name => new Project
-                {
-                    ProjectName = name,
-                    ClientId = clientId,
-                    ProjectTypeId = ProjectTypeInternal,
-                    PricingTypeId = PricingTypeInternal,
-                    PracticeId = ManagedServicesPractice,
-                    StartDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                    IsActive = true,
-                    CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                    CreatedBy = "System"
-                }).ToList();
-
-                context.Projects.AddRange(projects);
-                await context.SaveChangesAsync();
-            }
+            // Project seeding removed — no seed data for new schema yet
         }
     }
 }

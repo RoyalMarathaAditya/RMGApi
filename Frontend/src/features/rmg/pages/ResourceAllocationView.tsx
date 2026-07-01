@@ -38,9 +38,8 @@ import ProjectDrawer from '../components/ProjectDrawer';
 import { allocationService } from '../services/allocationService';
 import api from '../../../services/api';
 import { toastService } from '../../../services/toastService';
-import { mockProjects } from '../../projects/mock/projects';
 import { ALLOCATION_TYPES, BILLABLE_STATUSES } from '../types/allocation';
-import type { EmployeeResourceDetailsDto, ProjectAllocationDetailDto, ProjectAllocationDto, AddProjectAllocationDto, UpdateProjectAllocationDto } from '../types/allocation';
+import type { EmployeeResourceDetailsDto, ProjectAllocationDetailDto, ProjectAllocationDto, AddProjectAllocationDto, UpdateProjectAllocationDto, ApiProject } from '../types/allocation';
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—';
@@ -151,8 +150,8 @@ export default function ResourceAllocationView() {
   const [currentBillingStatuses, setCurrentBillingStatuses] = useState<{ id: string; name: string }[]>([]);
   const [billingBuckets, setBillingBuckets] = useState<{ id: string; name: string }[]>([]);
   const [ageingBuckets, setAgeingBuckets] = useState<{ id: string; name: string }[]>([]);
-
-  const projects = useMemo(() => mockProjects, []);
+  const [projects, setProjects] = useState<ApiProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   const selectedProject = useMemo(() => {
     return projects.find((p) => p.id === formData.projectId) ?? null;
@@ -168,6 +167,7 @@ export default function ResourceAllocationView() {
     if (employeeId) {
       loadData();
       fetchClients();
+      fetchProjects();
       fetchProjectStatuses();
       fetchStatuses();
       fetchProbableNextAssignments();
@@ -202,6 +202,19 @@ export default function ResourceAllocationView() {
       setClients(res.data);
     } catch {
       console.error('Failed to load clients');
+    }
+  };
+
+  const fetchProjects = async () => {
+    setProjectsLoading(true);
+    try {
+      const res = await api.get<ApiProject[]>('/projects/active');
+      setProjects(res.data);
+    } catch {
+      console.error('Failed to load projects');
+      toastService.error('Failed to load projects');
+    } finally {
+      setProjectsLoading(false);
     }
   };
 
@@ -355,7 +368,7 @@ export default function ResourceAllocationView() {
     setFormError('');
 
     if (!formData.projectId) {
-      toastService.warning('Project Code is required');
+      toastService.warning('Project Name is required');
       return;
     }
     if (!formData.clientId) {
@@ -881,9 +894,10 @@ export default function ResourceAllocationView() {
               getOptionLabel={(option) => option.projectName}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedProject}
+              loading={projectsLoading}
               onChange={(_, value) => {
-                const matchedClient = value?.clientName
-                  ? clients.find((c) => c.name.toLowerCase() === value.clientName.toLowerCase())
+                const matchedClient = value?.clientId
+                  ? clients.find((c) => c.id === value.clientId)
                   : null;
                 setFormData((prev) => ({
                   ...prev,
@@ -900,6 +914,17 @@ export default function ResourceAllocationView() {
                   {...params}
                   label="Project Name *"
                   placeholder="Search project..."
+                  slotProps={{
+                    input: {
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {projectsLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    },
+                  }}
                 />
               )}
             />

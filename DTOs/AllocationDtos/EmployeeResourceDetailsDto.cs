@@ -32,10 +32,9 @@ namespace HRMS.Api.DTOs.AllocationDtos
 
     public class ProjectAllocationDetailDto
     {
-        public int? ProjectCode { get; set; }
+        public string? ProjectCode { get; set; }
         public string? Client { get; set; }
         public string? Project { get; set; }
-        public string? ProjectType { get; set; }
         public string? ProjectStatus { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

@@ -16,6 +16,7 @@ namespace HRMS.Api.Data
         public DbSet<EmployeeSkill> EmployeeSkills { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<CSMRevenueType> CSMRevenueTypes { get; set; }
         public DbSet<EmployeeLeave> EmployeeLeaves { get; set; }
         public DbSet<PIP> PIPs { get; set; }
 

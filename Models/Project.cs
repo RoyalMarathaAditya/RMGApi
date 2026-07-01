@@ -11,27 +11,22 @@ namespace HRMS.Api.Models
         [MaxLength(200)]
         public string ProjectName { get; set; } = string.Empty;
 
+        [MaxLength(50)]
+        public string? ProjectCode { get; set; }
+
         public int ClientId { get; set; }
         public Client Client { get; set; } = null!;
 
-        public Guid ProjectTypeId { get; set; }
-        public ProjectTypeMaster ProjectType { get; set; } = null!;
+        [MaxLength(200)]
+        public string? ProjectManager { get; set; }
 
-        public Guid PricingTypeId { get; set; }
-        public PricingTypeMaster PricingType { get; set; } = null!;
+        [MaxLength(200)]
+        public string? DeliveryHead { get; set; }
 
-        public DateTime StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public Guid? CSMRevenueTypeId { get; set; }
+        public CSMRevenueType? CSMRevenueType { get; set; }
+
         public bool IsActive { get; set; } = true;
-
-        public Guid PracticeId { get; set; }
-        public Practice Practice { get; set; } = null!;
-
-        public int? ProjectManagerId { get; set; }
-        public Employee? ProjectManager { get; set; }
-
-        public int? CSMId { get; set; }
-        public Employee? CSM { get; set; }
 
         [MaxLength(1000)]
         public string? Description { get; set; }
@@ -44,6 +39,5 @@ namespace HRMS.Api.Models
 
         [Timestamp]
         public byte[] RowVersion { get; set; } = default!;
-
     }
 }

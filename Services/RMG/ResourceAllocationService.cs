@@ -460,7 +460,6 @@ namespace HRMS.Api.Services.RMG
             var activeAllocations = await _dbContext.ResourceAllocations
                 .AsNoTracking()
                 .Include(ra => ra.Project).ThenInclude(p => p.Client)
-                .Include(ra => ra.Project).ThenInclude(p => p.ProjectType)
                 .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History")
                 .ToListAsync(cancellationToken);
 
@@ -515,10 +514,9 @@ namespace HRMS.Api.Services.RMG
 
                     return new ProjectAllocationDetailDto
                     {
-                        ProjectCode = a.ProjectId,
+                        ProjectCode = a.Project?.ProjectCode,
                         Client = a.Project?.Client?.Name,
                         Project = a.Project?.ProjectName,
-                        ProjectType = a.Project?.ProjectType?.Name,
                         ProjectStatus = a.BillableStatus,
                         StartDate = a.StartDate,
                         EndDate = a.EndDate,

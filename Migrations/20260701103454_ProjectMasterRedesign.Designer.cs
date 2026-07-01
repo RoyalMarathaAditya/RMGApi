@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701103454_ProjectMasterRedesign")]
+    partial class ProjectMasterRedesign
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1073,7 +1076,7 @@ namespace HRMS.Api.Migrations
 
                     b.HasKey("BatchId");
 
-                    b.ToTable("EmployeeImportHistory", (string)null);
+                    b.ToTable("EmployeeImportHistory");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.EmployeeLeave", b =>
@@ -3364,7 +3367,7 @@ namespace HRMS.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.RoleMaster", b =>

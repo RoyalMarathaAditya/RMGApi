@@ -86,8 +86,6 @@ namespace HRMS.Api.Models
         public byte[] RowVersion { get; set; } = default!;
 
         public ICollection<EmployeeSkill> EmployeeSkills { get; set; } = new List<EmployeeSkill>();
-        public ICollection<Project> ManagedProjects { get; set; } = new List<Project>();
-        public ICollection<Project> CSMProjects { get; set; } = new List<Project>();
         public ICollection<EmployeeLeave> EmployeeLeaves { get; set; } = new List<EmployeeLeave>();
         public ICollection<PIP> PIPs { get; set; } = new List<PIP>();
     }

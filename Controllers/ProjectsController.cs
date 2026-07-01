@@ -1,10 +1,8 @@
 using AutoMapper;
-using HRMS.Api.Data;
 using HRMS.Api.DTOs;
 using HRMS.Api.Models;
 using HRMS.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace HRMS.Api.Controllers
@@ -14,113 +12,88 @@ namespace HRMS.Api.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectRepository _projectRepo;
-        private readonly AppDbContext _db;
+        private readonly IMapper _mapper;
         private readonly ILogger<ProjectsController> _logger;
 
-        public ProjectsController(IProjectRepository projectRepo, AppDbContext db, ILogger<ProjectsController> logger)
+        public ProjectsController(IProjectRepository projectRepo, IMapper mapper, ILogger<ProjectsController> logger)
         {
             _projectRepo = projectRepo;
-            _db = db;
+            _mapper = mapper;
             _logger = logger;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching projects...");
-            var items = await _db.Projects
-                .AsNoTracking()
-                .Include(p => p.Client)
-                .Include(p => p.ProjectType)
-                .Include(p => p.PricingType)
-                .Include(p => p.Practice)
-                .Include(p => p.ProjectManager)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.ProjectName,
-                    p.Description,
-                    p.StartDate,
-                    p.EndDate,
-                    p.IsActive,
-                    ClientName = p.Client.Name,
-                    ProjectType = p.ProjectType.Name,
-                    PricingType = p.PricingType.Name,
-                    Practice = p.Practice.Name,
-                    ProjectManager = p.ProjectManager != null ? p.ProjectManager.FullName : null
-                })
-                .ToListAsync();
-            return Ok(items);
+            var items = await _projectRepo.GetAllAsync(cancellationToken);
+            var dtos = _mapper.Map<IEnumerable<ProjectDto>>(items);
+            return Ok(dtos);
+        }
+
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActive(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Fetching active projects...");
+            var items = await _projectRepo.GetActiveProjectsAsync(cancellationToken);
+            var dtos = _mapper.Map<IEnumerable<ProjectDto>>(items);
+            return Ok(dtos);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching project with {Id}...", id);
-            var p = await _db.Projects
-                .AsNoTracking()
-                .Include(p => p.Client)
-                .Include(p => p.ProjectType)
-                .Include(p => p.PricingType)
-                .Include(p => p.Practice)
-                .Include(p => p.ProjectManager)
-                .FirstOrDefaultAsync(p => p.Id == id);
-            if (p is null)
+            var project = await _projectRepo.GetByIdAsync(id, cancellationToken);
+            if (project is null)
             {
                 _logger.LogWarning("Project {Id} not found", id);
                 return NotFound();
             }
-            return Ok(p);
+            var dto = _mapper.Map<ProjectDto>(project);
+            return Ok(dto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Project project)
+        public async Task<IActionResult> Create([FromBody] CreateProjectDto dto, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating project...");
-            _db.Projects.Add(project);
-            await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
+            var project = _mapper.Map<Project>(dto);
+            var created = await _projectRepo.CreateAsync(project, cancellationToken);
+            var resultDto = _mapper.Map<ProjectDto>(created);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, resultDto);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Project project)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateProjectDto dto, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating project {Id}...", id);
-            var existing = await _db.Projects.FindAsync(id);
+            var existing = await _projectRepo.GetByIdAsync(id, cancellationToken);
             if (existing is null)
             {
                 _logger.LogWarning("Project {Id} not found for update", id);
                 return NotFound();
             }
 
-            existing.ProjectName = project.ProjectName;
-            existing.Description = project.Description;
-            existing.ClientId = project.ClientId;
-            existing.ProjectTypeId = project.ProjectTypeId;
-            existing.PricingTypeId = project.PricingTypeId;
-            existing.StartDate = project.StartDate;
-            existing.EndDate = project.EndDate;
-            existing.IsActive = project.IsActive;
-            existing.PracticeId = project.PracticeId;
-            existing.ProjectManagerId = project.ProjectManagerId;
-            existing.CSMId = project.CSMId;
+            _mapper.Map(dto, existing);
+            existing.ModifiedOn = DateTime.UtcNow;
 
-            await _db.SaveChangesAsync();
-            return Ok(existing);
+            var updated = await _projectRepo.UpdateAsync(existing, cancellationToken);
+            var resultDto = _mapper.Map<ProjectDto>(updated);
+            return Ok(resultDto);
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Deleting project {Id}...", id);
-            var existing = await _db.Projects.FindAsync(id);
+            var existing = await _projectRepo.GetByIdAsync(id, cancellationToken);
             if (existing is null)
             {
                 _logger.LogWarning("Project {Id} not found for deletion", id);
                 return NotFound();
             }
-            existing.IsDeleted = true;
-            await _db.SaveChangesAsync();
+            await _projectRepo.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
     }
