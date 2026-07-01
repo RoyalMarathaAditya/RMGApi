@@ -436,6 +436,8 @@ namespace HRMS.Api.Services.RMG
             employee.ReportingManagerId = dto.ProjectManagerId;
             employee.IsDeleted = !dto.IsActive;
             employee.Remarks = dto.Remarks;
+            employee.PrimarySkillName = dto.PrimarySkillName;
+            employee.SkillNames = dto.SkillNames;
             employee.ModifiedOn = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -469,13 +471,16 @@ namespace HRMS.Api.Services.RMG
             var isBillable = activeAllocations.Any(a => a.BillableStatus == "Billable");
 
             var priorExp = employee.PriorExperience ?? 0;
-            var totalExperience = employee.ExperienceYears ?? priorExp + (employee.RelevantExperience ?? 0);
+            var totalExperience = priorExp + (employee.RelevantExperience ?? 0);
             var nvExperience = totalExperience - priorExp;
             if (nvExperience < 0) nvExperience = 0;
 
-            var skills = employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).ToList() ?? new List<string>();
-            var primarySkill = skills.FirstOrDefault();
-            var skillString = skills.Any() ? string.Join(", ", skills) : null;
+            var primarySkill = !string.IsNullOrEmpty(employee.PrimarySkillName) ? employee.PrimarySkillName :
+                employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).FirstOrDefault();
+            var skillString = !string.IsNullOrEmpty(employee.SkillNames) ? employee.SkillNames :
+                employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).Any() == true
+                    ? string.Join(", ", employee.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name))
+                    : null;
 
             var today = DateTime.UtcNow.Date;
 

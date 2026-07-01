@@ -23,7 +23,6 @@ import {
 } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
@@ -216,7 +215,7 @@ export default function ResourceAllocationDashboard() {
                     key={row.employeeId}
                     hover
                     sx={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/rmg/edit/${row.employeeId}`)}
+                    onClick={() => navigate(`/rmg/view/${row.employeeId}`)}
                   >
                     <TableCell>
                       <Typography fontWeight={600} variant="body2">{row.employeeName}</Typography>
@@ -259,11 +258,6 @@ export default function ResourceAllocationDashboard() {
                         <Tooltip title="View Details">
                           <IconButton size="small" onClick={() => navigate(`/rmg/view/${row.employeeId}`)}>
                             <VisibilityOutlinedIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit Allocations">
-                          <IconButton size="small" onClick={() => navigate(`/rmg/edit/${row.employeeId}`)}>
-                            <EditOutlinedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                       </Stack>

@@ -16,7 +16,7 @@ import type { EmployeeResourceDetailsDto } from '../types/allocation';
 interface EditExperienceModalProps {
   open: boolean;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: () => Promise<void>;
   employeeId: number;
   data: EmployeeResourceDetailsDto;
 }
@@ -76,16 +76,18 @@ export default function EditExperienceModal({ open, onClose, onSaved, employeeId
 
   useEffect(() => {
     if (open) {
+      const primarySkillId = skills.find((s) => s.skillName === data.primarySkill)?.id ?? null;
+      const skillIds = skills.filter((s) => data.skill?.includes(s.skillName)).map((s) => s.id);
       reset({
-        primarySkillId: null,
-        skillIds: [],
+        primarySkillId,
+        skillIds,
         projectManagerId: data.projectManagerId ?? null,
         isActive: data.active ?? true,
         remarks: data.remarks ?? '',
       });
       fetchEmployees();
     }
-  }, [open, data, reset]);
+  }, [open, data, reset, skills]);
 
   const fetchEmployees = async () => {
     setEmployeesLoading(true);
@@ -103,17 +105,21 @@ export default function EditExperienceModal({ open, onClose, onSaved, employeeId
   const onSubmit = async (values: FormValues) => {
     setSaving(true);
     try {
+      const selectedPrimarySkill = skills.find((s) => s.id === values.primarySkillId);
+      const selectedSkills = skills.filter((s) => values.skillIds.includes(s.id));
       await api.put(`/resource-allocations/employee/${employeeId}/details`, {
         employeeId,
         experienceInNV: nvExperienceYears,
         primarySkillId: values.primarySkillId,
         skillIds: values.skillIds,
+        primarySkillName: selectedPrimarySkill?.skillName ?? null,
+        skillNames: selectedSkills.map((s) => s.skillName).join(', ') || null,
         projectManagerId: values.projectManagerId,
         isActive: values.isActive,
         remarks: values.remarks ?? '',
       });
+      await onSaved();
       toastService.success('Experience Information updated successfully.');
-      onSaved();
       onClose();
     } catch (err: any) {
       toastService.error(err.response?.data?.message || 'Failed to save experience information');

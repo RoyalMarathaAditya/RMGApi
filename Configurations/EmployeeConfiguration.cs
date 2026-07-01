@@ -15,6 +15,8 @@ namespace HRMS.Api.Configurations
             builder.Property(e => e.Email).HasMaxLength(150).IsRequired();
             builder.Property(e => e.MobileNumber).HasMaxLength(20);
             builder.Property(e => e.Remarks).HasMaxLength(1000);
+            builder.Property(e => e.PrimarySkillName).HasMaxLength(200);
+            builder.Property(e => e.SkillNames).HasMaxLength(2000);
             builder.Property(e => e.PriorExperience).HasPrecision(8, 2);
             builder.Property(e => e.RelevantExperience).HasPrecision(8, 2);
             builder.Property(e => e.ExperienceYears).HasPrecision(8, 2);

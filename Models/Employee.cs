@@ -79,6 +79,12 @@ namespace HRMS.Api.Models
         [MaxLength(1000)]
         public string? Remarks { get; set; }
 
+        [MaxLength(200)]
+        public string? PrimarySkillName { get; set; }
+
+        [MaxLength(2000)]
+        public string? SkillNames { get; set; }
+
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public string? CreatedBy { get; set; }
         public DateTime? ModifiedOn { get; set; }
