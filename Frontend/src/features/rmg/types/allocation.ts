@@ -249,6 +249,10 @@ export interface EmployeeResourceDetailsDto {
   billable: string | null;
   status: string | null;
 
+  projectManagerId: number | null;
+  projectManagerName: string | null;
+  remarks: string | null;
+
   projectAllocations: ProjectAllocationDetailDto[];
 }
 

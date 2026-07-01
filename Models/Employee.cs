@@ -76,6 +76,9 @@ namespace HRMS.Api.Models
         [MaxLength(20)]
         public string? MobileNumber { get; set; }
 
+        [MaxLength(1000)]
+        public string? Remarks { get; set; }
+
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         public string? CreatedBy { get; set; }
         public DateTime? ModifiedOn { get; set; }

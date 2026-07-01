@@ -435,6 +435,7 @@ namespace HRMS.Api.Services.RMG
             employee.RelevantExperience = dto.ExperienceInNV;
             employee.ReportingManagerId = dto.ProjectManagerId;
             employee.IsDeleted = !dto.IsActive;
+            employee.Remarks = dto.Remarks;
             employee.ModifiedOn = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -504,6 +505,10 @@ namespace HRMS.Api.Services.RMG
                 Utilised = isUtilised ? "Yes" : "No",
                 Billable = isBillable ? "Yes" : "No",
                 Status = employee.EmployeeStatus?.Name ?? (employee.IsDeleted ? "Inactive" : "Active"),
+
+                ProjectManagerId = employee.ReportingManagerId,
+                ProjectManagerName = employee.ReportingManager?.FullName,
+                Remarks = employee.Remarks,
 
                 ProjectAllocations = activeAllocations.Select(a =>
                 {

@@ -35,6 +35,7 @@ import InfoSection from '../../employees/components/InfoSection';
 import InfoField from '../../employees/components/InfoField';
 import InfoGrid from '../../employees/components/InfoGrid';
 import ProjectDrawer from '../components/ProjectDrawer';
+import EditExperienceModal from '../components/EditExperienceModal';
 import { allocationService } from '../services/allocationService';
 import api from '../../../services/api';
 import { toastService } from '../../../services/toastService';
@@ -112,6 +113,7 @@ export default function ResourceAllocationView() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [drawerProject, setDrawerProject] = useState<ProjectAllocationDetailDto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [experienceModalOpen, setExperienceModalOpen] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -662,7 +664,7 @@ export default function ResourceAllocationView() {
 
         {/* ── TAB 1: EXPERIENCE DETAILS ── */}
         {tabValue === 1 && (
-          <Box sx={{ mt: '16px' }}>
+          <Box sx={{ mt: '16px', position: 'relative' }}>
             <InfoSection {...sectionConfig.experience}>
               <InfoGrid>
                 <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Experience" value={`${data.totalExperience} yrs`} />
@@ -673,6 +675,12 @@ export default function ResourceAllocationView() {
                 <InfoField icon={<PsychologyOutlinedIcon sx={{ fontSize: 16 }} />} label="Key Skills" value={data.skill ?? '—'} colSpan={3} />
               </InfoGrid>
             </InfoSection>
+            <IconButton
+              onClick={() => setExperienceModalOpen(true)}
+              sx={{ position: 'absolute', top: 0, right: 4, color: '#6B7280', '&:hover': { color: '#2563EB', bgcolor: '#EFF6FF' } }}
+            >
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
           </Box>
         )}
 
@@ -1278,6 +1286,16 @@ export default function ResourceAllocationView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {data && (
+        <EditExperienceModal
+          open={experienceModalOpen}
+          onClose={() => setExperienceModalOpen(false)}
+          onSaved={refreshGrid}
+          employeeId={id}
+          data={data}
+        />
+      )}
     </Box>
   );
 }
