@@ -1,6 +1,7 @@
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.Common;
 using HRMS.Api.DTOs.EmployeeDtos;
+using HRMS.Api.Models;
 using HRMS.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +39,7 @@ namespace HRMS.Api.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> BulkUpload(IFormFile file, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Bulk uploading employees...");
+            _logger.LogInformation("Bulk uploading employees... File: {FileName}", file?.FileName);
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "No file uploaded." });
 
@@ -52,6 +53,25 @@ namespace HRMS.Api.Controllers
             var uploadedBy = User.Identity?.Name;
             var result = await _bulkImportService.ImportAsync(file, uploadedBy, cancellationToken);
             return Ok(result);
+        }
+
+        [HttpGet("last-upload-columns")]
+        public async Task<IActionResult> GetLastUploadColumns(CancellationToken cancellationToken)
+        {
+            var uploadedBy = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(uploadedBy))
+                return Ok(new List<UploadColumnInfo>());
+
+            var lastHistory = await _db.Set<EmployeeImportHistory>()
+                .Where(h => h.ImportedBy == uploadedBy && !string.IsNullOrEmpty(h.UploadedColumns))
+                .OrderByDescending(h => h.ImportedOn)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (lastHistory?.UploadedColumns == null)
+                return Ok(new List<UploadColumnInfo>());
+
+            var columns = System.Text.Json.JsonSerializer.Deserialize<List<UploadColumnInfo>>(lastHistory.UploadedColumns);
+            return Ok(columns ?? new List<UploadColumnInfo>());
         }
 
         [HttpGet("leaders")]

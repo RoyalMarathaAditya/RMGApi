@@ -1,19 +1,18 @@
-
-import AddIcon from '@mui/icons-material/Add';
+import { Chip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Alert, Box, Button, InputAdornment, Stack, TextField, Typography } from '@mui/material';
-import type { GridPaginationModel, GridRowParams } from '@mui/x-data-grid';
+import type { GridColDef, GridPaginationModel, GridRowParams } from '@mui/x-data-grid';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
-// Redux: dispatches thunks for employee CRUD, reads employee list and filter state
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import BulkUploadSection from '../components/BulkUploadSection';
 import EmployeeGrid from '../components/EmployeeGrid';
 import EmployeeDialog from '../components/EmployeeDialog';
 import DeleteEmployeeDialog from '../components/DeleteEmployeeDialog';
+import { employeeService } from '../services/employeeService';
+import type { UploadColumnInfo } from '../services/employeeService';
 import { getEmployeeColumns } from '../config/employeeColumns';
-// Redux async thunks and actions for employee operations
 import {
   createEmployee,
   deleteEmployee,
@@ -22,6 +21,31 @@ import {
   updateEmployee,
 } from '../../../redux/slices/employeeSlice';
 import type { Employee, EmployeeFormValues } from '../types/employee';
+
+function buildColumns(columnInfo: UploadColumnInfo[]): GridColDef<Employee>[] {
+  return columnInfo.map((col) => {
+    const base: GridColDef<Employee> = {
+      field: col.field,
+      headerName: col.header,
+      width: col.field === 'email' ? 220 : col.field === 'fullName' ? 180 : col.field === 'employeeCode' ? 100 : 150,
+    };
+    if (col.field === 'employeeStatus') {
+      base.renderCell = ({ row }) => (
+        <Chip
+          color={row.employeeStatus === 'Active' ? 'success' : 'default'}
+          label={row.employeeStatus}
+          size="small"
+          variant="outlined"
+        />
+      );
+    }
+    if (col.field === 'doj' || col.field === 'lwd') {
+      base.valueFormatter = (value: unknown) =>
+        value ? new Date(value as string).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    }
+    return base;
+  });
+}
 
 export default function EmployeeList() {
   const dispatch = useAppDispatch();
@@ -34,9 +58,11 @@ export default function EmployeeList() {
     page: 0,
     pageSize: 10,
   });
+  const [uploadColumns, setUploadColumns] = useState<UploadColumnInfo[]>([]);
 
   useEffect(() => {
     void dispatch(fetchEmployees());
+    employeeService.getLastUploadColumns().then(setUploadColumns).catch(() => {});
   }, [dispatch]);
 
   const filteredEmployees = useMemo(() => {
@@ -64,7 +90,7 @@ export default function EmployeeList() {
     });
   }, [employees, filters.search]);
 
-  const columns = useMemo(() => getEmployeeColumns(), []);
+  const columns = useMemo(() => uploadColumns.length > 0 ? buildColumns(uploadColumns) : getEmployeeColumns(), [uploadColumns]);
 
   const handleAdd = () => {
     setSelectedEmployee(null);
@@ -87,9 +113,15 @@ export default function EmployeeList() {
     setDeleteTarget(null);
   };
 
-  const handleImportComplete = useCallback(() => {
-    dispatch(fetchEmployees());
-  }, [dispatch]);
+  const handleImportComplete = useCallback(
+    (result?: { columns?: UploadColumnInfo[] | null }) => {
+      dispatch(fetchEmployees());
+      if (result?.columns) {
+        setUploadColumns(result.columns);
+      }
+    },
+    [dispatch],
+  );
 
   const handleRowClick = useCallback(
     (params: GridRowParams<Employee>) => {
@@ -114,11 +146,9 @@ export default function EmployeeList() {
             </Typography>
             <Typography variant="body2">
               {filteredEmployees.length} of {employees.length} employee records
+              {uploadColumns.length > 0 && ` | ${uploadColumns.length} columns`}
             </Typography>
           </Box>
-          {/* <Button onClick={handleAdd} startIcon={<AddIcon />} variant="contained">
-            Add Employee
-          </Button> */}
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

@@ -45,6 +45,8 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IBillingBucketRepository, BillingBucketRepository>();
             services.AddScoped<IOnboardingStatusRepository, OnboardingStatusRepository>();
             services.AddScoped<IAgeingBucketRepository, AgeingBucketRepository>();
+            services.AddScoped<IColumnMappingRepository, ColumnMappingRepository>();
+            services.AddScoped<IColumnValueMappingRepository, ColumnValueMappingRepository>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -54,6 +56,7 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IPipService, PipService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IBulkImportService, BulkImportService>();
+            services.AddScoped<DynamicExcelMapper>();
             services.AddScoped<IDesignationService, DesignationService>();
             services.AddScoped<IProjectStatusService, ProjectStatusService>();
             services.AddScoped<IProbableNextAssignmentService, ProbableNextAssignmentService>();
@@ -62,6 +65,8 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IBillingBucketService, BillingBucketService>();
             services.AddScoped<IOnboardingStatusService, OnboardingStatusService>();
             services.AddScoped<IAgeingBucketService, AgeingBucketService>();
+            services.AddScoped<IColumnMappingService, ColumnMappingService>();
+            services.AddScoped<IColumnValueMappingService, ColumnValueMappingService>();
 
             services.AddScoped<IResourceAllocationRepository, ResourceAllocationRepository>();
             services.AddScoped<IResourceAllocationHistoryRepository, ResourceAllocationHistoryRepository>();

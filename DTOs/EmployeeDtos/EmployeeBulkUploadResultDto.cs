@@ -1,5 +1,11 @@
 namespace HRMS.Api.DTOs.EmployeeDtos
 {
+    public class UploadColumnInfo
+    {
+        public string Field { get; set; } = string.Empty;
+        public string Header { get; set; } = string.Empty;
+    }
+
     public class EmployeeBulkUploadResultDto
     {
         public bool Success { get; set; }
@@ -10,6 +16,7 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public List<EmployeeImportErrorDto> Errors { get; set; } = new();
         public string? ErrorFileUrl { get; set; }
         public List<EmployeeImportRowDto>? ImportedRows { get; set; }
+        public List<UploadColumnInfo>? Columns { get; set; }
     }
 
     public class EmployeeImportErrorDto

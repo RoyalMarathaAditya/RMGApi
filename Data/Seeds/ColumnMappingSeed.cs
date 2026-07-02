@@ -1,0 +1,30 @@
+using HRMS.Api.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRMS.Api.Data.Seeds
+{
+    public static class ColumnMappingSeed
+    {
+        public static void Seed(ModelBuilder modelBuilder)
+    {
+        var now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        modelBuilder.Entity<ColumnMapping>().HasData(
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000001"), SourceColumn = "Emp Id", TargetProperty = "EmployeeCode", TargetDisplayName = "Emp Id", DataType = "string", IsRequired = true, IsActive = true, DisplayOrder = 1, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000002"), SourceColumn = "Full Name", TargetProperty = "FullName", TargetDisplayName = "Full Name", DataType = "string", IsRequired = true, IsActive = true, DisplayOrder = 2, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000003"), SourceColumn = "FTE/ Consultant", TargetProperty = "EmployeeType", TargetDisplayName = "FTE/ Consultant", DataType = "string", IsRequired = true, IsActive = true, DisplayOrder = 3, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000004"), SourceColumn = "Role", TargetProperty = "Designation", TargetDisplayName = "Role", DataType = "string", IsRequired = true, IsActive = true, DisplayOrder = 4, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000005"), SourceColumn = "OU 4 - Practice", TargetProperty = "Practice", TargetDisplayName = "OU 4 - Practice", DataType = "string", IsRequired = true, IsActive = true, DisplayOrder = 5, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000006"), SourceColumn = "OU 5 - Sub-practice", TargetProperty = "SubPractice", TargetDisplayName = "OU 5 - Sub-practice", DataType = "string", IsRequired = false, IsActive = true, DisplayOrder = 6, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000007"), SourceColumn = "Organization Unit", TargetProperty = "SubPractice", TargetDisplayName = "Sub-practice", DataType = "string", IsRequired = false, IsActive = false, DisplayOrder = 7, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000008"), SourceColumn = "Location", TargetProperty = "NVLocation", TargetDisplayName = "Location", DataType = "string", IsRequired = false, IsActive = true, DisplayOrder = 8, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000009"), SourceColumn = "L1 Manager", TargetProperty = "ReportingManager", TargetDisplayName = "L1 Manager", DataType = "string", IsRequired = false, IsActive = true, DisplayOrder = 9, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000010"), SourceColumn = "Practice Head", TargetProperty = "PracticeHead", TargetDisplayName = "Practice Head", DataType = "string", IsRequired = false, IsActive = true, DisplayOrder = 10, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000011"), SourceColumn = "email ID", TargetProperty = "Email", TargetDisplayName = "Email ID", DataType = "string", IsRequired = true, IsActive = true, DisplayOrder = 11, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000012"), SourceColumn = "Active", TargetProperty = "ActiveStatus", TargetDisplayName = "Active", DataType = "string", IsRequired = false, IsActive = true, DisplayOrder = 12, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000013"), SourceColumn = "DOJ", TargetProperty = "DOJ", TargetDisplayName = "DOJ", DataType = "datetime", IsRequired = true, IsActive = true, DisplayOrder = 13, CreatedOn = now },
+            new ColumnMapping { Id = Guid.Parse("A1000000-0000-0000-0000-000000000014"), SourceColumn = "LWD", TargetProperty = "LWD", TargetDisplayName = "LWD", DataType = "datetime", IsRequired = false, IsActive = true, DisplayOrder = 14, CreatedOn = now }
+        );
+    }
+    }
+}

@@ -46,6 +46,8 @@ namespace HRMS.Api.Data
         public DbSet<ResourceAllocationHistory> ResourceAllocationHistory { get; set; }
         public DbSet<ResourceRequest> ResourceRequests { get; set; }
         public DbSet<EmployeeImportHistory> EmployeeImportHistory { get; set; }
+        public DbSet<ColumnMapping> ColumnMappings { get; set; }
+        public DbSet<ColumnValueMapping> ColumnValueMappings { get; set; }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

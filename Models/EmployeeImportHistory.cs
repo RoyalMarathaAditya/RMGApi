@@ -26,5 +26,7 @@ namespace HRMS.Api.Models
 
         [MaxLength(50)]
         public string Status { get; set; } = "Completed";
+
+        public string? UploadedColumns { get; set; }
     }
 }

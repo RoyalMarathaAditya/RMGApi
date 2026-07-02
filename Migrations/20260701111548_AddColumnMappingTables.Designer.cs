@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701111548_AddColumnMappingTables")]
+    partial class AddColumnMappingTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -388,6 +391,11 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("SourceSystem")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("TargetDisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -400,7 +408,7 @@ namespace HRMS.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SourceColumn")
+                    b.HasIndex("SourceSystem", "SourceColumn")
                         .IsUnique()
                         .HasFilter("[IsActive] = 1");
 
@@ -415,8 +423,9 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "Emp Id",
-                            TargetDisplayName = "Emp Id",
+                            SourceColumn = "Employee Code",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Emp ID",
                             TargetProperty = "EmployeeCode"
                         },
                         new
@@ -426,10 +435,11 @@ namespace HRMS.Api.Migrations
                             DataType = "string",
                             DisplayOrder = 2,
                             IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "Full Name",
-                            TargetDisplayName = "Full Name",
-                            TargetProperty = "FullName"
+                            IsRequired = false,
+                            SourceColumn = "Employment Status",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Active",
+                            TargetProperty = "ActiveStatus"
                         },
                         new
                         {
@@ -439,7 +449,8 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "FTE/ Consultant",
+                            SourceColumn = "Employment Type",
+                            SourceSystem = "PeopleStrong",
                             TargetDisplayName = "FTE/ Consultant",
                             TargetProperty = "EmployeeType"
                         },
@@ -451,9 +462,10 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "Role",
-                            TargetDisplayName = "Role",
-                            TargetProperty = "Designation"
+                            SourceColumn = "Employee Name",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Full Name",
+                            TargetProperty = "FullName"
                         },
                         new
                         {
@@ -463,8 +475,9 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 5,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "OU 4 - Practice",
-                            TargetDisplayName = "OU 4 - Practice",
+                            SourceColumn = "Function",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Practice",
                             TargetProperty = "Practice"
                         },
                         new
@@ -475,8 +488,9 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 6,
                             IsActive = true,
                             IsRequired = false,
-                            SourceColumn = "OU 5 - Sub-practice",
-                            TargetDisplayName = "OU 5 - Sub-practice",
+                            SourceColumn = "Department/Practice",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Sub-practice",
                             TargetProperty = "SubPractice"
                         },
                         new
@@ -488,6 +502,7 @@ namespace HRMS.Api.Migrations
                             IsActive = false,
                             IsRequired = false,
                             SourceColumn = "Organization Unit",
+                            SourceSystem = "PeopleStrong",
                             TargetDisplayName = "Sub-practice",
                             TargetProperty = "SubPractice"
                         },
@@ -499,7 +514,8 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 8,
                             IsActive = true,
                             IsRequired = false,
-                            SourceColumn = "Location",
+                            SourceColumn = "Base office location",
+                            SourceSystem = "PeopleStrong",
                             TargetDisplayName = "Location",
                             TargetProperty = "NVLocation"
                         },
@@ -510,22 +526,24 @@ namespace HRMS.Api.Migrations
                             DataType = "string",
                             DisplayOrder = 9,
                             IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "L1 Manager",
-                            TargetDisplayName = "L1 Manager",
-                            TargetProperty = "ReportingManager"
+                            IsRequired = true,
+                            SourceColumn = "Office Email Address",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Email ID",
+                            TargetProperty = "Email"
                         },
                         new
                         {
                             Id = new Guid("a1000000-0000-0000-0000-000000000010"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
+                            DataType = "datetime",
                             DisplayOrder = 10,
                             IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Practice Head",
-                            TargetDisplayName = "Practice Head",
-                            TargetProperty = "PracticeHead"
+                            IsRequired = true,
+                            SourceColumn = "Date of Joining",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "DOJ",
+                            TargetProperty = "DOJ"
                         },
                         new
                         {
@@ -535,9 +553,10 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 11,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "email ID",
-                            TargetDisplayName = "Email ID",
-                            TargetProperty = "Email"
+                            SourceColumn = "Designation",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Role",
+                            TargetProperty = "Designation"
                         },
                         new
                         {
@@ -547,31 +566,190 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 12,
                             IsActive = true,
                             IsRequired = false,
-                            SourceColumn = "Active",
-                            TargetDisplayName = "Active",
-                            TargetProperty = "ActiveStatus"
+                            SourceColumn = "L1 Manager",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "L1 Manager",
+                            TargetProperty = "ReportingManager"
                         },
                         new
                         {
                             Id = new Guid("a1000000-0000-0000-0000-000000000013"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "datetime",
+                            DataType = "string",
                             DisplayOrder = 13,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Practice Head",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Practice Head",
+                            TargetProperty = "PracticeHead"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000001"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Emp Id",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Emp ID",
+                            TargetProperty = "EmployeeCode"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000002"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "Full Name",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Full Name",
+                            TargetProperty = "FullName"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000003"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "FTE/ Consultant",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "FTE/ Consultant",
+                            TargetProperty = "EmployeeType"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000004"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "Role",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Role",
+                            TargetProperty = "Designation"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000005"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "OU 4 - Practice",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Practice",
+                            TargetProperty = "Practice"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000006"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 6,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "OU 5 - Sub-practice",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Sub-practice",
+                            TargetProperty = "SubPractice"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000007"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 7,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Location",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Location",
+                            TargetProperty = "NVLocation"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000008"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 8,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "L1 Manager",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "L1 Manager",
+                            TargetProperty = "ReportingManager"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000009"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 9,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Practice Head",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Practice Head",
+                            TargetProperty = "PracticeHead"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000010"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 10,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "email ID",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Email ID",
+                            TargetProperty = "Email"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000011"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 11,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Active",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Active",
+                            TargetProperty = "ActiveStatus"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000012"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "datetime",
+                            DisplayOrder = 12,
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "DOJ",
+                            SourceSystem = "RMG",
                             TargetDisplayName = "DOJ",
                             TargetProperty = "DOJ"
                         },
                         new
                         {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000014"),
+                            Id = new Guid("a2000000-0000-0000-0000-000000000013"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "datetime",
-                            DisplayOrder = 14,
+                            DisplayOrder = 13,
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "LWD",
+                            SourceSystem = "RMG",
                             TargetDisplayName = "LWD",
                             TargetProperty = "LWD"
                         });
@@ -1393,9 +1571,6 @@ namespace HRMS.Api.Migrations
 
                     b.Property<int>("TotalRows")
                         .HasColumnType("int");
-
-                    b.Property<string>("UploadedColumns")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BatchId");
 
