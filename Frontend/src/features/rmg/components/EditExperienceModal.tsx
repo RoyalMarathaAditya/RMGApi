@@ -159,7 +159,7 @@ export default function EditExperienceModal({ open, onClose, onSaved, employeeId
                   value={selected}
                   onChange={(_, value) => field.onChange(value?.id ?? null)}
                   size="small" fullWidth
-                  renderInput={(params) => <TextField {...params} label="Primary Skill" placeholder="Search skill" />}
+                  renderInput={(params) => <TextField {...params} label="Primary Skill" placeholder="Select Primary Skill" />}
                 />
               );
             }} />
@@ -184,7 +184,7 @@ export default function EditExperienceModal({ open, onClose, onSaved, employeeId
                       {option.skillName}
                     </li>
                   )}
-                  renderInput={(params) => <TextField {...params} label="Key Skills" placeholder="Search skills" />}
+                  renderInput={(params) => <TextField {...params} label="Key Skills" placeholder="Select Key Skill(s)" />}
                 />
               );
             }} />
@@ -201,7 +201,7 @@ export default function EditExperienceModal({ open, onClose, onSaved, employeeId
                   loading={employeesLoading}
                   size="small" fullWidth
                   renderInput={(params) => (
-                    <TextField {...params} label="Project Manager" placeholder="Search employee"
+                    <TextField {...params} label="Project Manager" placeholder="Select Project Manager"
                       slotProps={{
                         input: {
                           ...params.InputProps,

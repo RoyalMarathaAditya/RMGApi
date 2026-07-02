@@ -465,6 +465,9 @@ namespace HRMS.Api.Services.RMG
             var activeAllocations = await _dbContext.ResourceAllocations
                 .AsNoTracking()
                 .Include(ra => ra.Project).ThenInclude(p => p.Client)
+                .Include(ra => ra.ProjectStatus)
+                .Include(ra => ra.BillingBucket)
+                .Include(ra => ra.AgeingBucket)
                 .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History")
                 .ToListAsync(cancellationToken);
 
@@ -529,7 +532,7 @@ namespace HRMS.Api.Services.RMG
                         ProjectCode = a.Project?.ProjectCode,
                         Client = a.Project?.Client?.Name,
                         Project = a.Project?.ProjectName,
-                        ProjectStatus = a.BillableStatus,
+                        ProjectStatus = a.ProjectStatus?.Name ?? a.BillableStatus,
                         StartDate = a.StartDate,
                         EndDate = a.EndDate,
                         AllocationPercentage = a.AllocationPercentage,
@@ -537,7 +540,13 @@ namespace HRMS.Api.Services.RMG
                         Engineering = a.Engineering ?? (employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null),
                         DurationInProject = $"{durationDays} Days",
                         Ageing = $"{Math.Max(0, ageingDays)} Days",
-                        Remarks = a.Notes
+                        Remarks = a.Notes,
+                        BillableStatus = a.BillableStatus,
+                        AllocationType = a.AllocationType,
+                        AllocationStatus = a.AllocationStatus,
+                        Status = employee.EmployeeStatus?.Name ?? (employee.IsDeleted ? "Inactive" : "Active"),
+                        BillingBucket = a.BillingBucket?.Name,
+                        AgeingBucket = a.AgeingBucket?.Name
                     };
                 }).ToList()
             };

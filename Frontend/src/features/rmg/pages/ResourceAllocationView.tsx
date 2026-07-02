@@ -752,18 +752,25 @@ export default function ResourceAllocationView() {
                 </Box>
               ) : (
                 <>
-                  <TableContainer>
-                    <Table size="small">
+                  <TableContainer sx={{ maxHeight: 480, overflowX: 'auto' }}>
+                    <Table size="small" sx={{ minWidth: 1600 }}>
                       <TableHead>
                         <TableRow>
                           {[
                             { key: 'project', label: 'Project Name' },
                             { key: null as any, label: 'Project Code' },
                             { key: 'client', label: 'Client Name' },
+                            { key: null as any, label: 'Project Status' },
                             { key: 'allocationPercentage', label: 'Allocation %' },
                             { key: 'startDate', label: 'Start Date' },
                             { key: 'endDate', label: 'End Date' },
+                            { key: null as any, label: 'Billable Status' },
+                            { key: null as any, label: 'Allocation Type' },
+                            { key: null as any, label: 'Allocation Status' },
                             { key: null as any, label: 'Status' },
+                            { key: null as any, label: 'Engineering' },
+                            { key: null as any, label: 'Billing Bucket' },
+                            { key: null as any, label: 'Aging Bucket' },
                             { key: null as any, label: 'Duration' },
                             { key: null as any, label: 'Actions' },
                           ].map((col) => (
@@ -773,6 +780,7 @@ export default function ResourceAllocationView() {
                                 fontWeight: 600, fontSize: '0.7rem', color: '#6B7280',
                                 textTransform: 'uppercase', letterSpacing: '0.4px',
                                 bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', py: 1.25,
+                                position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
                               }}
                             >
                               {col.key ? (
@@ -797,27 +805,16 @@ export default function ResourceAllocationView() {
                               hover
                               sx={{ '&:hover': { bgcolor: '#F8FBFF' }, '&:last-child td': { borderBottom: 'none' } }}
                             >
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{pa.project ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#6B7280', fontFamily: 'monospace' }}>{pa.projectCode ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.client ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
-                                <Typography sx={{ fontSize: 14, fontWeight: 700, color: isOver ? '#DC2626' : (pa.allocationPercentage ?? 0) >= 100 ? '#F59E0B' : '#16A34A' }}>
-                                  {pa.allocationPercentage != null ? `${pa.allocationPercentage}%` : '—'}
-                                </Typography>
-                              </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.startDate)}</Typography>
-                              </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.endDate)}</Typography>
-                              </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Chip
                                   label={pa.projectStatus ?? '—'}
                                   size="small"
@@ -826,35 +823,58 @@ export default function ResourceAllocationView() {
                                   sx={{ fontWeight: 600, fontSize: '0.65rem', height: 20, borderRadius: '999px' }}
                                 />
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 14, fontWeight: 700, color: isOver ? '#DC2626' : (pa.allocationPercentage ?? 0) >= 100 ? '#F59E0B' : '#16A34A' }}>
+                                  {pa.allocationPercentage != null ? `${pa.allocationPercentage}%` : '—'}
+                                </Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.startDate)}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.endDate)}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.billableStatus ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.allocationType ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.allocationStatus ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.status ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.engineering ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.billingBucket ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.ageingBucket ?? '—'}</Typography>
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.durationInProject ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1 }}>
+                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Stack direction="row" spacing={0.5}>
                                   <Tooltip title="View Details">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => { setDrawerProject(pa); setDrawerOpen(true); }}
-                                      sx={{ color: '#2563EB', '&:hover': { bgcolor: '#EFF6FF' } }}
-                                    >
+                                    <IconButton size="small" onClick={() => { setDrawerProject(pa); setDrawerOpen(true); }}
+                                      sx={{ color: '#2563EB', '&:hover': { bgcolor: '#EFF6FF' } }}>
                                       <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
                                   <Tooltip title="Edit">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => openEditDialog(pa)}
-                                      sx={{ color: '#D97706', '&:hover': { bgcolor: '#FFFBEB' } }}
-                                    >
+                                    <IconButton size="small" onClick={() => openEditDialog(pa)}
+                                      sx={{ color: '#D97706', '&:hover': { bgcolor: '#FFFBEB' } }}>
                                       <EditOutlinedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
                                   <Tooltip title="Delete">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => openDeleteDialog(pa)}
-                                      sx={{ color: '#DC2626', '&:hover': { bgcolor: '#FEF2F2' } }}
-                                    >
+                                    <IconButton size="small" onClick={() => openDeleteDialog(pa)}
+                                      sx={{ color: '#DC2626', '&:hover': { bgcolor: '#FEF2F2' } }}>
                                       <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
@@ -936,7 +956,7 @@ export default function ResourceAllocationView() {
                 <TextField
                   {...params}
                   label="Project Name *"
-                  placeholder="Search project..."
+                  placeholder="Select Project Name"
                   slotProps={{
                     input: {
                       ...params.InputProps,
@@ -977,7 +997,7 @@ export default function ResourceAllocationView() {
                 <TextField
                   {...params}
                   label="Client *"
-                  placeholder="Search client..."
+                  placeholder="Select Client"
                 />
               )}
             />

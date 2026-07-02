@@ -273,6 +273,12 @@ export interface ProjectAllocationDetailDto {
   durationInProject: string | null;
   ageing: string | null;
   remarks: string | null;
+  billableStatus: string | null;
+  allocationType: string | null;
+  allocationStatus: string | null;
+  status: string | null;
+  billingBucket: string | null;
+  ageingBucket: string | null;
 }
 
 export const ALLOCATION_STATUSES = ['Current', 'History', 'Planned', 'Active', 'Completed', 'Released', 'Cancelled'] as const;

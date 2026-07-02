@@ -48,6 +48,12 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? DurationInProject { get; set; }
         public string? Ageing { get; set; }
         public string? Remarks { get; set; }
+        public string? BillableStatus { get; set; }
+        public string? AllocationType { get; set; }
+        public string? AllocationStatus { get; set; }
+        public string? Status { get; set; }
+        public string? BillingBucket { get; set; }
+        public string? AgeingBucket { get; set; }
     }
 
 
