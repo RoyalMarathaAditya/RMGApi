@@ -72,6 +72,7 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string AllocationStatus { get; set; } = string.Empty;
         public string? ActionItem { get; set; }
         public string? Remarks { get; set; }
+        public string? Engineering { get; set; }
     }
 
     public class AddProjectAllocationDto
@@ -95,6 +96,7 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? AllocationStatus { get; set; }
         public string? ActionItem { get; set; }
         public string? Remarks { get; set; }
+        public string? Engineering { get; set; }
     }
 
     public class UpdateProjectAllocationDto
@@ -117,6 +119,7 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? AllocationStatus { get; set; }
         public string? ActionItem { get; set; }
         public string? Remarks { get; set; }
+        public string? Engineering { get; set; }
     }
 
     public class EmployeeAllocationDto

@@ -6,7 +6,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, parse } from 'date-fns';
 import {
   Autocomplete, Box, Button, Chip, CircularProgress, Dialog, DialogActions,
-  DialogContent, DialogTitle, IconButton, MenuItem, Stack, Tab, Tabs,
+  DialogContent, DialogTitle, FormControl, FormControlLabel,
+  FormLabel, IconButton, MenuItem, Radio, RadioGroup, Stack, Tab, Tabs,
   TextField, Tooltip, Typography, Alert, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, TablePagination, TableSortLabel,
 } from '@mui/material';
@@ -136,10 +137,11 @@ export default function ResourceAllocationView() {
     remarks: null as string | null,
     startDate: '',
     endDate: '',
-    allocationPercentage: 0,
-    allocationType: 'Full Time',
-    billableStatus: 'Billable',
+    allocationPercentage: '' as string | number,
+    allocationType: '',
+    billableStatus: '',
     allocationStatus: 'Active',
+    engineering: null as boolean | null,
   });
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -315,8 +317,9 @@ export default function ResourceAllocationView() {
       billableDateProbabilityId: null, currentBillingStatusId: null,
       billingBucketId: null, ageingBucketId: null,
       actionItem: null, remarks: null,
-      startDate: '', endDate: '', allocationPercentage: 0,
-      allocationType: 'Full Time', billableStatus: 'Billable', allocationStatus: 'History',
+      startDate: '', endDate: '', allocationPercentage: '',
+      allocationType: '', billableStatus: '', allocationStatus: 'History',
+      engineering: null,
     });
     setFormError('');
     setDialogOpen(true);
@@ -355,9 +358,10 @@ export default function ResourceAllocationView() {
         startDate: matched.startDate.split('T')[0],
         endDate: matched.endDate ? matched.endDate.split('T')[0] : '',
         allocationPercentage: matched.allocationPercentage,
-        allocationType: matched.allocationType ?? 'Full Time',
-        billableStatus: matched.billableStatus ?? 'Billable',
+        allocationType: matched.allocationType ?? '',
+        billableStatus: matched.billableStatus ?? '',
         allocationStatus: matched.allocationStatus,
+        engineering: pa.engineering === 'Yes' ? true : pa.engineering === 'No' ? false : null,
       });
       setFormError('');
       setDialogOpen(true);
@@ -369,6 +373,14 @@ export default function ResourceAllocationView() {
   const handleSave = async () => {
     setFormError('');
 
+    if (formData.engineering === null) {
+      toastService.warning('Engineering selection is required.');
+      return;
+    }
+    if (!formData.billableStatus) {
+      toastService.warning('Please select Billable Status.');
+      return;
+    }
     if (!formData.projectId) {
       toastService.warning('Project Name is required');
       return;
@@ -389,7 +401,8 @@ export default function ResourceAllocationView() {
       toastService.warning('End date cannot be earlier than start date');
       return;
     }
-    if (formData.allocationPercentage < 1 || formData.allocationPercentage > 100) {
+    const allocPct = Number(formData.allocationPercentage);
+    if (!formData.allocationPercentage || allocPct < 1 || allocPct > 100) {
       toastService.warning('Allocation percentage must be between 1 and 100');
       return;
     }
@@ -401,8 +414,8 @@ export default function ResourceAllocationView() {
       toastService.warning('Status is required');
       return;
     }
-    if (!formData.billableDateProbabilityId) {
-      toastService.warning('Billable Date Probability is required');
+    if (!formData.allocationType) {
+      toastService.warning('Please select Allocation Type.');
       return;
     }
     if (!formData.currentBillingStatusId) {
@@ -419,8 +432,8 @@ export default function ResourceAllocationView() {
     }
 
     const otherTotal = getOtherAllocationsTotal(editingAllocation?.id);
-    if (otherTotal + formData.allocationPercentage > 100) {
-      toastService.warning(`Total allocation cannot exceed 100%. Current allocation: ${otherTotal}%. Adding ${formData.allocationPercentage}% would make it ${otherTotal + formData.allocationPercentage}%.`);
+    if (otherTotal + allocPct > 100) {
+      toastService.warning(`Total allocation cannot exceed 100%. Current allocation: ${otherTotal}%. Adding ${allocPct}% would make it ${otherTotal + allocPct}%.`);
       return;
     }
 
@@ -442,10 +455,11 @@ export default function ResourceAllocationView() {
           remarks: formData.remarks,
           startDate: formData.startDate,
           endDate: formData.endDate || null,
-          allocationPercentage: formData.allocationPercentage,
+          allocationPercentage: allocPct,
           allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
           allocationStatus: computeAllocationStatus(formData.endDate),
+          engineering: formData.engineering ? 'Yes' : 'No',
         };
         await allocationService.updateProjectAllocation(editingAllocation.id, dto);
       } else {
@@ -465,10 +479,11 @@ export default function ResourceAllocationView() {
           remarks: formData.remarks,
           startDate: formData.startDate,
           endDate: formData.endDate || null,
-          allocationPercentage: formData.allocationPercentage,
+          allocationPercentage: allocPct,
           allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
           allocationStatus: computeAllocationStatus(formData.endDate),
+          engineering: formData.engineering ? 'Yes' : 'No',
         };
         await allocationService.addProjectAllocation(dto);
       }
@@ -1020,31 +1035,37 @@ export default function ResourceAllocationView() {
               fullWidth
               size="small"
               value={formData.allocationPercentage}
-              onChange={(e) => setFormData((prev) => ({ ...prev, allocationPercentage: Number(e.target.value) }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, allocationPercentage: e.target.value }))}
               slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: 1, max: 100 } }}
             />
             <TextField
               select
-              label="Allocation Type"
+              label="Allocation Type *"
               fullWidth
               size="small"
               value={formData.allocationType}
               onChange={(e) => setFormData((prev) => ({ ...prev, allocationType: e.target.value }))}
               slotProps={{ inputLabel: { shrink: true } }}
             >
+              <MenuItem value="" disabled sx={{ color: 'text.disabled' }}>
+                Select Allocation Type
+              </MenuItem>
               {ALLOCATION_TYPES.map((t) => (
                 <MenuItem key={t} value={t}>{t}</MenuItem>
               ))}
             </TextField>
             <TextField
               select
-              label="Billable Status"
+              label="Billable Status *"
               fullWidth
               size="small"
               value={formData.billableStatus}
               onChange={(e) => setFormData((prev) => ({ ...prev, billableStatus: e.target.value }))}
               slotProps={{ inputLabel: { shrink: true } }}
             >
+              <MenuItem value="" disabled sx={{ color: 'text.disabled' }}>
+                Select Billable Status
+              </MenuItem>
               {BILLABLE_STATUSES.map((s) => (
                 <MenuItem key={s} value={s}>{s}</MenuItem>
               ))}
@@ -1130,7 +1151,7 @@ export default function ResourceAllocationView() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Billable Date Probability *"
+                  label="Billable Date Probability"
                   placeholder="Select Billable Date Probability"
                   slotProps={{ inputLabel: { shrink: true } }}
                 />
@@ -1213,16 +1234,33 @@ export default function ResourceAllocationView() {
               sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}
               slotProps={{ inputLabel: { shrink: true } }}
             />
-            <TextField
-              label="Remark"
-              fullWidth
-              size="small"
-              multiline
-              minRows={2}
-              value={formData.remarks ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, remarks: e.target.value || null }))}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
+            <Box sx={{ display: 'contents' }}>
+              <TextField
+                label="Remark"
+                fullWidth
+                size="small"
+                multiline
+                minRows={4}
+                value={formData.remarks ?? ''}
+                onChange={(e) => setFormData((prev) => ({ ...prev, remarks: e.target.value || null }))}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}
+              />
+              <FormControl sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' }, justifyContent: 'center' }}>
+                <FormLabel id="engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: '#374151', mb: 0.5, '&.Mui-focused': { color: '#374151' } }}>
+                  Engineering *
+                </FormLabel>
+                <RadioGroup
+                  row
+                  aria-labelledby="engineering-radio-label"
+                  value={formData.engineering === null ? '' : formData.engineering ? 'Yes' : 'No'}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, engineering: e.target.value === 'Yes' }))}
+                >
+                  <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                  <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                </RadioGroup>
+              </FormControl>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', gap: 1 }}>

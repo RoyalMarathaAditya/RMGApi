@@ -66,6 +66,7 @@ export interface ProjectAllocationDto {
   billableStatus: string | null;
   allocationType: string | null;
   allocationStatus: string;
+  engineering: string | null;
 }
 
 export interface AddProjectAllocationDto {
@@ -88,6 +89,7 @@ export interface AddProjectAllocationDto {
   billableStatus?: string;
   allocationType?: string;
   allocationStatus?: string;
+  engineering?: string;
 }
 
 export interface UpdateProjectAllocationDto {
@@ -109,6 +111,7 @@ export interface UpdateProjectAllocationDto {
   billableStatus?: string;
   allocationType?: string;
   allocationStatus?: string;
+  engineering?: string;
 }
 
 export interface EmployeeAllocationDto {

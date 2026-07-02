@@ -277,6 +277,7 @@ namespace HRMS.Api.Services.RMG
                 BillableStatus = dto.BillableStatus,
                 ActionItem = dto.ActionItem,
                 Remarks = dto.Remarks,
+                Engineering = dto.Engineering,
                 CreatedBy = userName
             };
 
@@ -317,6 +318,7 @@ namespace HRMS.Api.Services.RMG
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.ActionItem is not null) allocation.ActionItem = dto.ActionItem;
             if (dto.Remarks is not null) allocation.Remarks = dto.Remarks;
+            if (dto.Engineering is not null) allocation.Engineering = dto.Engineering;
             allocation.ModifiedBy = userName;
             allocation.ModifiedOn = DateTime.UtcNow;
 
@@ -532,7 +534,7 @@ namespace HRMS.Api.Services.RMG
                         EndDate = a.EndDate,
                         AllocationPercentage = a.AllocationPercentage,
                         BillablePercentage = a.BillableStatus == "Billable" ? a.AllocationPercentage : 0,
-                        Engineering = employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null,
+                        Engineering = a.Engineering ?? (employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null),
                         DurationInProject = $"{durationDays} Days",
                         Ageing = $"{Math.Max(0, ageingDays)} Days",
                         Remarks = a.Notes
@@ -650,7 +652,8 @@ namespace HRMS.Api.Services.RMG
                 AllocationType = allocation.AllocationType,
                 AllocationStatus = allocation.AllocationStatus,
                 ActionItem = allocation.ActionItem,
-                Remarks = allocation.Remarks
+                Remarks = allocation.Remarks,
+                Engineering = allocation.Engineering
             };
         }
 
