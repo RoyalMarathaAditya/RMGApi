@@ -80,7 +80,6 @@ export interface AddProjectAllocationDto {
   billableDateProbabilityId?: string | null;
   currentBillingStatusId?: string | null;
   billingBucketId?: string | null;
-  ageingBucketId?: string | null;
   actionItem?: string | null;
   remarks?: string | null;
   startDate: string;

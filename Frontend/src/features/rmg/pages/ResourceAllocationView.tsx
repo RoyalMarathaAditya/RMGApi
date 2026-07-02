@@ -57,6 +57,22 @@ function computeAllocationStatus(endDate: string): string {
   return end >= today ? 'Current' : 'History';
 }
 
+function computeDurationDays(startDate: string, endDate: string): number {
+  if (!startDate || !endDate) return 0;
+  const s = new Date(startDate + 'T00:00:00');
+  const e = new Date(endDate + 'T00:00:00');
+  return Math.max(0, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+function computeAgeingDays(startDate: string, allocationPct: number): number {
+  if (!startDate) return 0;
+  const s = new Date(startDate + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const rawDays = Math.round((today.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(0, Math.round(rawDays * allocationPct / 100));
+}
+
 const projectStatusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
   Billable: 'success', 'Non-Billable': 'warning', Shadow: 'info',
   Active: 'success', Planned: 'info', Completed: 'default',
@@ -426,10 +442,6 @@ export default function ResourceAllocationView() {
       toastService.warning('Billing Bucket is required');
       return;
     }
-    if (!formData.ageingBucketId) {
-      toastService.warning('Ageing Bucket is required');
-      return;
-    }
 
     const otherTotal = getOtherAllocationsTotal(editingAllocation?.id);
     if (otherTotal + allocPct > 100) {
@@ -450,7 +462,6 @@ export default function ResourceAllocationView() {
           billableDateProbabilityId: formData.billableDateProbabilityId,
           currentBillingStatusId: formData.currentBillingStatusId,
           billingBucketId: formData.billingBucketId,
-          ageingBucketId: formData.ageingBucketId,
           actionItem: formData.actionItem,
           remarks: formData.remarks,
           startDate: formData.startDate,
@@ -474,7 +485,6 @@ export default function ResourceAllocationView() {
           billableDateProbabilityId: formData.billableDateProbabilityId,
           currentBillingStatusId: formData.currentBillingStatusId,
           billingBucketId: formData.billingBucketId,
-          ageingBucketId: formData.ageingBucketId,
           actionItem: formData.actionItem,
           remarks: formData.remarks,
           startDate: formData.startDate,
@@ -1221,66 +1231,73 @@ export default function ResourceAllocationView() {
                 />
               )}
             />
-            <Autocomplete
-              options={ageingBuckets}
-              getOptionLabel={(option) => option.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={ageingBuckets.find((s) => s.id === formData.ageingBucketId) ?? null}
-              onChange={(_, value) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  ageingBucketId: value?.id ?? null,
-                }));
-              }}
+            <TextField
+              label="Duration"
               fullWidth
               size="small"
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Ageing Bucket *"
-                  placeholder="Select Ageing Bucket"
-                  slotProps={{ inputLabel: { shrink: true } }}
-                />
-              )}
+              value={formData.startDate && formData.endDate ? `${computeDurationDays(formData.startDate, formData.endDate)} Days` : '—'}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
+            <TextField
+              label="Ageing"
+              fullWidth
+              size="small"
+              value={formData.startDate && formData.allocationPercentage ? `${computeAgeingDays(formData.startDate, Number(formData.allocationPercentage))} Days` : '—'}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
+            />
+            <TextField
+              label="Ageing Bucket"
+              fullWidth
+              size="small"
+              value={(() => {
+                if (!formData.startDate || !formData.allocationPercentage) return '—';
+                const ageingDays = computeAgeingDays(formData.startDate, Number(formData.allocationPercentage));
+                let index;
+                if (ageingDays <= 30) index = 0;
+                else if (ageingDays <= 90) index = 1;
+                else if (ageingDays <= 181) index = 2;
+                else index = 3;
+                return ageingBuckets[index]?.name ?? '—';
+              })()}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
+            />
+            <FormControl sx={{ justifyContent: 'center' }}>
+              <FormLabel id="engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: '#374151', mb: 0.5, '&.Mui-focused': { color: '#374151' } }}>
+                Engineering *
+              </FormLabel>
+              <RadioGroup
+                row
+                aria-labelledby="engineering-radio-label"
+                value={formData.engineering === null ? '' : formData.engineering ? 'Yes' : 'No'}
+                onChange={(e) => setFormData((prev) => ({ ...prev, engineering: e.target.value === 'Yes' }))}
+              >
+                <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+              </RadioGroup>
+            </FormControl>
             <TextField
               label="Action Item"
               fullWidth
               size="small"
               multiline
-              minRows={2}
+              minRows={3}
               value={formData.actionItem ?? ''}
               onChange={(e) => setFormData((prev) => ({ ...prev, actionItem: e.target.value || null }))}
-              sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}
               slotProps={{ inputLabel: { shrink: true } }}
             />
-            <Box sx={{ display: 'contents' }}>
-              <TextField
-                label="Remark"
-                fullWidth
-                size="small"
-                multiline
-                minRows={4}
-                value={formData.remarks ?? ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, remarks: e.target.value || null }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}
-              />
-              <FormControl sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' }, justifyContent: 'center' }}>
-                <FormLabel id="engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: '#374151', mb: 0.5, '&.Mui-focused': { color: '#374151' } }}>
-                  Engineering *
-                </FormLabel>
-                <RadioGroup
-                  row
-                  aria-labelledby="engineering-radio-label"
-                  value={formData.engineering === null ? '' : formData.engineering ? 'Yes' : 'No'}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, engineering: e.target.value === 'Yes' }))}
-                >
-                  <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
-                  <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
-                </RadioGroup>
-              </FormControl>
-            </Box>
+            <TextField
+              label="Remark"
+              fullWidth
+              size="small"
+              multiline
+              minRows={3}
+              value={formData.remarks ?? ''}
+              onChange={(e) => setFormData((prev) => ({ ...prev, remarks: e.target.value || null }))}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', gap: 1 }}>

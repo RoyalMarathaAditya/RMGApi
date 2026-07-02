@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702153830_AddResourceAllocationDurationAgeing")]
+    partial class AddResourceAllocationDurationAgeing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,7 +74,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "< 1 month"
+                            Name = "0-30 Days"
                         },
                         new
                         {
@@ -80,7 +83,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "1-3 months"
+                            Name = "31-60 Days"
                         },
                         new
                         {
@@ -89,7 +92,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "3 to 6 months"
+                            Name = "61-90 Days"
                         },
                         new
                         {
@@ -98,7 +101,16 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "> 6 months"
+                            Name = "91-120 Days"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0040001-0000-0000-0000-000000000005"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "120+ Days"
                         });
                 });
 

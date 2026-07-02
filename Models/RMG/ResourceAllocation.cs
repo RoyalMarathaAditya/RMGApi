@@ -65,6 +65,10 @@ namespace HRMS.Api.Models.RMG
         [MaxLength(10)]
         public string? Engineering { get; set; }
 
+        public int? Duration { get; set; }
+
+        public int? Ageing { get; set; }
+
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
         [MaxLength(100)]
         public string? CreatedBy { get; set; }

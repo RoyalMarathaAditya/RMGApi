@@ -256,6 +256,7 @@ namespace HRMS.Api.Services.RMG
             if (totalAllocated + dto.AllocationPercentage > 100)
                 throw new InvalidOperationException($"Total allocation cannot exceed 100%. Current allocation: {totalAllocated}%.");
 
+            var today = DateTime.UtcNow.Date;
             var allocation = new ResourceAllocation
             {
                 EmployeeId = dto.EmployeeId,
@@ -268,18 +269,22 @@ namespace HRMS.Api.Services.RMG
                 BillableDateProbabilityId = dto.BillableDateProbabilityId,
                 CurrentBillingStatusId = dto.CurrentBillingStatusId,
                 BillingBucketId = dto.BillingBucketId,
-                AgeingBucketId = dto.AgeingBucketId,
+                AgeingBucketId = null,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
-                AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History",
+                AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= today ? "Current" : "History",
                 AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
                 ActionItem = dto.ActionItem,
                 Remarks = dto.Remarks,
                 Engineering = dto.Engineering,
+                Duration = dto.EndDate.HasValue ? (int?)(dto.EndDate.Value.Date - dto.StartDate.Date).Days : null,
+                Ageing = (int?)Math.Max(0, (int)Math.Round(((today - dto.StartDate.Date).Days + 1) * dto.AllocationPercentage / 100m)),
                 CreatedBy = userName
             };
+
+            allocation.AgeingBucketId = await DetermineAgeingBucketIdAsync(allocation.Ageing, cancellationToken);
 
             var created = await _repository.CreateAsync(allocation, cancellationToken);
             sw.Stop();
@@ -306,19 +311,25 @@ namespace HRMS.Api.Services.RMG
             if (dto.BillableDateProbabilityId.HasValue) allocation.BillableDateProbabilityId = dto.BillableDateProbabilityId.Value;
             if (dto.CurrentBillingStatusId.HasValue) allocation.CurrentBillingStatusId = dto.CurrentBillingStatusId.Value;
             if (dto.BillingBucketId.HasValue) allocation.BillingBucketId = dto.BillingBucketId.Value;
-            if (dto.AgeingBucketId.HasValue) allocation.AgeingBucketId = dto.AgeingBucketId.Value;
             if (dto.StartDate.HasValue) allocation.StartDate = dto.StartDate.Value;
             if (dto.EndDate.HasValue)
             {
                 allocation.EndDate = dto.EndDate;
                 allocation.AllocationStatus = dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History";
             }
+
+            var today = DateTime.UtcNow.Date;
+
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
             if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.ActionItem is not null) allocation.ActionItem = dto.ActionItem;
             if (dto.Remarks is not null) allocation.Remarks = dto.Remarks;
             if (dto.Engineering is not null) allocation.Engineering = dto.Engineering;
+
+            allocation.Duration = allocation.EndDate.HasValue ? (int?)(allocation.EndDate.Value.Date - allocation.StartDate.Date).Days : null;
+            allocation.Ageing = (int?)Math.Max(0, (int)Math.Round(((today - allocation.StartDate.Date).Days + 1) * allocation.AllocationPercentage / 100m));
+            allocation.AgeingBucketId = await DetermineAgeingBucketIdAsync(allocation.Ageing, cancellationToken);
             allocation.ModifiedBy = userName;
             allocation.ModifiedOn = DateTime.UtcNow;
 
@@ -525,7 +536,7 @@ namespace HRMS.Api.Services.RMG
                     var startDate = a.StartDate;
                     var endDate = a.EndDate ?? today;
                     var durationDays = (endDate - startDate).Days;
-                    var ageingDays = (today - startDate).Days;
+                    var ageingDays = (int)Math.Max(0, Math.Round(((today - startDate).Days + 1) * (double)a.AllocationPercentage / 100.0));
 
                     return new ProjectAllocationDetailDto
                     {
@@ -538,8 +549,8 @@ namespace HRMS.Api.Services.RMG
                         AllocationPercentage = a.AllocationPercentage,
                         BillablePercentage = a.BillableStatus == "Billable" ? a.AllocationPercentage : 0,
                         Engineering = a.Engineering ?? (employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null),
-                        DurationInProject = $"{durationDays} Days",
-                        Ageing = $"{Math.Max(0, ageingDays)} Days",
+                        DurationInProject = a.Duration.HasValue ? $"{a.Duration.Value} Days" : $"{durationDays} Days",
+                        Ageing = a.Ageing.HasValue ? $"{Math.Max(0, a.Ageing.Value)} Days" : $"{Math.Max(0, ageingDays)} Days",
                         Remarks = a.Notes,
                         BillableStatus = a.BillableStatus,
                         AllocationType = a.AllocationType,
@@ -672,6 +683,36 @@ namespace HRMS.Api.Services.RMG
             var priorExperience = employee.PriorExperience ?? 0;
             var yearsSinceDoj = (decimal)(DateTime.UtcNow - doj).TotalDays / 365.25m;
             return Math.Round(yearsSinceDoj + priorExperience, 1);
+        }
+
+        private async Task<Guid?> DetermineAgeingBucketIdAsync(int? ageingDays, CancellationToken cancellationToken = default)
+        {
+            if (!ageingDays.HasValue || ageingDays < 0)
+                return null;
+
+            var buckets = await _dbContext.AgeingBucketMasters
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.DisplayOrder)
+                .Select(b => b.Id)
+                .ToListAsync(cancellationToken);
+
+            if (!buckets.Any())
+                return null;
+
+            int index;
+            if (ageingDays.Value <= 30)
+                index = 0;
+            else if (ageingDays.Value <= 90)
+                index = 1;
+            else if (ageingDays.Value <= 181)
+                index = 2;
+            else
+                index = 3;
+
+            if (index >= buckets.Count)
+                return null;
+
+            return buckets[index];
         }
     }
 }
