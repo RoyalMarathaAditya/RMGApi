@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701111548_AddColumnMappingTables")]
+    partial class AddColumnMappingTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,7 +74,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "< 1 month"
+                            Name = "0-30 Days"
                         },
                         new
                         {
@@ -80,7 +83,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "1-3 months"
+                            Name = "31-60 Days"
                         },
                         new
                         {
@@ -89,7 +92,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "3 to 6 months"
+                            Name = "61-90 Days"
                         },
                         new
                         {
@@ -98,7 +101,16 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "> 6 months"
+                            Name = "91-120 Days"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0040001-0000-0000-0000-000000000005"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "120+ Days"
                         });
                 });
 
@@ -289,48 +301,6 @@ namespace HRMS.Api.Migrations
                         });
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.CSMRevenueType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CSMRevenueTypes", (string)null);
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
                 {
                     b.Property<int>("Id")
@@ -421,6 +391,11 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("SourceSystem")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("TargetDisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -433,7 +408,7 @@ namespace HRMS.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SourceColumn")
+                    b.HasIndex("SourceSystem", "SourceColumn")
                         .IsUnique()
                         .HasFilter("[IsActive] = 1");
 
@@ -448,8 +423,9 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "Emp Id",
-                            TargetDisplayName = "Emp Id",
+                            SourceColumn = "Employee Code",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Emp ID",
                             TargetProperty = "EmployeeCode"
                         },
                         new
@@ -459,10 +435,11 @@ namespace HRMS.Api.Migrations
                             DataType = "string",
                             DisplayOrder = 2,
                             IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "Full Name",
-                            TargetDisplayName = "Full Name",
-                            TargetProperty = "FullName"
+                            IsRequired = false,
+                            SourceColumn = "Employment Status",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Active",
+                            TargetProperty = "ActiveStatus"
                         },
                         new
                         {
@@ -472,7 +449,8 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "FTE/ Consultant",
+                            SourceColumn = "Employment Type",
+                            SourceSystem = "PeopleStrong",
                             TargetDisplayName = "FTE/ Consultant",
                             TargetProperty = "EmployeeType"
                         },
@@ -484,9 +462,10 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "Role",
-                            TargetDisplayName = "Role",
-                            TargetProperty = "Designation"
+                            SourceColumn = "Employee Name",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Full Name",
+                            TargetProperty = "FullName"
                         },
                         new
                         {
@@ -496,8 +475,9 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 5,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "OU 4 - Practice",
-                            TargetDisplayName = "OU 4 - Practice",
+                            SourceColumn = "Function",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Practice",
                             TargetProperty = "Practice"
                         },
                         new
@@ -508,8 +488,9 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 6,
                             IsActive = true,
                             IsRequired = false,
-                            SourceColumn = "OU 5 - Sub-practice",
-                            TargetDisplayName = "OU 5 - Sub-practice",
+                            SourceColumn = "Department/Practice",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Sub-practice",
                             TargetProperty = "SubPractice"
                         },
                         new
@@ -521,6 +502,7 @@ namespace HRMS.Api.Migrations
                             IsActive = false,
                             IsRequired = false,
                             SourceColumn = "Organization Unit",
+                            SourceSystem = "PeopleStrong",
                             TargetDisplayName = "Sub-practice",
                             TargetProperty = "SubPractice"
                         },
@@ -532,7 +514,8 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 8,
                             IsActive = true,
                             IsRequired = false,
-                            SourceColumn = "Location",
+                            SourceColumn = "Base office location",
+                            SourceSystem = "PeopleStrong",
                             TargetDisplayName = "Location",
                             TargetProperty = "NVLocation"
                         },
@@ -543,22 +526,24 @@ namespace HRMS.Api.Migrations
                             DataType = "string",
                             DisplayOrder = 9,
                             IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "L1 Manager",
-                            TargetDisplayName = "L1 Manager",
-                            TargetProperty = "ReportingManager"
+                            IsRequired = true,
+                            SourceColumn = "Office Email Address",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Email ID",
+                            TargetProperty = "Email"
                         },
                         new
                         {
                             Id = new Guid("a1000000-0000-0000-0000-000000000010"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
+                            DataType = "datetime",
                             DisplayOrder = 10,
                             IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Practice Head",
-                            TargetDisplayName = "Practice Head",
-                            TargetProperty = "PracticeHead"
+                            IsRequired = true,
+                            SourceColumn = "Date of Joining",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "DOJ",
+                            TargetProperty = "DOJ"
                         },
                         new
                         {
@@ -568,9 +553,10 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 11,
                             IsActive = true,
                             IsRequired = true,
-                            SourceColumn = "email ID",
-                            TargetDisplayName = "Email ID",
-                            TargetProperty = "Email"
+                            SourceColumn = "Designation",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Role",
+                            TargetProperty = "Designation"
                         },
                         new
                         {
@@ -580,31 +566,190 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 12,
                             IsActive = true,
                             IsRequired = false,
-                            SourceColumn = "Active",
-                            TargetDisplayName = "Active",
-                            TargetProperty = "ActiveStatus"
+                            SourceColumn = "L1 Manager",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "L1 Manager",
+                            TargetProperty = "ReportingManager"
                         },
                         new
                         {
                             Id = new Guid("a1000000-0000-0000-0000-000000000013"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "datetime",
+                            DataType = "string",
                             DisplayOrder = 13,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Practice Head",
+                            SourceSystem = "PeopleStrong",
+                            TargetDisplayName = "Practice Head",
+                            TargetProperty = "PracticeHead"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000001"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Emp Id",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Emp ID",
+                            TargetProperty = "EmployeeCode"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000002"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "Full Name",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Full Name",
+                            TargetProperty = "FullName"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000003"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "FTE/ Consultant",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "FTE/ Consultant",
+                            TargetProperty = "EmployeeType"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000004"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "Role",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Role",
+                            TargetProperty = "Designation"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000005"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "OU 4 - Practice",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Practice",
+                            TargetProperty = "Practice"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000006"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 6,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "OU 5 - Sub-practice",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Sub-practice",
+                            TargetProperty = "SubPractice"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000007"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 7,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Location",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Location",
+                            TargetProperty = "NVLocation"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000008"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 8,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "L1 Manager",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "L1 Manager",
+                            TargetProperty = "ReportingManager"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000009"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 9,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Practice Head",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Practice Head",
+                            TargetProperty = "PracticeHead"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000010"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 10,
+                            IsActive = true,
+                            IsRequired = true,
+                            SourceColumn = "email ID",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Email ID",
+                            TargetProperty = "Email"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000011"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 11,
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Active",
+                            SourceSystem = "RMG",
+                            TargetDisplayName = "Active",
+                            TargetProperty = "ActiveStatus"
+                        },
+                        new
+                        {
+                            Id = new Guid("a2000000-0000-0000-0000-000000000012"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "datetime",
+                            DisplayOrder = 12,
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "DOJ",
+                            SourceSystem = "RMG",
                             TargetDisplayName = "DOJ",
                             TargetProperty = "DOJ"
                         },
                         new
                         {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000014"),
+                            Id = new Guid("a2000000-0000-0000-0000-000000000013"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "datetime",
-                            DisplayOrder = 14,
+                            DisplayOrder = 13,
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "LWD",
+                            SourceSystem = "RMG",
                             TargetDisplayName = "LWD",
                             TargetProperty = "LWD"
                         });
@@ -1327,10 +1472,6 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid>("PracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("PrimarySkillName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<decimal?>("PriorExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
@@ -1338,10 +1479,6 @@ namespace HRMS.Api.Migrations
                     b.Property<decimal?>("RelevantExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("ReportingManagerId")
                         .HasColumnType("int");
@@ -1355,10 +1492,6 @@ namespace HRMS.Api.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
-
-                    b.Property<string>("SkillNames")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
@@ -1438,9 +1571,6 @@ namespace HRMS.Api.Migrations
 
                     b.Property<int>("TotalRows")
                         .HasColumnType("int");
-
-                    b.Property<string>("UploadedColumns")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BatchId");
 
@@ -3196,8 +3326,8 @@ namespace HRMS.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid?>("CSMRevenueTypeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CSMId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
@@ -3209,19 +3339,21 @@ namespace HRMS.Api.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeliveryHead")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(100)
@@ -3230,18 +3362,22 @@ namespace HRMS.Api.Migrations
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ProjectCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<Guid>("PracticeId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ProjectManager")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<Guid>("PricingTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ProjectManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("ProjectTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -3249,11 +3385,24 @@ namespace HRMS.Api.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CSMRevenueTypeId");
+                    b.HasIndex("CSMId");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("PracticeId");
+
+                    b.HasIndex("PricingTypeId");
+
+                    b.HasIndex("ProjectManagerId");
+
+                    b.HasIndex("ProjectTypeId");
 
                     b.ToTable("Projects", (string)null);
                 });
@@ -3460,9 +3609,6 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("Ageing")
-                        .HasColumnType("int");
-
                     b.Property<Guid?>("AgeingBucketId")
                         .HasColumnType("uniqueidentifier");
 
@@ -3502,18 +3648,11 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid?>("CurrentBillingStatusId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("Duration")
-                        .HasColumnType("int");
-
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Engineering")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -4413,9 +4552,9 @@ namespace HRMS.Api.Migrations
 
             modelBuilder.Entity("HRMS.Api.Models.Project", b =>
                 {
-                    b.HasOne("HRMS.Api.Models.CSMRevenueType", "CSMRevenueType")
-                        .WithMany("Projects")
-                        .HasForeignKey("CSMRevenueTypeId")
+                    b.HasOne("HRMS.Api.Models.Employee", "CSM")
+                        .WithMany("CSMProjects")
+                        .HasForeignKey("CSMId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("HRMS.Api.Models.Client", "Client")
@@ -4424,9 +4563,44 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("CSMRevenueType");
+                    b.HasOne("HRMS.Api.Models.Location", null)
+                        .WithMany("Projects")
+                        .HasForeignKey("LocationId");
+
+                    b.HasOne("HRMS.Api.Models.Practice", "Practice")
+                        .WithMany()
+                        .HasForeignKey("PracticeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Api.Models.PricingTypeMaster", "PricingType")
+                        .WithMany()
+                        .HasForeignKey("PricingTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Api.Models.Employee", "ProjectManager")
+                        .WithMany("ManagedProjects")
+                        .HasForeignKey("ProjectManagerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HRMS.Api.Models.ProjectTypeMaster", "ProjectType")
+                        .WithMany()
+                        .HasForeignKey("ProjectTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CSM");
 
                     b.Navigation("Client");
+
+                    b.Navigation("Practice");
+
+                    b.Navigation("PricingType");
+
+                    b.Navigation("ProjectManager");
+
+                    b.Navigation("ProjectType");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceAllocation", b =>
@@ -4545,11 +4719,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("Practice");
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.CSMRevenueType", b =>
-                {
-                    b.Navigation("Projects");
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
                 {
                     b.Navigation("Projects");
@@ -4557,11 +4726,15 @@ namespace HRMS.Api.Migrations
 
             modelBuilder.Entity("HRMS.Api.Models.Employee", b =>
                 {
+                    b.Navigation("CSMProjects");
+
                     b.Navigation("DirectReports");
 
                     b.Navigation("EmployeeLeaves");
 
                     b.Navigation("EmployeeSkills");
+
+                    b.Navigation("ManagedProjects");
 
                     b.Navigation("PIPs");
 
@@ -4571,6 +4744,8 @@ namespace HRMS.Api.Migrations
             modelBuilder.Entity("HRMS.Api.Models.Location", b =>
                 {
                     b.Navigation("Employees");
+
+                    b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.Practice", b =>

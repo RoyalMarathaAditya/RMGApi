@@ -25,6 +25,8 @@ namespace HRMS.Api.Data.Seeds
             BillingBucketMasterSeed.Seed(modelBuilder);
             OnboardingStatusMasterSeed.Seed(modelBuilder);
             AgeingBucketMasterSeed.Seed(modelBuilder);
+            ColumnMappingSeed.Seed(modelBuilder);
+            ColumnValueMappingSeed.Seed(modelBuilder);
         }
     }
 }

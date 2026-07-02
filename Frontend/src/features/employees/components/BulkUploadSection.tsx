@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { useRef, useState } from 'react';
 import { employeeService } from '../services/employeeService';
+import type { BulkUploadResponse } from '../services/employeeService';
 
 interface UploadResult {
   success: boolean;
@@ -26,7 +27,11 @@ interface UploadResult {
   errorFileUrl: string | null;
 }
 
-export default function BulkUploadSection({ onImportComplete }: { onImportComplete?: () => void }) {
+export default function BulkUploadSection({
+  onImportComplete,
+}: {
+  onImportComplete?: (result?: BulkUploadResponse) => void;
+}) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -73,7 +78,9 @@ export default function BulkUploadSection({ onImportComplete }: { onImportComple
     try {
       const res = await employeeService.uploadEmployees(file, setProgress);
       setResult(res);
-      if (res.success && onImportComplete) onImportComplete();
+      if (res.success) {
+        if (onImportComplete) onImportComplete(res);
+      }
     } catch (err: any) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.title || err?.message || 'Upload failed. Please try again.';
       setResult({
@@ -144,7 +151,7 @@ export default function BulkUploadSection({ onImportComplete }: { onImportComple
             Selected File: <strong>{file.name}</strong> ({(file.size / 1024).toFixed(1)} KB)
           </Typography>
 
-            <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1}>
             <Button variant="contained" size="small" onClick={handleUpload} disabled={uploading}>
               {uploading ? 'Uploading...' : 'Upload'}
             </Button>

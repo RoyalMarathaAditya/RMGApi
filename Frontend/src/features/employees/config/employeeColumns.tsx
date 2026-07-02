@@ -1,4 +1,3 @@
-
 import { Chip } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
 import type { Employee } from '../types/employee';

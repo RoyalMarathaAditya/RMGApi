@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702125619_UpdateColumnMappingSourceColumns")]
+    partial class UpdateColumnMappingSourceColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,7 +74,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "< 1 month"
+                            Name = "0-30 Days"
                         },
                         new
                         {
@@ -80,7 +83,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "1-3 months"
+                            Name = "31-60 Days"
                         },
                         new
                         {
@@ -89,7 +92,7 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "3 to 6 months"
+                            Name = "61-90 Days"
                         },
                         new
                         {
@@ -98,7 +101,16 @@ namespace HRMS.Api.Migrations
                             DisplayOrder = 4,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "> 6 months"
+                            Name = "91-120 Days"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0040001-0000-0000-0000-000000000005"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "120+ Days"
                         });
                 });
 
@@ -287,48 +299,6 @@ namespace HRMS.Api.Migrations
                             IsDeleted = false,
                             Name = "Corporate"
                         });
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.CSMRevenueType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CSMRevenueTypes", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
@@ -1327,10 +1297,6 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid>("PracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("PrimarySkillName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<decimal?>("PriorExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
@@ -1338,10 +1304,6 @@ namespace HRMS.Api.Migrations
                     b.Property<decimal?>("RelevantExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("ReportingManagerId")
                         .HasColumnType("int");
@@ -1355,10 +1317,6 @@ namespace HRMS.Api.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
-
-                    b.Property<string>("SkillNames")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
@@ -3196,8 +3154,8 @@ namespace HRMS.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid?>("CSMRevenueTypeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CSMId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
@@ -3209,19 +3167,21 @@ namespace HRMS.Api.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DeliveryHead")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(100)
@@ -3230,18 +3190,22 @@ namespace HRMS.Api.Migrations
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ProjectCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<Guid>("PracticeId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ProjectManager")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<Guid>("PricingTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ProjectManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("ProjectTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -3249,11 +3213,24 @@ namespace HRMS.Api.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CSMRevenueTypeId");
+                    b.HasIndex("CSMId");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("PracticeId");
+
+                    b.HasIndex("PricingTypeId");
+
+                    b.HasIndex("ProjectManagerId");
+
+                    b.HasIndex("ProjectTypeId");
 
                     b.ToTable("Projects", (string)null);
                 });
@@ -3460,9 +3437,6 @@ namespace HRMS.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("Ageing")
-                        .HasColumnType("int");
-
                     b.Property<Guid?>("AgeingBucketId")
                         .HasColumnType("uniqueidentifier");
 
@@ -3502,18 +3476,11 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid?>("CurrentBillingStatusId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("Duration")
-                        .HasColumnType("int");
-
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Engineering")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -4413,9 +4380,9 @@ namespace HRMS.Api.Migrations
 
             modelBuilder.Entity("HRMS.Api.Models.Project", b =>
                 {
-                    b.HasOne("HRMS.Api.Models.CSMRevenueType", "CSMRevenueType")
-                        .WithMany("Projects")
-                        .HasForeignKey("CSMRevenueTypeId")
+                    b.HasOne("HRMS.Api.Models.Employee", "CSM")
+                        .WithMany("CSMProjects")
+                        .HasForeignKey("CSMId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("HRMS.Api.Models.Client", "Client")
@@ -4424,9 +4391,44 @@ namespace HRMS.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("CSMRevenueType");
+                    b.HasOne("HRMS.Api.Models.Location", null)
+                        .WithMany("Projects")
+                        .HasForeignKey("LocationId");
+
+                    b.HasOne("HRMS.Api.Models.Practice", "Practice")
+                        .WithMany()
+                        .HasForeignKey("PracticeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Api.Models.PricingTypeMaster", "PricingType")
+                        .WithMany()
+                        .HasForeignKey("PricingTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Api.Models.Employee", "ProjectManager")
+                        .WithMany("ManagedProjects")
+                        .HasForeignKey("ProjectManagerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HRMS.Api.Models.ProjectTypeMaster", "ProjectType")
+                        .WithMany()
+                        .HasForeignKey("ProjectTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CSM");
 
                     b.Navigation("Client");
+
+                    b.Navigation("Practice");
+
+                    b.Navigation("PricingType");
+
+                    b.Navigation("ProjectManager");
+
+                    b.Navigation("ProjectType");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.RMG.ResourceAllocation", b =>
@@ -4545,11 +4547,6 @@ namespace HRMS.Api.Migrations
                     b.Navigation("Practice");
                 });
 
-            modelBuilder.Entity("HRMS.Api.Models.CSMRevenueType", b =>
-                {
-                    b.Navigation("Projects");
-                });
-
             modelBuilder.Entity("HRMS.Api.Models.Client", b =>
                 {
                     b.Navigation("Projects");
@@ -4557,11 +4554,15 @@ namespace HRMS.Api.Migrations
 
             modelBuilder.Entity("HRMS.Api.Models.Employee", b =>
                 {
+                    b.Navigation("CSMProjects");
+
                     b.Navigation("DirectReports");
 
                     b.Navigation("EmployeeLeaves");
 
                     b.Navigation("EmployeeSkills");
+
+                    b.Navigation("ManagedProjects");
 
                     b.Navigation("PIPs");
 
@@ -4571,6 +4572,8 @@ namespace HRMS.Api.Migrations
             modelBuilder.Entity("HRMS.Api.Models.Location", b =>
                 {
                     b.Navigation("Employees");
+
+                    b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.Practice", b =>

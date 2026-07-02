@@ -16,6 +16,8 @@ import SkillDashboard from '../features/skills/pages/SkillDashboard';
 import SkillDetails from '../features/skills/pages/SkillDetails';
 import SkillEdit from '../features/skills/pages/SkillEdit';
 import DesignationList from '../features/designations/pages/DesignationList';
+import ColumnMappingList from '../features/columnMappings/pages/ColumnMappingList';
+import ColumnValueMappingList from '../features/columnMappings/pages/ColumnValueMappingList';
 import SkillList from '../features/skills/pages/SkillList';
 import SkillMatrix from '../features/skills/pages/SkillMatrix';
 import ResourceAllocationDashboard from '../features/rmg/pages/ResourceAllocationDashboard';
@@ -64,6 +66,8 @@ export function AppRoutes() {
           <Route path="/projects/edit/:id" element={<ProjectEdit />} />
           <Route path="/projects/:id" element={<Project />} />
           <Route path="/designations" element={<DesignationList />} />
+          <Route path="/admin/column-mappings" element={<ColumnMappingList />} />
+          <Route path="/admin/column-value-mappings" element={<ColumnValueMappingList />} />
           <Route path="/skills" element={<SkillList />} />
           <Route path="/skills/create" element={<SkillCreate />} />
           <Route path="/skills/dashboard" element={<SkillDashboard />} />

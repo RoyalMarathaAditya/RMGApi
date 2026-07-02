@@ -14,23 +14,29 @@ namespace HRMS.Api.Services
         private readonly AppDbContext _dbContext;
         private readonly string _connectionString;
         private readonly ILogger<BulkImportService> _logger;
+        private readonly DynamicExcelMapper _dynamicMapper;
+        private List<UploadColumnInfo>? _lastUploadedColumns;
 
         static BulkImportService()
         {
             ExcelPackage.License.SetNonCommercialOrganization("RMG HRMS");
         }
 
-        public BulkImportService(AppDbContext dbContext, IConfiguration configuration, ILogger<BulkImportService> logger)
+        public BulkImportService(AppDbContext dbContext, IConfiguration configuration, ILogger<BulkImportService> logger, DynamicExcelMapper dynamicMapper)
         {
             _dbContext = dbContext;
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("DefaultConnection string not found");
             _logger = logger;
+            _dynamicMapper = dynamicMapper;
         }
 
-        public async Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken)
+        public async Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken = default)
         {
             var result = new EmployeeBulkUploadResultDto();
+
+            _logger.LogInformation("Starting bulk import. File: {FileName}, UploadedBy: {UploadedBy}",
+                file.FileName, uploadedBy);
 
             var rows = await ParseExcelAsync(file, cancellationToken);
             if (rows.Count == 0)
@@ -130,10 +136,13 @@ namespace HRMS.Api.Services
                     ImportedRows = result.SuccessRows,
                     FailedRows = result.FailedRows,
                     DeletedRows = result.DeletedRows,
-                    Status = "Completed"
+                    Status = "Completed",
+                    UploadedColumns = _lastUploadedColumns != null ? System.Text.Json.JsonSerializer.Serialize(_lastUploadedColumns) : null
                 };
                 _dbContext.Set<EmployeeImportHistory>().Add(history);
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                result.Columns = _lastUploadedColumns;
 
                 result.Success = true;
                 result.ImportedRows = rows;
@@ -203,96 +212,30 @@ namespace HRMS.Api.Services
 
         private async Task<List<EmployeeImportRowDto>> ParseExcelAsync(IFormFile file, CancellationToken cancellationToken)
         {
-            var rows = new List<EmployeeImportRowDto>();
-
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream, cancellationToken);
             stream.Position = 0;
 
             using var package = new ExcelPackage(stream);
             var worksheet = package.Workbook.Worksheets[0];
-            if (worksheet.Dimension == null) return rows;
+            if (worksheet.Dimension == null) return new List<EmployeeImportRowDto>();
 
-            var headerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
+            var (dynamicRows, uploadedColumns, warnings) = await _dynamicMapper.MapExcelToDtoAsync(worksheet, cancellationToken);
+
+            foreach (var warning in warnings)
             {
-                var header = worksheet.Cells[1, col].Text?.Trim();
-                if (string.IsNullOrEmpty(header)) continue;
-                var normalized = System.Text.RegularExpressions.Regex.Replace(header, @"\s*\(.*?\)\s*", " ").Trim();
-                if (!string.IsNullOrEmpty(normalized))
-                    headerMap[normalized] = col;
+                _logger.LogWarning("Dynamic mapping: {Warning}", warning);
             }
 
-            for (int row = 2; row <= worksheet.Dimension.Rows; row++)
+            _lastUploadedColumns = uploadedColumns.Count > 0 ? uploadedColumns : null;
+
+            if (dynamicRows.Count > 0 || warnings.Any(w => w.StartsWith("Missing required")))
             {
-                var importRow = new EmployeeImportRowDto
-                {
-                    RowNumber = row,
-                    EmployeeCode = GetString(worksheet, row, headerMap, "Emp Id") ?? GetString(worksheet, row, headerMap, "Employee Code"),
-                    FullName = GetString(worksheet, row, headerMap, "Full Name") ?? string.Empty,
-                    EmployeeType = GetString(worksheet, row, headerMap, "FTE/ Consultant") ?? GetString(worksheet, row, headerMap, "Employee Type") ?? string.Empty,
-                    Designation = GetString(worksheet, row, headerMap, "Role") ?? GetString(worksheet, row, headerMap, "Designation") ?? string.Empty,
-                    Practice = GetString(worksheet, row, headerMap, "OU 4 - Practice") ?? GetString(worksheet, row, headerMap, "Practice") ?? string.Empty,
-                    SubPractice = GetString(worksheet, row, headerMap, "OU 5 - Sub-practice") ?? GetString(worksheet, row, headerMap, "SubPractice"),
-                    NVLocation = GetString(worksheet, row, headerMap, "Location") ?? GetString(worksheet, row, headerMap, "NV Location"),
-                    ReportingManager = GetString(worksheet, row, headerMap, "L1 Manager") ?? GetString(worksheet, row, headerMap, "Reporting Manager"),
-                    PracticeHead = GetString(worksheet, row, headerMap, "Practice Head"),
-                    Email = GetString(worksheet, row, headerMap, "email ID") ?? GetString(worksheet, row, headerMap, "E-mail ID") ?? GetString(worksheet, row, headerMap, "Email") ?? string.Empty,
-                    ActiveStatus = GetString(worksheet, row, headerMap, "Active") ?? GetString(worksheet, row, headerMap, "Status"),
-                    DOJ = ParseDate(worksheet, row, headerMap, "DOJ"),
-                    LWD = ParseDate(worksheet, row, headerMap, "LWD"),
-                };
-
-                if (string.IsNullOrWhiteSpace(importRow.EmployeeCode) &&
-                    string.IsNullOrWhiteSpace(importRow.FullName) &&
-                    string.IsNullOrWhiteSpace(importRow.Email) &&
-                    string.IsNullOrWhiteSpace(importRow.Practice) &&
-                    string.IsNullOrWhiteSpace(importRow.Designation) &&
-                    string.IsNullOrWhiteSpace(importRow.EmployeeType))
-                {
-                    continue;
-                }
-
-                rows.Add(importRow);
+                return dynamicRows;
             }
 
-            return rows;
-        }
-
-        private static string? GetString(ExcelWorksheet ws, int row, Dictionary<string, int> headerMap, string key)
-        {
-            if (!headerMap.TryGetValue(key, out var col)) return null;
-            var value = ws.Cells[row, col].Text?.Trim();
-            return string.IsNullOrEmpty(value) ? null : value;
-        }
-
-        private static DateTime? ParseDate(ExcelWorksheet ws, int row, Dictionary<string, int> headerMap, string key)
-        {
-            if (!headerMap.TryGetValue(key, out var col)) return null;
-            var cell = ws.Cells[row, col];
-
-            if (cell.Value is DateTime dt)
-                return dt;
-
-            if (cell.Value is double oaDate && oaDate > 0)
-            {
-                try { return DateTime.FromOADate(oaDate); }
-                catch { }
-            }
-
-            var text = cell.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(text)) return null;
-            if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
-                return parsed;
-            return null;
-        }
-
-        private static decimal? ParseDecimal(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return null;
-            if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var num))
-                return num;
-            return null;
+            _logger.LogWarning("No dynamic mapping results and no data parsed");
+            return dynamicRows;
         }
 
         private async Task<List<EmployeeImportErrorDto>> ValidateRowsAsync(List<EmployeeImportRowDto> rows, CancellationToken cancellationToken)
