@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701103454_ProjectMasterRedesign")]
+    partial class ProjectMasterRedesign
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -397,371 +400,6 @@ namespace HRMS.Api.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("Clients", (string)null);
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.ColumnMapping", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DataType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsRequired")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SourceColumn")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TargetDisplayName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TargetProperty")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SourceColumn")
-                        .IsUnique()
-                        .HasFilter("[IsActive] = 1");
-
-                    b.ToTable("ColumnMappings", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 1,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "Emp Id",
-                            TargetDisplayName = "Emp Id",
-                            TargetProperty = "EmployeeCode"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "Full Name",
-                            TargetDisplayName = "Full Name",
-                            TargetProperty = "FullName"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 3,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "FTE/ Consultant",
-                            TargetDisplayName = "FTE/ Consultant",
-                            TargetProperty = "EmployeeType"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 4,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "Role",
-                            TargetDisplayName = "Role",
-                            TargetProperty = "Designation"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "OU 4 - Practice",
-                            TargetDisplayName = "OU 4 - Practice",
-                            TargetProperty = "Practice"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 6,
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "OU 5 - Sub-practice",
-                            TargetDisplayName = "OU 5 - Sub-practice",
-                            TargetProperty = "SubPractice"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 7,
-                            IsActive = false,
-                            IsRequired = false,
-                            SourceColumn = "Organization Unit",
-                            TargetDisplayName = "Sub-practice",
-                            TargetProperty = "SubPractice"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 8,
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Location",
-                            TargetDisplayName = "Location",
-                            TargetProperty = "NVLocation"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 9,
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "L1 Manager",
-                            TargetDisplayName = "L1 Manager",
-                            TargetProperty = "ReportingManager"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000010"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 10,
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Practice Head",
-                            TargetDisplayName = "Practice Head",
-                            TargetProperty = "PracticeHead"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000011"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 11,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "email ID",
-                            TargetDisplayName = "Email ID",
-                            TargetProperty = "Email"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000012"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 12,
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Active",
-                            TargetDisplayName = "Active",
-                            TargetProperty = "ActiveStatus"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000013"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "datetime",
-                            DisplayOrder = 13,
-                            IsActive = true,
-                            IsRequired = true,
-                            SourceColumn = "DOJ",
-                            TargetDisplayName = "DOJ",
-                            TargetProperty = "DOJ"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000014"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "datetime",
-                            DisplayOrder = 14,
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "LWD",
-                            TargetDisplayName = "LWD",
-                            TargetProperty = "LWD"
-                        });
-                });
-
-            modelBuilder.Entity("HRMS.Api.Models.ColumnValueMapping", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SourceValue")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TargetProperty")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TargetValue")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ColumnValueMappings", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Permanent",
-                            TargetProperty = "EmployeeType",
-                            TargetValue = "FTE"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Contract",
-                            TargetProperty = "EmployeeType",
-                            TargetValue = "Consultant"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Contractor",
-                            TargetProperty = "EmployeeType",
-                            TargetValue = "Consultant"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Probation",
-                            TargetProperty = "EmployeeType",
-                            TargetValue = "FTE"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Active",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Active"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Inactive",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Inactive"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Yes",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Active"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "No",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Inactive"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "Y",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Active"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000010"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "N",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Inactive"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000011"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "True",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Active"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000012"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            SourceValue = "False",
-                            TargetProperty = "ActiveStatus",
-                            TargetValue = "Inactive"
-                        });
                 });
 
             modelBuilder.Entity("HRMS.Api.Models.CurrentBillingStatusMaster", b =>
@@ -1336,10 +974,6 @@ namespace HRMS.Api.Migrations
                     b.Property<Guid>("PracticeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("PrimarySkillName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<decimal?>("PriorExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
@@ -1347,10 +981,6 @@ namespace HRMS.Api.Migrations
                     b.Property<decimal?>("RelevantExperience")
                         .HasPrecision(8, 2)
                         .HasColumnType("decimal(8,2)");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("ReportingManagerId")
                         .HasColumnType("int");
@@ -1364,10 +994,6 @@ namespace HRMS.Api.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
-
-                    b.Property<string>("SkillNames")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<Guid>("StatusId")
                         .HasColumnType("uniqueidentifier");
@@ -1447,9 +1073,6 @@ namespace HRMS.Api.Migrations
 
                     b.Property<int>("TotalRows")
                         .HasColumnType("int");
-
-                    b.Property<string>("UploadedColumns")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BatchId");
 

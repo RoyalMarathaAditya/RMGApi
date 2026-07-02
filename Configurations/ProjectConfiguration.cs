@@ -11,6 +11,9 @@ namespace HRMS.Api.Configurations
             builder.ToTable("Projects");
 
             builder.Property(p => p.ProjectName).HasMaxLength(200).IsRequired();
+            builder.Property(p => p.ProjectCode).HasMaxLength(50);
+            builder.Property(p => p.ProjectManager).HasMaxLength(200);
+            builder.Property(p => p.DeliveryHead).HasMaxLength(200);
             builder.Property(p => p.Description).HasMaxLength(1000);
             builder.Property(p => p.CreatedBy).HasMaxLength(100);
             builder.Property(p => p.ModifiedBy).HasMaxLength(100);
@@ -24,29 +27,9 @@ namespace HRMS.Api.Configurations
                 .HasForeignKey(p => p.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(p => p.ProjectType)
-                .WithMany()
-                .HasForeignKey(p => p.ProjectTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(p => p.PricingType)
-                .WithMany()
-                .HasForeignKey(p => p.PricingTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(p => p.Practice)
-                .WithMany()
-                .HasForeignKey(p => p.PracticeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(p => p.ProjectManager)
-                .WithMany(e => e.ManagedProjects)
-                .HasForeignKey(p => p.ProjectManagerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(p => p.CSM)
-                .WithMany(e => e.CSMProjects)
-                .HasForeignKey(p => p.CSMId)
+            builder.HasOne(p => p.CSMRevenueType)
+                .WithMany(r => r.Projects)
+                .HasForeignKey(p => p.CSMRevenueTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

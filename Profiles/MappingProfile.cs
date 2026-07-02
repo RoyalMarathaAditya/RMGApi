@@ -87,6 +87,15 @@ namespace HRMS.Api.Profiles
             #region Existing
             CreateMap<User, UserDto>();
             CreateMap<Client, ClientDto>();
+            CreateMap<CSMRevenueType, CSMRevenueTypeDto>();
+            #endregion
+
+            #region Project
+            CreateMap<CreateProjectDto, Project>();
+            CreateMap<UpdateProjectDto, Project>();
+            CreateMap<Project, ProjectDto>()
+                .ForMember(dest => dest.ClientName, opt => opt.MapFrom(src => src.Client != null ? src.Client.Name : null))
+                .ForMember(dest => dest.CSMRevenueTypeName, opt => opt.MapFrom(src => src.CSMRevenueType != null ? src.CSMRevenueType.Name : null));
             #endregion
         }
     }

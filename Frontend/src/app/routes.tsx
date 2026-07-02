@@ -21,7 +21,6 @@ import ColumnValueMappingList from '../features/columnMappings/pages/ColumnValue
 import SkillList from '../features/skills/pages/SkillList';
 import SkillMatrix from '../features/skills/pages/SkillMatrix';
 import ResourceAllocationDashboard from '../features/rmg/pages/ResourceAllocationDashboard';
-import ResourceAllocationDetail from '../features/rmg/pages/ResourceAllocationDetail';
 import ResourceAllocationView from '../features/rmg/pages/ResourceAllocationView';
 import ResourceFinder from '../features/rmg/pages/ResourceFinder';
 import PracticeUtilization from '../features/rmg/pages/PracticeUtilization';
@@ -79,7 +78,6 @@ export function AppRoutes() {
           <Route path="/skills/:id" element={<SkillDetails />} />
           <Route path="/rmg" element={<ResourceAllocationDashboard />} />
           <Route path="/rmg/view/:employeeId" element={<ResourceAllocationView />} />
-          <Route path="/rmg/edit/:id" element={<ResourceAllocationDetail />} />
           <Route path="/rmg/finder" element={<ResourceFinder />} />
           <Route path="/rmg/practice-utilization" element={<PracticeUtilization />} />
           <Route path="/rmg/requests" element={<ResourceRequestPage />} />

@@ -106,8 +106,8 @@ export default function ResourceAllocationList() {
                   <TableCell>{a.totalAllocated}%</TableCell>
                   <TableCell>{a.availableCapacity}%</TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton size="small" onClick={() => navigate(`/rmg/edit/${a.id}`)}>
+                    <Tooltip title="View / Edit">
+                      <IconButton size="small" onClick={() => navigate(`/rmg/view/${a.employeeId}`)}>
                         <EditOutlinedIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

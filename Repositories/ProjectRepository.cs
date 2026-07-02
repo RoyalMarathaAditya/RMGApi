@@ -18,10 +18,17 @@ namespace HRMS.Api.Repositories
         {
             return await _dbContext.Projects
                 .Include(p => p.Client)
-                .Include(p => p.ProjectType)
-                .Include(p => p.PricingType)
-                .Include(p => p.Practice)
-                .Include(p => p.ProjectManager)
+                .Include(p => p.CSMRevenueType)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Project>> GetActiveProjectsAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Projects
+                .Include(p => p.Client)
+                .Include(p => p.CSMRevenueType)
+                .Where(p => p.IsActive)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
         }
@@ -30,10 +37,7 @@ namespace HRMS.Api.Repositories
         {
             return await _dbContext.Projects
                 .Include(p => p.Client)
-                .Include(p => p.ProjectType)
-                .Include(p => p.PricingType)
-                .Include(p => p.Practice)
-                .Include(p => p.ProjectManager)
+                .Include(p => p.CSMRevenueType)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 

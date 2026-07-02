@@ -27,15 +27,18 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? Billable { get; set; }
         public string? Status { get; set; }
 
+        public int? ProjectManagerId { get; set; }
+        public string? ProjectManagerName { get; set; }
+        public string? Remarks { get; set; }
+
         public List<ProjectAllocationDetailDto> ProjectAllocations { get; set; } = new();
     }
 
     public class ProjectAllocationDetailDto
     {
-        public int? ProjectCode { get; set; }
+        public string? ProjectCode { get; set; }
         public string? Client { get; set; }
         public string? Project { get; set; }
-        public string? ProjectType { get; set; }
         public string? ProjectStatus { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -46,4 +49,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? Ageing { get; set; }
         public string? Remarks { get; set; }
     }
+
+
 }

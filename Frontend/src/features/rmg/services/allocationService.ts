@@ -59,7 +59,9 @@ export const allocationService = {
   },
 
   async getEmployeeAllocations(employeeId: number): Promise<EmployeeAllocationDto> {
-    const response = await api.get<EmployeeAllocationDto>(`/resource-allocations/employee/${employeeId}`);
+    const response = await api.get<EmployeeAllocationDto>(`/resource-allocations/employee/${employeeId}`, {
+      params: { _t: Date.now() },
+    });
     return unwrap(response);
   },
 
@@ -83,7 +85,9 @@ export const allocationService = {
   },
 
   async getEmployeeDetails(employeeId: number): Promise<EmployeeResourceDetailsDto> {
-    const response = await api.get<EmployeeResourceDetailsDto>(`/resourceallocation/employee-details/${employeeId}`);
+    const response = await api.get<EmployeeResourceDetailsDto>(`/resourceallocation/employee-details/${employeeId}`, {
+      params: { _t: Date.now() },
+    });
     return unwrap(response);
   },
 };

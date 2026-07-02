@@ -214,6 +214,15 @@ export interface PracticeUtilizationDto {
   utilizationPercentage: number;
 }
 
+export interface ApiProject {
+  id: number;
+  projectName: string;
+  projectCode: string | null;
+  clientId: number;
+  clientName: string;
+  isActive: boolean;
+}
+
 export interface EmployeeResourceDetailsDto {
   employeeId: number;
   employeeCode: string;
@@ -240,11 +249,15 @@ export interface EmployeeResourceDetailsDto {
   billable: string | null;
   status: string | null;
 
+  projectManagerId: number | null;
+  projectManagerName: string | null;
+  remarks: string | null;
+
   projectAllocations: ProjectAllocationDetailDto[];
 }
 
 export interface ProjectAllocationDetailDto {
-  projectCode: number | null;
+  projectCode: string | null;
   client: string | null;
   project: string | null;
   projectType: string | null;

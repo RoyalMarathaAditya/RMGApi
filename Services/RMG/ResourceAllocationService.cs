@@ -435,6 +435,9 @@ namespace HRMS.Api.Services.RMG
             employee.RelevantExperience = dto.ExperienceInNV;
             employee.ReportingManagerId = dto.ProjectManagerId;
             employee.IsDeleted = !dto.IsActive;
+            employee.Remarks = dto.Remarks;
+            employee.PrimarySkillName = dto.PrimarySkillName;
+            employee.SkillNames = dto.SkillNames;
             employee.ModifiedOn = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -460,7 +463,6 @@ namespace HRMS.Api.Services.RMG
             var activeAllocations = await _dbContext.ResourceAllocations
                 .AsNoTracking()
                 .Include(ra => ra.Project).ThenInclude(p => p.Client)
-                .Include(ra => ra.Project).ThenInclude(p => p.ProjectType)
                 .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History")
                 .ToListAsync(cancellationToken);
 
@@ -469,13 +471,16 @@ namespace HRMS.Api.Services.RMG
             var isBillable = activeAllocations.Any(a => a.BillableStatus == "Billable");
 
             var priorExp = employee.PriorExperience ?? 0;
-            var totalExperience = employee.ExperienceYears ?? priorExp + (employee.RelevantExperience ?? 0);
+            var totalExperience = priorExp + (employee.RelevantExperience ?? 0);
             var nvExperience = totalExperience - priorExp;
             if (nvExperience < 0) nvExperience = 0;
 
-            var skills = employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).ToList() ?? new List<string>();
-            var primarySkill = skills.FirstOrDefault();
-            var skillString = skills.Any() ? string.Join(", ", skills) : null;
+            var primarySkill = !string.IsNullOrEmpty(employee.PrimarySkillName) ? employee.PrimarySkillName :
+                employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).FirstOrDefault();
+            var skillString = !string.IsNullOrEmpty(employee.SkillNames) ? employee.SkillNames :
+                employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).Any() == true
+                    ? string.Join(", ", employee.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name))
+                    : null;
 
             var today = DateTime.UtcNow.Date;
 
@@ -506,6 +511,10 @@ namespace HRMS.Api.Services.RMG
                 Billable = isBillable ? "Yes" : "No",
                 Status = employee.EmployeeStatus?.Name ?? (employee.IsDeleted ? "Inactive" : "Active"),
 
+                ProjectManagerId = employee.ReportingManagerId,
+                ProjectManagerName = employee.ReportingManager?.FullName,
+                Remarks = employee.Remarks,
+
                 ProjectAllocations = activeAllocations.Select(a =>
                 {
                     var startDate = a.StartDate;
@@ -515,10 +524,9 @@ namespace HRMS.Api.Services.RMG
 
                     return new ProjectAllocationDetailDto
                     {
-                        ProjectCode = a.ProjectId,
+                        ProjectCode = a.Project?.ProjectCode,
                         Client = a.Project?.Client?.Name,
                         Project = a.Project?.ProjectName,
-                        ProjectType = a.Project?.ProjectType?.Name,
                         ProjectStatus = a.BillableStatus,
                         StartDate = a.StartDate,
                         EndDate = a.EndDate,
