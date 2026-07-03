@@ -13,10 +13,6 @@ namespace HRMS.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "OnboardingStatus",
-                table: "ResourceAllocations");
-
             migrationBuilder.CreateTable(
                 name: "ColumnMappings",
                 columns: table => new
@@ -123,13 +119,6 @@ namespace HRMS.Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "ColumnValueMappings");
-
-            migrationBuilder.AddColumn<string>(
-                name: "OnboardingStatus",
-                table: "ResourceAllocations",
-                type: "nvarchar(500)",
-                maxLength: 500,
-                nullable: true);
         }
     }
 }
