@@ -29,6 +29,8 @@ namespace HRMS.Api.Data.Seeds
             ColumnValueMappingSeed.Seed(modelBuilder);
             OnboardingTypeMasterSeed.Seed(modelBuilder);
             CSMRevenueTypeMasterSeed.Seed(modelBuilder);
+            ClientMasterSeed.Seed(modelBuilder);
+            ProjectMasterSeed.Seed(modelBuilder);
         }
     }
 }

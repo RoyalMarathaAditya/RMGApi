@@ -328,19 +328,41 @@ namespace HRMS.Api.Data.Seeders
                 await context.SaveChangesAsync();
             }
 
-            if (!await context.Clients.AnyAsync())
+            if (!await context.Clients.AnyAsync(e => e.Name == "Internal"))
             {
                 context.Clients.Add(new Client
                 {
                     Name = "Internal",
                     StatusId = StatusActive,
                     Location = "Internal",
-                    CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    CreatedOn = seedDate
                 });
                 await context.SaveChangesAsync();
             }
 
-            // Project seeding removed — no seed data for new schema yet
+            var runtimeCSMRevenueTypes = new (Guid Id, string Name)[]
+            {
+                (Guid.Parse("de0d59ac-defc-43cd-a295-9e4350dea14f"), "FB"),
+                (Guid.Parse("43abf1c4-f2bf-4014-a3d5-0fab57bca3c9"), "FMB"),
+                (Guid.Parse("525a869f-145d-47ad-b82a-853498d6c849"), "FMB+T&M"),
+                (Guid.Parse("db74f4e1-480d-49e2-8d92-dcaf3693d244"), "Internal"),
+                (Guid.Parse("a3615354-898b-4132-8783-f7acbfb55bd4"), "T&M"),
+            };
+            foreach (var (id, name) in runtimeCSMRevenueTypes)
+            {
+                if (!await context.CSMRevenueTypes.AnyAsync(e => e.Name == name))
+                {
+                    context.CSMRevenueTypes.Add(new CSMRevenueType
+                    {
+                        Id = id,
+                        Name = name,
+                        IsActive = true,
+                        CreatedOn = seedDate,
+                        CreatedBy = "System"
+                    });
+                }
+            }
+            await context.SaveChangesAsync();
         }
     }
 }
