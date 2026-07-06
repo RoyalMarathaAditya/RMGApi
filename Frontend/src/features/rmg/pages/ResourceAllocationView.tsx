@@ -43,6 +43,10 @@ import { toastService } from '../../../services/toastService';
 import { ALLOCATION_TYPES, BILLABLE_STATUSES } from '../types/allocation';
 import type { EmployeeResourceDetailsDto, ProjectAllocationDetailDto, ProjectAllocationDto, AddProjectAllocationDto, UpdateProjectAllocationDto, ApiProject } from '../types/allocation';
 
+function safeArray<T>(arr: T[] | null | undefined | unknown): T[] {
+  return Array.isArray(arr) ? arr : [];
+}
+
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -175,11 +179,11 @@ export default function ResourceAllocationView() {
   const [projectsLoading, setProjectsLoading] = useState(false);
 
   const selectedProject = useMemo(() => {
-    return projects.find((p) => p.id === formData.projectId) ?? null;
+    return safeArray(projects).find((p) => p.id === formData.projectId) ?? null;
   }, [projects, formData.projectId]);
 
   const selectedClient = useMemo(() => {
-    return clients.find((c) => c.id === formData.clientId) ?? null;
+    return safeArray(clients).find((c) => c.id === formData.clientId) ?? null;
   }, [clients, formData.clientId]);
 
   const id = Number(employeeId);
@@ -219,8 +223,8 @@ export default function ResourceAllocationView() {
 
   const fetchClients = async () => {
     try {
-      const res = await api.get<{ id: number; name: string }[]>('/clients');
-      setClients(res.data);
+      const res = await api.get<{ success: boolean; data: { id: number; name: string }[] }>('/clients');
+      setClients(res.data.data ?? []);
     } catch {
       console.error('Failed to load clients');
     }
@@ -306,7 +310,7 @@ export default function ResourceAllocationView() {
 
   const totalAllocated = useMemo(() => {
     if (!data) return 0;
-    return data.projectAllocations.reduce((sum, pa) => sum + (pa.allocationPercentage ?? 0), 0);
+    return safeArray(data.projectAllocations).reduce((sum, pa) => sum + (pa.allocationPercentage ?? 0), 0);
   }, [data]);
 
   const availableCapacity = Math.max(0, 100 - totalAllocated);
@@ -318,7 +322,7 @@ export default function ResourceAllocationView() {
 
   const getOtherAllocationsTotal = (excludeId?: number) => {
     if (!data) return 0;
-    const total = data.projectAllocations.reduce((sum, a) => sum + (a.allocationPercentage ?? 0), 0);
+    const total = safeArray(data.projectAllocations).reduce((sum, a) => sum + (a.allocationPercentage ?? 0), 0);
     if (excludeId != null && editingAllocation) {
       return total - (editingAllocation.allocationPercentage ?? 0);
     }
@@ -348,7 +352,7 @@ export default function ResourceAllocationView() {
     setDateError('');
     try {
       const employeeAlloc = await allocationService.getEmployeeAllocations(id);
-      const matched = employeeAlloc.allocations.find(
+      const matched = safeArray(employeeAlloc.allocations).find(
         (a) => a.projectName === pa.project && a.allocationPercentage === (pa.allocationPercentage ?? 0)
       );
       if (!matched) {
@@ -356,9 +360,9 @@ export default function ResourceAllocationView() {
         return;
       }
       setEditingAllocation(matched);
-      const project = projects.find((p) => p.id === matched.projectId);
+      const project = safeArray(projects).find((p) => p.id === matched.projectId);
       const clientName = matched.clientName || project?.clientName || '';
-      const matchedClient = clientName ? clients.find((c) => c.name.toLowerCase() === clientName.toLowerCase()) : null;
+      const matchedClient = clientName ? safeArray(clients).find((c) => c.name.toLowerCase() === clientName.toLowerCase()) : null;
       setFormData({
         projectId: matched.projectId,
         projectName: matched.projectName,
@@ -543,7 +547,7 @@ export default function ResourceAllocationView() {
     setDeleting(true);
     try {
       const employeeAlloc = await allocationService.getEmployeeAllocations(id);
-      const matched = employeeAlloc.allocations.find(
+      const matched = safeArray(employeeAlloc.allocations).find(
         (a) => a.projectName === allocationToDelete.projectName && a.allocationPercentage === allocationToDelete.allocationPercentage
       );
       if (!matched) {
@@ -566,7 +570,7 @@ export default function ResourceAllocationView() {
 
   const sortedAllocations = useMemo(() => {
     if (!data) return [];
-    const list = [...data.projectAllocations];
+    const list = [...safeArray(data.projectAllocations)];
     list.sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
@@ -737,7 +741,7 @@ export default function ResourceAllocationView() {
               <InfoGrid>
                 <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Allocation" value={`${totalAllocated}%`} />
                 <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Available Capacity" value={`${availableCapacity}%`} />
-                <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Active Projects" value={data.projectAllocations.length} />
+                <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Active Projects" value={safeArray(data.projectAllocations).length} />
                 <InfoField icon={<TimelineOutlinedIcon sx={{ fontSize: 16 }} />} label="Utilisation" value={totalAllocated > 100 ? 'Overallocated' : totalAllocated >= 80 ? 'High' : 'Normal'} />
               </InfoGrid>
             </InfoSection>
@@ -747,7 +751,7 @@ export default function ResourceAllocationView() {
               <Box sx={{ px: '20px', py: 1.5, bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <TimelineOutlinedIcon sx={{ fontSize: '1rem', color: '#0891B2' }} />
                 <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>Project Allocations</Typography>
-                <Typography sx={{ fontSize: 11, fontWeight: 400, color: '#6B7280', ml: 'auto' }}>{data.projectAllocations.length} record(s)</Typography>
+                <Typography sx={{ fontSize: 11, fontWeight: 400, color: '#6B7280', ml: 'auto' }}>{safeArray(data.projectAllocations).length} record(s)</Typography>
                 <Button
                   variant="contained"
                   size="small"
@@ -759,7 +763,7 @@ export default function ResourceAllocationView() {
                 </Button>
               </Box>
 
-              {data.projectAllocations.length === 0 ? (
+              {safeArray(data.projectAllocations).length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
                   <Typography sx={{ fontSize: 14, color: '#6B7280' }}>No Active Allocations</Typography>
                 </Box>
@@ -953,7 +957,7 @@ export default function ResourceAllocationView() {
               loading={projectsLoading}
               onChange={(_, value) => {
                 const matchedClient = value?.clientId
-                  ? clients.find((c) => c.id === value.clientId)
+                  ? safeArray(clients).find((c) => c.id === value.clientId)
                   : null;
                 setFormData((prev) => ({
                   ...prev,
@@ -1028,7 +1032,7 @@ export default function ResourceAllocationView() {
               options={projectStatuses}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={projectStatuses.find((s) => s.id === formData.projectStatusId) ?? null}
+              value={safeArray(projectStatuses).find((s) => s.id === formData.projectStatusId) ?? null}
               onChange={(_, value) => {
                 setFormData((prev) => ({
                   ...prev,
@@ -1142,7 +1146,7 @@ export default function ResourceAllocationView() {
               options={statuses}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={statuses.find((s) => s.id === formData.statusId) ?? null}
+              value={safeArray(statuses).find((s) => s.id === formData.statusId) ?? null}
               onChange={(_, value) => {
                 setFormData((prev) => ({
                   ...prev,
@@ -1164,7 +1168,7 @@ export default function ResourceAllocationView() {
               options={probableNextAssignments}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={probableNextAssignments.find((s) => s.id === formData.probableNextAssignmentId) ?? null}
+              value={safeArray(probableNextAssignments).find((s) => s.id === formData.probableNextAssignmentId) ?? null}
               onChange={(_, value) => {
                 setFormData((prev) => ({
                   ...prev,
@@ -1207,7 +1211,7 @@ export default function ResourceAllocationView() {
               options={billableDateProbabilities}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={billableDateProbabilities.find((s) => s.id === formData.billableDateProbabilityId) ?? null}
+              value={safeArray(billableDateProbabilities).find((s) => s.id === formData.billableDateProbabilityId) ?? null}
               onChange={(_, value) => {
                 setFormData((prev) => ({
                   ...prev,
@@ -1229,7 +1233,7 @@ export default function ResourceAllocationView() {
               options={currentBillingStatuses}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={currentBillingStatuses.find((s) => s.id === formData.currentBillingStatusId) ?? null}
+              value={safeArray(currentBillingStatuses).find((s) => s.id === formData.currentBillingStatusId) ?? null}
               onChange={(_, value) => {
                 setFormData((prev) => ({
                   ...prev,
@@ -1251,7 +1255,7 @@ export default function ResourceAllocationView() {
               options={billingBuckets}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={billingBuckets.find((s) => s.id === formData.billingBucketId) ?? null}
+              value={safeArray(billingBuckets).find((s) => s.id === formData.billingBucketId) ?? null}
               onChange={(_, value) => {
                 setFormData((prev) => ({
                   ...prev,
@@ -1297,7 +1301,7 @@ export default function ResourceAllocationView() {
                 else if (ageingDays <= 90) index = 1;
                 else if (ageingDays <= 181) index = 2;
                 else index = 3;
-                return ageingBuckets[index]?.name ?? '—';
+                return safeArray(ageingBuckets)[index]?.name ?? '—';
               })()}
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
