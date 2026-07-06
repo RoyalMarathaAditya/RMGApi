@@ -61,7 +61,7 @@ function computeDurationDays(startDate: string, endDate: string): number {
   if (!startDate || !endDate) return 0;
   const s = new Date(startDate + 'T00:00:00');
   const e = new Date(endDate + 'T00:00:00');
-  return Math.max(0, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)));
+  return Math.max(0, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
 }
 
 function computeAgeingDays(startDate: string, allocationPct: number): number {
@@ -1010,6 +1010,30 @@ export default function ResourceAllocationView() {
                   placeholder="Select Client"
                 />
               )}
+            />
+            <TextField
+              label="Project Manager"
+              fullWidth
+              size="small"
+              value={selectedProject?.projectManager ?? ''}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
+            />
+            <TextField
+              label="Delivery Head"
+              fullWidth
+              size="small"
+              value={selectedProject?.deliveryHead ?? ''}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
+            />
+            <TextField
+              label="CSM"
+              fullWidth
+              size="small"
+              value={selectedProject?.csmRevenueTypeName ?? ''}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
             <Autocomplete
               options={projectStatuses}

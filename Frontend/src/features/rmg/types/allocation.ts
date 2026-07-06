@@ -223,6 +223,9 @@ export interface ApiProject {
   clientId: number;
   clientName: string;
   isActive: boolean;
+  projectManager: string | null;
+  deliveryHead: string | null;
+  csmRevenueTypeName: string | null;
 }
 
 export interface EmployeeResourceDetailsDto {
