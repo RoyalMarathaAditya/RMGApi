@@ -31,6 +31,7 @@ namespace HRMS.Api.Extensions
 
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<IClientService, ClientService>();
             services.AddScoped<ISkillRepository, SkillRepository>();
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
