@@ -225,6 +225,7 @@ export interface ApiProject {
   isActive: boolean;
   projectManager: string | null;
   deliveryHead: string | null;
+  csm: string | null;
   csmRevenueTypeName: string | null;
 }
 
@@ -265,22 +266,30 @@ export interface ProjectAllocationDetailDto {
   projectCode: string | null;
   client: string | null;
   project: string | null;
-  projectType: string | null;
+  projectManager: string | null;
+  deliveryHead: string | null;
+  csm: string | null;
   projectStatus: string | null;
+  allocationStatus: string | null;
   startDate: string | null;
   endDate: string | null;
   allocationPercentage: number | null;
   billablePercentage: number | null;
-  engineering: string | null;
+  allocationType: string | null;
+  billableStatus: string | null;
+  status: string | null;
+  currentBillingStatus: string | null;
+  billableDateProbability: string | null;
+  billingBucket: string | null;
   durationInProject: string | null;
   ageing: string | null;
-  remarks: string | null;
-  billableStatus: string | null;
-  allocationType: string | null;
-  allocationStatus: string | null;
-  status: string | null;
-  billingBucket: string | null;
   ageingBucket: string | null;
+  probableNextAssignment: string | null;
+  probableNextAssignmentDate: string | null;
+  engineering: string | null;
+  actionItem: string | null;
+  remarks: string | null;
+  notes: string | null;
 }
 
 export const ALLOCATION_STATUSES = ['Current', 'History', 'Planned', 'Active', 'Completed', 'Released', 'Cancelled'] as const;

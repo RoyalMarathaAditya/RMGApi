@@ -32,6 +32,7 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['.NET 8', 'React', 'SQL Server', 'Azure'],
     allocatedResources: 18,
+    csm: 'Balan Ramaswamy',
   },
   {
     id: 2,
@@ -47,6 +48,7 @@ export const mockProjects: Project[] = [
     priority: 'Critical',
     technologies: ['NodeJS', 'React', 'MongoDB', 'AWS'],
     allocatedResources: 14,
+    csm: '',
   },
   {
     id: 3,
@@ -62,6 +64,7 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['Angular', 'Oracle', 'Docker', 'Kubernetes'],
     allocatedResources: 22,
+    csm: '',
   },
   {
     id: 4,
@@ -77,6 +80,7 @@ export const mockProjects: Project[] = [
     priority: 'Critical',
     technologies: ['.NET 8', 'Angular', 'Azure', 'SQL Server'],
     allocatedResources: 26,
+    csm: '',
   },
   {
     id: 5,
@@ -92,6 +96,7 @@ export const mockProjects: Project[] = [
     priority: 'Medium',
     technologies: ['React', 'NodeJS', 'MongoDB', 'Docker'],
     allocatedResources: 10,
+    csm: '',
   },
   {
     id: 6,
@@ -107,6 +112,7 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['NodeJS', 'React', 'MongoDB', 'AWS', 'Docker'],
     allocatedResources: 20,
+    csm: '',
   },
   {
     id: 7,
@@ -122,6 +128,7 @@ export const mockProjects: Project[] = [
     priority: 'Medium',
     technologies: ['Angular', 'NodeJS', 'SQL Server', 'Azure'],
     allocatedResources: 12,
+    csm: '',
   },
   {
     id: 8,
@@ -137,6 +144,7 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['.NET 8', 'React', 'SQL Server', 'Azure'],
     allocatedResources: 9,
+    csm: '',
   },
   {
     id: 9,
@@ -152,6 +160,7 @@ export const mockProjects: Project[] = [
     priority: 'Medium',
     technologies: ['React', 'AWS', 'Docker', 'Kubernetes'],
     allocatedResources: 11,
+    csm: '',
   },
   {
     id: 10,
@@ -167,6 +176,7 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['.NET 8', 'Angular', 'Oracle'],
     allocatedResources: 16,
+    csm: '',
   },
   {
     id: 11,
@@ -182,6 +192,7 @@ export const mockProjects: Project[] = [
     priority: 'Medium',
     technologies: ['NodeJS', 'React', 'AWS'],
     allocatedResources: 13,
+    csm: '',
   },
   {
     id: 12,
@@ -197,6 +208,7 @@ export const mockProjects: Project[] = [
     priority: 'Critical',
     technologies: ['SQL Server', 'Azure', 'Docker'],
     allocatedResources: 15,
+    csm: '',
   },
   {
     id: 13,
@@ -212,6 +224,7 @@ export const mockProjects: Project[] = [
     priority: 'Low',
     technologies: ['Angular', 'Oracle', 'AWS'],
     allocatedResources: 8,
+    csm: '',
   },
   {
     id: 14,
@@ -227,6 +240,7 @@ export const mockProjects: Project[] = [
     priority: 'Critical',
     technologies: ['.NET 8', 'Azure', 'Kubernetes', 'SQL Server'],
     allocatedResources: 7,
+    csm: '',
   },
   {
     id: 15,
@@ -242,6 +256,7 @@ export const mockProjects: Project[] = [
     priority: 'Medium',
     technologies: ['React', 'NodeJS', 'MongoDB'],
     allocatedResources: 10,
+    csm: '',
   },
   {
     id: 16,
@@ -257,6 +272,7 @@ export const mockProjects: Project[] = [
     priority: 'Low',
     technologies: ['Angular', 'NodeJS', 'MongoDB', 'AWS'],
     allocatedResources: 6,
+    csm: '',
   },
   {
     id: 17,
@@ -272,6 +288,7 @@ export const mockProjects: Project[] = [
     priority: 'Medium',
     technologies: ['.NET 8', 'React', 'SQL Server'],
     allocatedResources: 9,
+    csm: '',
   },
   {
     id: 18,
@@ -287,6 +304,7 @@ export const mockProjects: Project[] = [
     priority: 'Low',
     technologies: ['NodeJS', 'React', 'AWS'],
     allocatedResources: 4,
+    csm: '',
   },
   {
     id: 19,
@@ -302,6 +320,7 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['.NET 8', 'Angular', 'Oracle', 'Azure'],
     allocatedResources: 17,
+    csm: '',
   },
   {
     id: 20,
@@ -317,5 +336,6 @@ export const mockProjects: Project[] = [
     priority: 'High',
     technologies: ['React', 'NodeJS', 'MongoDB', 'Docker', 'Kubernetes'],
     allocatedResources: 19,
+    csm: '',
   },
 ];

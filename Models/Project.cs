@@ -23,6 +23,9 @@ namespace HRMS.Api.Models
         [MaxLength(200)]
         public string? DeliveryHead { get; set; }
 
+        [MaxLength(200)]
+        public string? CSM { get; set; }
+
         public Guid? CSMRevenueTypeId { get; set; }
         public CSMRevenueType? CSMRevenueType { get; set; }
 

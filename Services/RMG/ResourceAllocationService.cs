@@ -248,6 +248,10 @@ namespace HRMS.Api.Services.RMG
             _logger.LogInformation("Adding project allocation: EmployeeId={EmployeeId} ProjectId={ProjectId} User={User}",
                 dto.EmployeeId, dto.ProjectId, userName);
             var sw = Stopwatch.StartNew();
+
+            if (dto.EndDate.HasValue && dto.EndDate.Value.Date < dto.StartDate.Date)
+                throw new InvalidOperationException("End Date cannot be earlier than Start Date.");
+
             var employee = await _dbContext.Employees
                 .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId, cancellationToken)
                 ?? throw new InvalidOperationException("Employee not found.");
@@ -297,6 +301,10 @@ namespace HRMS.Api.Services.RMG
         {
             _logger.LogInformation("Updating project allocation {AllocationId} by user {User}", allocationId, userName);
             var sw = Stopwatch.StartNew();
+
+            if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.EndDate.Value.Date < dto.StartDate.Value.Date)
+                throw new InvalidOperationException("End Date cannot be earlier than Start Date.");
+
             var allocation = await _repository.GetByIdAsync(allocationId, cancellationToken);
             if (allocation is null) return null;
 
@@ -477,8 +485,12 @@ namespace HRMS.Api.Services.RMG
                 .AsNoTracking()
                 .Include(ra => ra.Project).ThenInclude(p => p.Client)
                 .Include(ra => ra.ProjectStatus)
+                .Include(ra => ra.Status)
+                .Include(ra => ra.CurrentBillingStatus)
+                .Include(ra => ra.BillableDateProbability)
                 .Include(ra => ra.BillingBucket)
                 .Include(ra => ra.AgeingBucket)
+                .Include(ra => ra.ProbableNextAssignment)
                 .Where(ra => ra.EmployeeId == employeeId && !ra.IsDeleted && ra.AllocationStatus != "Cancelled" && ra.AllocationStatus != "Released" && ra.AllocationStatus != "History")
                 .ToListAsync(cancellationToken);
 
@@ -543,21 +555,30 @@ namespace HRMS.Api.Services.RMG
                         ProjectCode = a.Project?.ProjectCode,
                         Client = a.Project?.Client?.Name,
                         Project = a.Project?.ProjectName,
+                        ProjectManager = a.Project?.ProjectManager,
+                        DeliveryHead = a.Project?.DeliveryHead,
+                        CSM = a.Project?.CSM,
                         ProjectStatus = a.ProjectStatus?.Name ?? a.BillableStatus,
+                        AllocationStatus = a.AllocationStatus,
                         StartDate = a.StartDate,
                         EndDate = a.EndDate,
                         AllocationPercentage = a.AllocationPercentage,
                         BillablePercentage = a.BillableStatus == "Billable" ? a.AllocationPercentage : 0,
-                        Engineering = a.Engineering ?? (employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null),
+                        AllocationType = a.AllocationType,
+                        BillableStatus = a.BillableStatus,
+                        Status = a.Status?.Name,
+                        CurrentBillingStatus = a.CurrentBillingStatus?.Name,
+                        BillableDateProbability = a.BillableDateProbability?.Name,
+                        BillingBucket = a.BillingBucket?.Name,
                         DurationInProject = a.Duration.HasValue ? $"{a.Duration.Value} Days" : $"{durationDays} Days",
                         Ageing = a.Ageing.HasValue ? $"{Math.Max(0, a.Ageing.Value)} Days" : $"{Math.Max(0, ageingDays)} Days",
-                        Remarks = a.Notes,
-                        BillableStatus = a.BillableStatus,
-                        AllocationType = a.AllocationType,
-                        AllocationStatus = a.AllocationStatus,
-                        Status = employee.EmployeeStatus?.Name ?? (employee.IsDeleted ? "Inactive" : "Active"),
-                        BillingBucket = a.BillingBucket?.Name,
-                        AgeingBucket = a.AgeingBucket?.Name
+                        AgeingBucket = a.AgeingBucket?.Name,
+                        ProbableNextAssignment = a.ProbableNextAssignment?.Name,
+                        ProbableNextAssignmentDate = a.ProbableNextAssignmentDate,
+                        Engineering = a.Engineering ?? (employee.Engineering.HasValue ? (employee.Engineering.Value ? "Yes" : "No") : null),
+                        ActionItem = a.ActionItem,
+                        Remarks = a.Remarks,
+                        Notes = a.Notes
                     };
                 }).ToList()
             };

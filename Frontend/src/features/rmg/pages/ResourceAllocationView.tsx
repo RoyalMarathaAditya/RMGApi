@@ -160,6 +160,7 @@ export default function ResourceAllocationView() {
     engineering: null as boolean | null,
   });
   const [formError, setFormError] = useState('');
+  const [dateError, setDateError] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
@@ -338,11 +339,13 @@ export default function ResourceAllocationView() {
       engineering: null,
     });
     setFormError('');
+    setDateError('');
     setDialogOpen(true);
   };
 
   const openEditDialog = async (pa: ProjectAllocationDetailDto) => {
     setFormError('');
+    setDateError('');
     try {
       const employeeAlloc = await allocationService.getEmployeeAllocations(id);
       const matched = employeeAlloc.allocations.find(
@@ -414,7 +417,7 @@ export default function ResourceAllocationView() {
       return;
     }
     if (formData.endDate < formData.startDate) {
-      toastService.warning('End date cannot be earlier than start date');
+      setDateError('End Date cannot be earlier than Start Date.');
       return;
     }
     const allocPct = Number(formData.allocationPercentage);
@@ -989,27 +992,13 @@ export default function ResourceAllocationView() {
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
-            <Autocomplete
-              options={clients}
-              getOptionLabel={(option) => option.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              value={selectedClient}
-              onChange={(_, value) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  clientId: value?.id ?? null,
-                  clientName: value?.name ?? '',
-                }));
-              }}
+            <TextField
+              label="Client"
               fullWidth
               size="small"
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Client *"
-                  placeholder="Select Client"
-                />
-              )}
+              value={formData.clientName || selectedClient?.name || selectedProject?.clientName || ''}
+              slotProps={{ input: { readOnly: true } }}
+              sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
             <TextField
               label="Project Manager"
@@ -1031,7 +1020,7 @@ export default function ResourceAllocationView() {
               label="CSM"
               fullWidth
               size="small"
-              value={selectedProject?.csmRevenueTypeName ?? ''}
+              value={selectedProject?.csm ?? selectedProject?.csmRevenueTypeName ?? ''}
               slotProps={{ input: { readOnly: true } }}
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
@@ -1063,7 +1052,19 @@ export default function ResourceAllocationView() {
               fullWidth
               size="small"
               value={formData.startDate}
-              onChange={(e) => setFormData((prev) => ({ ...prev, startDate: e.target.value }))}
+              onChange={(e) => {
+                const newStart = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  startDate: newStart,
+                  endDate: prev.endDate && newStart && prev.endDate < newStart ? '' : prev.endDate,
+                }));
+                if (newStart && formData.endDate && formData.endDate < newStart) {
+                  setDateError('');
+                } else if (newStart && formData.endDate && formData.endDate >= newStart) {
+                  setDateError('');
+                }
+              }}
               slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
@@ -1072,8 +1073,21 @@ export default function ResourceAllocationView() {
               fullWidth
               size="small"
               value={formData.endDate}
-              onChange={(e) => setFormData((prev) => ({ ...prev, endDate: e.target.value }))}
-              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={(e) => {
+                const newEnd = e.target.value;
+                setFormData((prev) => ({ ...prev, endDate: newEnd }));
+                if (formData.startDate && newEnd && newEnd < formData.startDate) {
+                  setDateError('End Date cannot be earlier than Start Date.');
+                } else {
+                  setDateError('');
+                }
+              }}
+              error={Boolean(dateError)}
+              helperText={dateError}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { min: formData.startDate || undefined },
+              }}
             />
             <TextField
               label="Allocation Status"

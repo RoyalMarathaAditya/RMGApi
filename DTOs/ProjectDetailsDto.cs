@@ -11,6 +11,7 @@ namespace HRMS.Api.DTOs
         public string ClientName { get; set; } = string.Empty;
         public string? ProjectManager { get; set; }
         public string? DeliveryHead { get; set; }
+        public string? CSM { get; set; }
         public Guid? CSMRevenueTypeId { get; set; }
         public string? CSMRevenueTypeName { get; set; }
         public bool IsActive { get; set; }
@@ -33,6 +34,9 @@ namespace HRMS.Api.DTOs
 
         [MaxLength(200)]
         public string? DeliveryHead { get; set; }
+
+        [MaxLength(200)]
+        public string? CSM { get; set; }
 
         public Guid? CSMRevenueTypeId { get; set; }
 
@@ -58,6 +62,9 @@ namespace HRMS.Api.DTOs
 
         [MaxLength(200)]
         public string? DeliveryHead { get; set; }
+
+        [MaxLength(200)]
+        public string? CSM { get; set; }
 
         public Guid? CSMRevenueTypeId { get; set; }
 

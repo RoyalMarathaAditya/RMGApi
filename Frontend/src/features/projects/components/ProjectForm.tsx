@@ -20,6 +20,7 @@ const defaultValues: ProjectFormValues = {
   priority: 'Medium',
   technologies: [],
   allocatedResources: 0,
+  csm: '',
 };
 
 interface ProjectFormProps {
@@ -87,6 +88,18 @@ export default function ProjectForm({ initialValues, mode, onCancel, onSubmit }:
                 error={Boolean(errors.projectManager)}
                 helperText={errors.projectManager?.message}
                 label="Project Manager"
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="csm"
+            render={({ field }) => (
+              <TextField
+                {...field}
+                error={Boolean(errors.csm)}
+                helperText={errors.csm?.message}
+                label="CSM"
               />
             )}
           />

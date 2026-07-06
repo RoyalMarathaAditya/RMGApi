@@ -15,6 +15,7 @@ export interface Project {
   priority: ProjectPriority;
   technologies: string[];
   allocatedResources: number;
+  csm: string;
 }
 
 export type ProjectFormValues = Omit<Project, 'id'>;

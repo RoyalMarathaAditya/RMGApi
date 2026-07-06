@@ -30,4 +30,5 @@ export const projectValidationSchema: yup.ObjectSchema<ProjectFormValues> = yup.
     .integer('Allocated resources must be a whole number')
     .min(0, 'Allocated resources cannot be negative')
     .required('Allocated resources is required'),
+  csm: yup.string().trim(),
 });

@@ -7,8 +7,6 @@ import {
   Divider,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
 import type { ProjectAllocationDetailDto } from '../types/allocation';
 
 interface ProjectDrawerProps {
@@ -46,7 +44,7 @@ export default function ProjectDrawer({ open, onClose, project }: ProjectDrawerP
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: 480,
+          width: 500,
           p: 2.5,
           borderRadius: '16px 0 0 16px',
           borderLeft: '1px solid #E5E7EB',
@@ -70,16 +68,16 @@ export default function ProjectDrawer({ open, onClose, project }: ProjectDrawerP
 
       <Divider sx={{ mb: 1.5 }} />
 
-      {/* Status badge */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 2.5 }}>
+      {/* Status badges */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 2.5, flexWrap: 'wrap' }}>
         <Chip
           label={project.projectStatus ?? '—'}
           size="small"
           sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, bgcolor: statusStyle.bg, color: statusStyle.text, borderRadius: '999px' }}
         />
-        {project.projectType && (
+        {project.allocationStatus && (
           <Chip
-            label={project.projectType}
+            label={project.allocationStatus}
             size="small"
             variant="outlined"
             sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, borderColor: '#D1D5DB', borderRadius: '999px' }}
@@ -87,51 +85,86 @@ export default function ProjectDrawer({ open, onClose, project }: ProjectDrawerP
         )}
       </Box>
 
-      {/* Project Information */}
+      {/* ── Section 1: Project Information ── */}
       <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.4px', mb: 1.25 }}>
         Project Information
       </Typography>
-
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, mb: 2.5 }}>
+        <Row label="Project Name" value={project.project} />
+        <Row label="Project Code" value={project.projectCode} />
         <Row label="Client" value={project.client} />
-        <Row label="Project Code" value={String(project.projectCode ?? '—')} />
-        <Row label="Project Type" value={project.projectType} />
-        <Row label="Status" value={<Chip label={project.projectStatus ?? '—'} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: statusStyle.bg, color: statusStyle.text, borderRadius: '999px' }} />} />
+        <Row label="Project Manager" value={project.projectManager} />
+        <Row label="Delivery Head" value={project.deliveryHead} />
+        <Row label="CSM" value={project.csm} />
+        <Row label="Project Status" value={project.projectStatus} />
+        <Row label="Allocation Status" value={project.allocationStatus} />
       </Box>
 
       <Divider sx={{ mb: 2.5 }} />
 
-      {/* Allocation Timeline */}
+      {/* ── Section 2: Allocation Information ── */}
       <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.4px', mb: 1.25 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <CalendarTodayOutlinedIcon sx={{ fontSize: 13 }} />
-          Allocation Timeline
-        </Box>
+        Allocation Information
       </Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, mb: 2.5 }}>
+        <Row label="Allocation %" value={project.allocationPercentage != null ? `${project.allocationPercentage}%` : null} />
+        <Row label="Allocation Type" value={project.allocationType} />
+        <Row label="Status" value={project.status} />
+        <Row label="Billable Status" value={project.billableStatus} />
+        <Row label="Current Billing Status" value={project.currentBillingStatus} />
+        <Row label="Billable Date Probability" value={project.billableDateProbability} />
+        <Row label="Billing Bucket" value={project.billingBucket} />
+      </Box>
 
+      <Divider sx={{ mb: 2.5 }} />
+
+      {/* ── Section 3: Timeline ── */}
+      <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.4px', mb: 1.25 }}>
+        Timeline
+      </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, mb: 2.5 }}>
         <Row label="Start Date" value={formatDate(project.startDate)} />
         <Row label="End Date" value={formatDate(project.endDate)} />
-        <Row label="Duration" value={project.durationInProject ?? '—'} />
-        <Row label="Allocation" value={project.allocationPercentage != null ? `${project.allocationPercentage}%` : '—'} />
-        <Row label="Billable" value={project.billablePercentage != null ? `${project.billablePercentage}%` : '—'} />
+        <Row label="Duration" value={project.durationInProject} />
+        <Row label="Ageing" value={project.ageing} />
+        <Row label="Ageing Bucket" value={project.ageingBucket} />
+        <Row label="Probable Next Assignment" value={project.probableNextAssignment} />
+        <Row label="Probable Next Assignment Date" value={formatDate(project.probableNextAssignmentDate)} />
       </Box>
 
       <Divider sx={{ mb: 2.5 }} />
 
-      {/* Additional Info */}
+      {/* ── Section 4: Additional Information ── */}
       <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.4px', mb: 1.25 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <AccountBalanceOutlinedIcon sx={{ fontSize: 13 }} />
-          Additional Information
-        </Box>
+        Additional Information
       </Typography>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-        <Row label="Ageing" value={project.ageing ?? '—'} />
-        <Row label="Engineering" value={project.engineering ?? '—'} />
-        <Row label="Remarks" value={project.remarks ?? '—'} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, mb: 2.5 }}>
+        <Row label="Engineering" value={project.engineering} />
       </Box>
+
+      {project.actionItem ? (
+        <Box sx={{ mb: 2 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#6B7280', mb: 0.5 }}>Action Item</Typography>
+          <Box sx={{ border: '1px solid #E5E7EB', borderRadius: 1.5, p: 1.5, bgcolor: '#F9FAFB', minHeight: 36 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#111827', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {project.actionItem}
+            </Typography>
+          </Box>
+        </Box>
+      ) : (
+        <Row label="Action Item" value={null} />
+      )}
+
+      {project.remarks ? (
+        <Box sx={{ mb: 2 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#6B7280', mb: 0.5 }}>Remarks</Typography>
+          <Box sx={{ border: '1px solid #E5E7EB', borderRadius: 1.5, p: 1.5, bgcolor: '#F9FAFB', minHeight: 36 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#111827', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {project.remarks}
+            </Typography>
+          </Box>
+        </Box>
+      ) : null}
     </Drawer>
   );
 }

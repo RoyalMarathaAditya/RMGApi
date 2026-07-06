@@ -14,6 +14,7 @@ namespace HRMS.Api.Configurations
             builder.Property(p => p.ProjectCode).HasMaxLength(50);
             builder.Property(p => p.ProjectManager).HasMaxLength(200);
             builder.Property(p => p.DeliveryHead).HasMaxLength(200);
+            builder.Property(p => p.CSM).HasMaxLength(200);
             builder.Property(p => p.Description).HasMaxLength(1000);
             builder.Property(p => p.CreatedBy).HasMaxLength(100);
             builder.Property(p => p.ModifiedBy).HasMaxLength(100);
