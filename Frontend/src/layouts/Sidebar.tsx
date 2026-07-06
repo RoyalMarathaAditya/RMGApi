@@ -1,13 +1,14 @@
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import HubOutlinedIcon from '@mui/icons-material/HubOutlined';
 import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined';
+import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
@@ -49,7 +50,13 @@ const menuItems: MenuItem[] = [
   },
   { icon: HubOutlinedIcon, label: 'Resource Allocation', path: '/rmg' },
   { icon: AssessmentOutlinedIcon, label: 'Reports', path: '/reports' },
-  { icon: BadgeOutlinedIcon, label: 'Designation Master', path: '/designations' },
+  {
+    icon: BusinessOutlinedIcon, label: 'Masters Management',
+    children: [
+      { icon: PeopleOutlinedIcon, label: 'Client Management', path: '/masters/clients' },
+      { icon: BadgeOutlinedIcon, label: 'Designation Management', path: '/designations' },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -126,7 +133,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
                   borderRadius: 2,
                   minHeight: 48,
                   my: 0.5,
-                  px: collapsed ? 1.5 : 2,
+                  px: collapsed ? 1.5 : 1.5,
                   bgcolor: parentActive && hasChildren ? 'action.selected' : 'transparent',
                   '&.active, &.Mui-selected, &.Mui-selected:hover': {
                     bgcolor: 'primary.main',
@@ -137,14 +144,16 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
                   },
                 }}
               >
-                <ListItemIcon sx={{ color: 'text.secondary', minWidth: collapsed ? 0 : 40 }}>
+                <ListItemIcon sx={{ color: 'text.secondary', minWidth: collapsed ? 0 : 34 }}>
                   <Icon />
                 </ListItemIcon>
                 {!collapsed ? (
                   <>
-                    <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 700 }} />
+                    <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 700, sx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }} sx={{ minWidth: 0 }} />
                     {hasChildren ? (
-                      expandedMenus[item.label] ? <ExpandLess /> : <ExpandMore />
+                      <Box sx={{ flexShrink: 0, display: 'flex' }}>
+                        {expandedMenus[item.label] ? <ExpandLess /> : <ExpandMore />}
+                      </Box>
                     ) : null}
                   </>
                 ) : null}

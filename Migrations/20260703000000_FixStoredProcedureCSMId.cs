@@ -1,4 +1,3 @@
-﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,40 +5,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HRMS.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class FixNullableColumnsAndStoredProcedure : Migration
+    public partial class FixStoredProcedureCSMId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<Guid>(
-                name: "WorkModelId",
-                table: "Employees",
-                type: "uniqueidentifier",
-                nullable: true,
-                oldClrType: typeof(Guid),
-                oldType: "uniqueidentifier");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "PriorExperience",
-                table: "Employees",
-                type: "decimal(8,2)",
-                precision: 8,
-                scale: 2,
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(8,2)",
-                oldPrecision: 8,
-                oldScale: 2);
-
-            migrationBuilder.AlterColumn<Guid>(
-                name: "DepartmentTypeId",
-                table: "Employees",
-                type: "uniqueidentifier",
-                nullable: true,
-                oldClrType: typeof(Guid),
-                oldType: "uniqueidentifier");
-
-            // Update stored procedure to handle nullable WorkModelId, DepartmentTypeId, PriorExperience
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS sp_ProcessEmployeeImport");
 
             migrationBuilder.Sql(@"
@@ -175,7 +145,7 @@ namespace HRMS.Api.Migrations
                         DELETE FROM ResourceAllocations;
                         DELETE FROM Employees;
 
-                        -- Phase 1: Insert employees with all FKs except self-referencing (ReportingManagerId, PracticeHeadId)
+                        -- Phase 1: Insert employees with manager names stored directly (no FK resolution)
                         INSERT INTO Employees (
                             EmployeeCode, FullName, Email,
                             DOJ, LWD,
@@ -183,6 +153,7 @@ namespace HRMS.Api.Migrations
                             EmploymentTypeId, LocationId, PracticeId, SubPracticeId,
                             StatusId,
                             PriorExperience,
+                            ReportingManagerName, PracticeHeadName,
                             IsDeleted, CreatedOn, CreatedBy
                         )
                         SELECT
@@ -198,6 +169,8 @@ namespace HRMS.Api.Migrations
                             spm.Id,
                             ISNULL(st.Id, (SELECT TOP 1 Id FROM StatusMasters WHERE Name = 'Active' AND IsDeleted = 0)),
                             0,
+                            s.ReportingManager,
+                            s.PracticeHead,
                             0,
                             GETUTCDATE(),
                             @ImportedBy
@@ -211,21 +184,6 @@ namespace HRMS.Api.Migrations
                         WHERE s.BatchId = @BatchId;
 
                         SET @ImportedRows = @@ROWCOUNT;
-
-                        -- Phase 2: Update self-referencing FKs (L1 Manager, Practice Head) by matching full names
-                        UPDATE e
-                        SET e.ReportingManagerId = rm.Id
-                        FROM Employees e
-                        INNER JOIN EmployeeImportStaging s ON s.EmployeeCode = e.EmployeeCode AND s.BatchId = @BatchId
-                        INNER JOIN Employees rm ON rm.FullName = s.ReportingManager AND rm.IsDeleted = 0
-                        WHERE s.ReportingManager IS NOT NULL AND s.ReportingManager != '';
-
-                        UPDATE e
-                        SET e.PracticeHeadId = ph.Id
-                        FROM Employees e
-                        INNER JOIN EmployeeImportStaging s ON s.EmployeeCode = e.EmployeeCode AND s.BatchId = @BatchId
-                        INNER JOIN Employees ph ON ph.FullName = s.PracticeHead AND ph.IsDeleted = 0
-                        WHERE s.PracticeHead IS NOT NULL AND s.PracticeHead != '';
 
                         DELETE FROM EmployeeImportStaging WHERE BatchId = @BatchId;
 
@@ -251,41 +209,6 @@ namespace HRMS.Api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<Guid>(
-                name: "WorkModelId",
-                table: "Employees",
-                type: "uniqueidentifier",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
-                oldClrType: typeof(Guid),
-                oldType: "uniqueidentifier",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "PriorExperience",
-                table: "Employees",
-                type: "decimal(8,2)",
-                precision: 8,
-                scale: 2,
-                nullable: false,
-                defaultValue: 0m,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(8,2)",
-                oldPrecision: 8,
-                oldScale: 2,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<Guid>(
-                name: "DepartmentTypeId",
-                table: "Employees",
-                type: "uniqueidentifier",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
-                oldClrType: typeof(Guid),
-                oldType: "uniqueidentifier",
-                oldNullable: true);
-
-            // Restore the previous stored procedure (without WorkModelId, DepartmentTypeId handling)
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS sp_ProcessEmployeeImport");
 
             migrationBuilder.Sql(@"
@@ -332,6 +255,7 @@ namespace HRMS.Api.Migrations
                         FROM EmployeeImportStaging
                         WHERE BatchId = @BatchId AND (FullName IS NULL OR FullName = '');
 
+                        -- Auto-create missing designations (Role)
                         INSERT INTO DesignationMasters (Id, Name, IsActive, IsDeleted, CreatedOn)
                         SELECT NEWID(), s.Designation, 1, 0, GETUTCDATE()
                         FROM EmployeeImportStaging s
@@ -339,6 +263,7 @@ namespace HRMS.Api.Migrations
                           AND NOT EXISTS (SELECT 1 FROM DesignationMasters d WHERE d.Name = s.Designation)
                         GROUP BY s.Designation;
 
+                        -- Auto-create missing practices (OU 4 - Practice)
                         INSERT INTO Practices (Id, Name, IsActive, IsDeleted, CreatedOn)
                         SELECT NEWID(), s.Practice, 1, 0, GETUTCDATE()
                         FROM EmployeeImportStaging s
@@ -346,6 +271,7 @@ namespace HRMS.Api.Migrations
                           AND NOT EXISTS (SELECT 1 FROM Practices p WHERE p.Name = s.Practice)
                         GROUP BY s.Practice;
 
+                        -- Auto-create missing sub-practices (OU 5 - Sub-practice, linked to Practice)
                         INSERT INTO SubPracticeMasters (Id, Name, PracticeId, IsActive, IsDeleted, CreatedOn)
                         SELECT NEWID(), s.SubPractice, p.Id, 1, 0, GETUTCDATE()
                         FROM EmployeeImportStaging s
@@ -354,6 +280,7 @@ namespace HRMS.Api.Migrations
                           AND NOT EXISTS (SELECT 1 FROM SubPracticeMasters sp WHERE sp.Name = s.SubPractice AND sp.PracticeId = p.Id)
                         GROUP BY s.SubPractice, p.Id;
 
+                        -- Auto-create missing locations
                         INSERT INTO Locations (Id, Name, Address, IsActive, IsDeleted, CreatedOn)
                         SELECT NEWID(), s.Location, s.Location, 1, 0, GETUTCDATE()
                         FROM EmployeeImportStaging s
@@ -361,6 +288,7 @@ namespace HRMS.Api.Migrations
                           AND NOT EXISTS (SELECT 1 FROM Locations l WHERE l.Name = s.Location)
                         GROUP BY s.Location;
 
+                        -- Auto-create missing employment types (FTE/ Consultant)
                         INSERT INTO EmploymentTypeMasters (Id, Name, IsActive, IsDeleted, CreatedOn)
                         SELECT NEWID(), s.EmployeeType, 1, 0, GETUTCDATE()
                         FROM EmployeeImportStaging s
@@ -368,6 +296,7 @@ namespace HRMS.Api.Migrations
                           AND NOT EXISTS (SELECT 1 FROM EmploymentTypeMasters e WHERE e.Name = s.EmployeeType)
                         GROUP BY s.EmployeeType;
 
+                        -- Duplicate validation within batch
                         INSERT INTO #Errors (EmployeeCode, ErrorMessage)
                         SELECT s.EmployeeCode, 'Duplicate Employee Code ''' + s.EmployeeCode + ''' within upload'
                         FROM EmployeeImportStaging s
@@ -406,6 +335,17 @@ namespace HRMS.Api.Migrations
 
                         SELECT @DeletedRows = COUNT(1) FROM Employees WHERE IsDeleted = 0;
 
+                        -- Preserve employee name-to-ID mapping before deleting
+                        CREATE TABLE #EmployeeNameMap (
+                            FullName NVARCHAR(200) NOT NULL,
+                            EmployeeId INT NOT NULL
+                        );
+
+                        INSERT INTO #EmployeeNameMap (FullName, EmployeeId)
+                        SELECT FullName, Id
+                        FROM Employees
+                        WHERE IsDeleted = 0;
+
                         -- Clear all FK references before deleting employees
                         UPDATE Employees SET ReportingManagerId = NULL, PracticeHeadId = NULL;
                         UPDATE Practices SET PracticeHeadId = NULL;
@@ -415,13 +355,14 @@ namespace HRMS.Api.Migrations
                         DELETE FROM ResourceAllocations;
                         DELETE FROM Employees;
 
+                        -- Phase 1: Insert employees with all FKs except self-referencing (ReportingManagerId, PracticeHeadId)
                         INSERT INTO Employees (
                             EmployeeCode, FullName, Email,
                             DOJ, LWD,
                             DesignationId,
                             EmploymentTypeId, LocationId, PracticeId, SubPracticeId,
-                            WorkModelId, DepartmentTypeId,
                             StatusId,
+                            PriorExperience,
                             IsDeleted, CreatedOn, CreatedBy
                         )
                         SELECT
@@ -435,9 +376,8 @@ namespace HRMS.Api.Migrations
                             ISNULL(l.Id, (SELECT TOP 1 Id FROM Locations WHERE Name = 'Not Specified' AND IsDeleted = 0)),
                             p.Id,
                             spm.Id,
-                            NULL,
-                            NULL,
                             ISNULL(st.Id, (SELECT TOP 1 Id FROM StatusMasters WHERE Name = 'Active' AND IsDeleted = 0)),
+                            0,
                             0,
                             GETUTCDATE(),
                             @ImportedBy
@@ -452,19 +392,24 @@ namespace HRMS.Api.Migrations
 
                         SET @ImportedRows = @@ROWCOUNT;
 
+                        -- Phase 2: Update self-referencing FKs (L1 Manager, Practice Head) by matching full names.
                         UPDATE e
-                        SET e.ReportingManagerId = rm.Id
+                        SET e.ReportingManagerId = COALESCE(rm_new.Id, rm_old.EmployeeId)
                         FROM Employees e
                         INNER JOIN EmployeeImportStaging s ON s.EmployeeCode = e.EmployeeCode AND s.BatchId = @BatchId
-                        INNER JOIN Employees rm ON rm.FullName = s.ReportingManager AND rm.IsDeleted = 0
+                        LEFT JOIN Employees rm_new ON rm_new.FullName = s.ReportingManager AND rm_new.IsDeleted = 0
+                        LEFT JOIN #EmployeeNameMap rm_old ON rm_old.FullName = s.ReportingManager
                         WHERE s.ReportingManager IS NOT NULL AND s.ReportingManager != '';
 
                         UPDATE e
-                        SET e.PracticeHeadId = ph.Id
+                        SET e.PracticeHeadId = COALESCE(ph_new.Id, ph_old.EmployeeId)
                         FROM Employees e
                         INNER JOIN EmployeeImportStaging s ON s.EmployeeCode = e.EmployeeCode AND s.BatchId = @BatchId
-                        INNER JOIN Employees ph ON ph.FullName = s.PracticeHead AND ph.IsDeleted = 0
+                        LEFT JOIN Employees ph_new ON ph_new.FullName = s.PracticeHead AND ph_new.IsDeleted = 0
+                        LEFT JOIN #EmployeeNameMap ph_old ON ph_old.FullName = s.PracticeHead
                         WHERE s.PracticeHead IS NOT NULL AND s.PracticeHead != '';
+
+                        DROP TABLE #EmployeeNameMap;
 
                         DELETE FROM EmployeeImportStaging WHERE BatchId = @BatchId;
 

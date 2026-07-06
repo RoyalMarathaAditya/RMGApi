@@ -15,6 +15,7 @@ import SkillCreate from '../features/skills/pages/SkillCreate';
 import SkillDashboard from '../features/skills/pages/SkillDashboard';
 import SkillDetails from '../features/skills/pages/SkillDetails';
 import SkillEdit from '../features/skills/pages/SkillEdit';
+import ClientList from '../features/clients/pages/ClientList';
 import DesignationList from '../features/designations/pages/DesignationList';
 import ColumnMappingList from '../features/columnMappings/pages/ColumnMappingList';
 import ColumnValueMappingList from '../features/columnMappings/pages/ColumnValueMappingList';
@@ -66,6 +67,7 @@ export function AppRoutes() {
           <Route path="/projects/edit/:id" element={<ProjectEdit />} />
           <Route path="/projects/:id" element={<Project />} />
           <Route path="/designations" element={<DesignationList />} />
+          <Route path="/masters/clients" element={<ClientList />} />
           <Route path="/admin/column-mappings" element={<ColumnMappingList />} />
           <Route path="/admin/column-value-mappings" element={<ColumnValueMappingList />} />
           <Route path="/skills" element={<SkillList />} />

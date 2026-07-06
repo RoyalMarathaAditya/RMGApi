@@ -152,7 +152,6 @@ namespace HRMS.Api.Migrations
 
                         -- Clear all FK references before deleting employees
                         UPDATE Employees SET ReportingManagerId = NULL, PracticeHeadId = NULL;
-                        UPDATE Projects SET CSMId = NULL, ProjectManagerId = NULL;
                         UPDATE Practices SET PracticeHeadId = NULL;
                         DELETE FROM EmployeeLeaves;
                         DELETE FROM EmployeeSkills;
@@ -371,7 +370,6 @@ namespace HRMS.Api.Migrations
 
                         -- Clear all FK references before deleting employees
                         UPDATE Employees SET ReportingManagerId = NULL, PracticeHeadId = NULL;
-                        UPDATE Projects SET CSMId = NULL, ProjectManagerId = NULL;
                         UPDATE Practices SET PracticeHeadId = NULL;
                         DELETE FROM EmployeeLeaves;
                         DELETE FROM EmployeeSkills;
