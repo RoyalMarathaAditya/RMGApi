@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
+import clientReducer from './slices/clientSlice';
 import employeeReducer from './slices/employeeSlice';
 import projectReducer from './slices/projectSlice';
 import skillReducer from './slices/skillSlice';
@@ -9,6 +10,7 @@ import designationReducer from './slices/designationSlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    clients: clientReducer,
     employees: employeeReducer,
     projects: projectReducer,
     skills: skillReducer,

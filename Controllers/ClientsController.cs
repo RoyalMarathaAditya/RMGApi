@@ -1,8 +1,6 @@
-using HRMS.Api.Data;
-using HRMS.Api.Models;
+using HRMS.Api.DTOs;
+using HRMS.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace HRMS.Api.Controllers
 {
@@ -10,94 +8,64 @@ namespace HRMS.Api.Controllers
     [Route("api/[controller]")]
     public class ClientsController : ControllerBase
     {
-        private readonly AppDbContext _db;
+        private readonly IClientService _clientService;
         private readonly ILogger<ClientsController> _logger;
 
-        public ClientsController(AppDbContext db, ILogger<ClientsController> logger)
+        public ClientsController(IClientService clientService, ILogger<ClientsController> logger)
         {
-            _db = db;
+            _clientService = clientService;
             _logger = logger;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching clients...");
-            var clients = await _db.Clients
-                .AsNoTracking()
-                .Include(c => c.ClientStatus)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Name,
-                    c.ContractStartDate,
-                    c.ContractEndDate,
-                    StatusName = c.ClientStatus.Name,
-                    c.Location
-                })
-                .ToListAsync();
-            return Ok(clients);
+            _logger.LogInformation("Fetching all clients...");
+            var result = await _clientService.GetAllAsync(cancellationToken);
+            return Ok(result);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching client with {Id}...", id);
-            var c = await _db.Clients
-                .AsNoTracking()
-                .Include(c => c.ClientStatus)
-                .FirstOrDefaultAsync(c => c.Id == id);
-            if (c is null)
-            {
-                _logger.LogWarning("Client {Id} not found", id);
-                return NotFound();
-            }
-            return Ok(c);
+            var result = await _clientService.GetByIdAsync(id, cancellationToken);
+            if (!result.Success)
+                return NotFound(result);
+            return Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Client client)
+        public async Task<IActionResult> Create([FromBody] CreateClientDto request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating client...");
-            _db.Clients.Add(client);
-            await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = client.Id }, client);
+            var userName = User.Identity?.Name ?? "System";
+            var result = await _clientService.CreateAsync(request, userName, cancellationToken);
+            if (!result.Success)
+                return BadRequest(result);
+            return CreatedAtAction(nameof(GetById), new { id = ((ClientDto)result.Data!).Id }, result);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Client client)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateClientDto request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating client {Id}...", id);
-            var existing = await _db.Clients.FindAsync(id);
-            if (existing is null)
-            {
-                _logger.LogWarning("Client {Id} not found for update", id);
-                return NotFound();
-            }
-
-            existing.Name = client.Name;
-            existing.ContractStartDate = client.ContractStartDate;
-            existing.ContractEndDate = client.ContractEndDate;
-            existing.StatusId = client.StatusId;
-            existing.Location = client.Location;
-
-            await _db.SaveChangesAsync();
-            return Ok(existing);
+            var userName = User.Identity?.Name ?? "System";
+            var result = await _clientService.UpdateAsync(id, request, userName, cancellationToken);
+            if (!result.Success)
+                return result.Message.Contains("not found") ? NotFound(result) : BadRequest(result);
+            return Ok(result);
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Deleting client {Id}...", id);
-            var existing = await _db.Clients.FindAsync(id);
-            if (existing is null)
-            {
-                _logger.LogWarning("Client {Id} not found for deletion", id);
-                return NotFound();
-            }
-            existing.IsDeleted = true;
-            await _db.SaveChangesAsync();
-            return NoContent();
+            var userName = User.Identity?.Name ?? "System";
+            var result = await _clientService.DeleteAsync(id, userName, cancellationToken);
+            if (!result.Success)
+                return NotFound(result);
+            return Ok(result);
         }
     }
 }
