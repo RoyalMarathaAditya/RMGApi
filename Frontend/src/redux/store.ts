@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import clientReducer from './slices/clientSlice';
 import employeeReducer from './slices/employeeSlice';
 import projectReducer from './slices/projectSlice';
+import projectManagementReducer from './slices/projectManagementSlice';
 import skillReducer from './slices/skillSlice';
 import designationReducer from './slices/designationSlice';
 
@@ -13,6 +14,7 @@ export const store = configureStore({
     clients: clientReducer,
     employees: employeeReducer,
     projects: projectReducer,
+    projectManagement: projectManagementReducer,
     skills: skillReducer,
     designations: designationReducer,
   },
