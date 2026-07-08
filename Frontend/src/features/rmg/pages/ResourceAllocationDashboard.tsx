@@ -30,6 +30,7 @@ import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
 import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
 import type { DashboardSummaryDto, DashboardGridDto } from '../types/dashboard';
@@ -81,8 +82,9 @@ export default function ResourceAllocationDashboard() {
       { icon: PeopleAltOutlinedIcon, label: 'Total Employees', value: summary.totalEmployees, color: 'primary.main' },
       { icon: GroupsOutlinedIcon, label: 'Total Practices', value: summary.totalPractices, color: 'secondary.main' },
       { icon: HourglassEmptyOutlinedIcon, label: 'Available', value: summary.availableResources, color: 'success.main' },
-      { icon: AssignmentTurnedInOutlinedIcon, label: 'Allocated', value: summary.allocatedResources, color: 'info.main' },
+      { icon: CallSplitOutlinedIcon, label: 'Partially Allocated', value: summary.partiallyAllocatedResources, color: 'info.main' },
       { icon: WorkOutlineOutlinedIcon, label: 'Fully Allocated', value: summary.fullyAllocatedResources, color: 'warning.main' },
+      { icon: AssignmentTurnedInOutlinedIcon, label: 'Total Allocated', value: summary.totalAllocatedResources, color: 'info.main' },
       { icon: PersonOffOutlinedIcon, label: 'Bench', value: summary.benchResources, color: 'text.secondary' },
     ];
   }, [summary]);
@@ -116,37 +118,41 @@ export default function ResourceAllocationDashboard() {
   return (
     <PageContainer title="Resource Allocation Dashboard">
       <Stack spacing={3}>
-        <Box
-          sx={{
-            display: 'grid',
-            gap: 2,
-            gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))', lg: 'repeat(6, minmax(0, 1fr))' },
-          }}
-        >
-          {summaryCards.map((card) => (
-            <Card key={card.label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Stack alignItems="center" direction="row" spacing={1.5}>
+<Box
+            sx={{
+              display: 'grid',
+              gap: 1.5,
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(4, 1fr)',
+                lg: 'repeat(7, 1fr)',
+              },
+              width: '100%',
+            }}
+          >
+            {summaryCards.map((card) => (
+              <Card key={card.label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Stack alignItems="center" spacing={0.5}>
                   <Box
                     alignItems="center"
                     bgcolor={`${card.color}15`}
                     borderRadius={1.5}
                     color={card.color}
                     display="flex"
-                    height={40}
+                    height={36}
                     justifyContent="center"
-                    width={40}
+                    width={36}
                   >
                     <card.icon fontSize="small" />
                   </Box>
-                  <Box minWidth={0}>
-                    <Typography color="text.secondary" noWrap variant="caption">
-                      {card.label}
-                    </Typography>
-                    <Typography fontWeight={700} variant="h5">
-                      {card.value}
-                    </Typography>
-                  </Box>
+                  <Typography color="text.secondary" align="center" noWrap variant="caption">
+                    {card.label}
+                  </Typography>
+                  <Typography fontWeight={700} variant="h5">
+                    {card.value}
+                  </Typography>
                 </Stack>
               </CardContent>
             </Card>

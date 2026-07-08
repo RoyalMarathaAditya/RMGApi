@@ -5,8 +5,9 @@ namespace HRMS.Api.DTOs.RmgDashboardDtos
         public int TotalEmployees { get; set; }
         public int TotalPractices { get; set; }
         public int AvailableResources { get; set; }
-        public int AllocatedResources { get; set; }
+        public int PartiallyAllocatedResources { get; set; }
         public int FullyAllocatedResources { get; set; }
+        public int TotalAllocatedResources { get; set; }
         public int OverallocatedResources { get; set; }
         public int BenchResources { get; set; }
         public int ResourcesOnLeave { get; set; }

@@ -2,8 +2,9 @@ export interface DashboardSummaryDto {
   totalEmployees: number;
   totalPractices: number;
   availableResources: number;
-  allocatedResources: number;
+  partiallyAllocatedResources: number;
   fullyAllocatedResources: number;
+  totalAllocatedResources: number;
   overallocatedResources: number;
   benchResources: number;
   resourcesOnLeave: number;
