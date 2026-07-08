@@ -10,6 +10,7 @@ import HubOutlinedIcon from '@mui/icons-material/HubOutlined';
 import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import PsychologyOutlinedIcon from '@mui/icons-material/PsychologyOutlined';
+import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
 import {
@@ -40,6 +41,14 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { icon: DashboardOutlinedIcon, label: 'Dashboard', path: '/dashboard' },
+  {
+    icon: AdminPanelSettingsOutlinedIcon, label: 'User Management',
+    children: [
+      { icon: PeopleOutlinedIcon, label: 'Users', path: '/users' },
+      { icon: BadgeOutlinedIcon, label: 'Roles', path: '/roles' },
+      { icon: SecurityOutlinedIcon, label: 'Permissions', path: '/permissions' },
+    ],
+  },
   {
     icon: GroupsOutlinedIcon, label: 'Employee Management',
     children: [
@@ -75,7 +84,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
 
   const isActive = (path?: string) => {
     if (!path) return false;
-    if (path === '/projects' || path === '/skills' || path === '/rmg') {
+    if (path === '/projects' || path === '/skills' || path === '/rmg' || path === '/users' || path === '/roles' || path === '/permissions') {
       return location.pathname.startsWith(path);
     }
     return location.pathname === path;

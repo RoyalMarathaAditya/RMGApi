@@ -32,6 +32,9 @@ import TimelineViewPage from '../features/rmg/pages/TimelineViewPage';
 import Login from '../pages/auth/Login';
 import Dashboard from '../pages/dashboard/Dashboard';
 import Home from '../pages/home/Home';
+import Users from '../features/user-management/pages/Users';
+import Roles from '../features/user-management/pages/Roles';
+import Permissions from '../features/user-management/pages/Permissions';
 
 const modulePages = {
   employees: 'Employee Management',
@@ -59,6 +62,9 @@ export function AppRoutes() {
           {/*<Route index element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />*/}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/roles" element={<Roles />} />
+          <Route path="/permissions" element={<Permissions />} />
           <Route path="/employees" element={<EmployeeList />} />
           <Route path="/employees/:employeeId" element={<EmployeeProfile />} />
           <Route path="/projects" element={<ProjectList />} />
