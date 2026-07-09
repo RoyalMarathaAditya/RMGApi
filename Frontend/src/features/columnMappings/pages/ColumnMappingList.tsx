@@ -21,6 +21,8 @@ import {
   TableHead,
   TableRow,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
@@ -30,11 +32,13 @@ import { columnMappingService } from '../services/columnMappingService';
 import type { ColumnMapping, ColumnMappingFormValues } from '../types/columnMapping';
 
 const dataTypes = ['string', 'datetime', 'int', 'decimal', 'bool'];
+const entityTypes = ['employee-import', 'resource-allocation'];
 const defaultFormValues: ColumnMappingFormValues = {
   sourceColumn: '',
   targetProperty: '',
   targetDisplayName: '',
   dataType: 'string',
+  entityType: 'employee-import',
   isRequired: false,
   isActive: true,
   displayOrder: 0,
@@ -45,6 +49,7 @@ export default function ColumnMappingList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [entityTypeFilter, setEntityTypeFilter] = useState<string>('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ColumnMapping | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ColumnMapping | null>(null);
@@ -70,15 +75,17 @@ export default function ColumnMappingList() {
   const filtered = mappings.filter((m) => {
     const q = searchText.toLowerCase();
     return (
-      !q ||
-      m.sourceColumn.toLowerCase().includes(q) ||
-      m.targetProperty.toLowerCase().includes(q)
+      (!q ||
+        m.sourceColumn.toLowerCase().includes(q) ||
+        m.targetProperty.toLowerCase().includes(q) ||
+        m.targetDisplayName.toLowerCase().includes(q)) &&
+      (!entityTypeFilter || m.entityType === entityTypeFilter)
     );
   });
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = (entityType?: string) => {
     setEditing(null);
-    setFormValues(defaultFormValues);
+    setFormValues({ ...defaultFormValues, entityType: entityType ?? 'employee-import' });
     setFormError('');
     setDialogOpen(true);
   };
@@ -90,6 +97,7 @@ export default function ColumnMappingList() {
       targetProperty: m.targetProperty,
       targetDisplayName: m.targetDisplayName,
       dataType: m.dataType,
+      entityType: m.entityType,
       isRequired: m.isRequired,
       isActive: m.isActive,
       displayOrder: m.displayOrder,
@@ -140,17 +148,35 @@ export default function ColumnMappingList() {
               {filtered.length} of {mappings.length} mappings
             </Typography>
           </Box>
-          <Button onClick={handleOpenAdd} startIcon={<AddIcon />} variant="contained">
-            Add Mapping
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button onClick={() => handleOpenAdd('employee-import')} startIcon={<AddIcon />} variant="contained" size="small">
+              Add Employee Mapping
+            </Button>
+            <Button onClick={() => handleOpenAdd('resource-allocation')} startIcon={<AddIcon />} variant="outlined" size="small">
+              Add RMG Mapping
+            </Button>
+          </Stack>
         </Stack>
 
-        <TextField
-          fullWidth
-          label="Search mappings"
-          onChange={(e) => setSearchText(e.target.value)}
-          value={searchText}
-        />
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+          <TextField
+            fullWidth
+            label="Search mappings"
+            onChange={(e) => setSearchText(e.target.value)}
+            value={searchText}
+          />
+          <ToggleButtonGroup
+            color="primary"
+            exclusive
+            onChange={(_, val) => setEntityTypeFilter(val ?? '')}
+            size="small"
+            value={entityTypeFilter}
+          >
+            <ToggleButton value="">All</ToggleButton>
+            <ToggleButton value="employee-import">Employee Import</ToggleButton>
+            <ToggleButton value="resource-allocation">Resource Allocation</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
 
         {error ? <Alert severity="error">{error}</Alert> : null}
 
@@ -163,6 +189,7 @@ export default function ColumnMappingList() {
                   <TableCell sx={{ fontWeight: 700 }}>Target Property</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Display Name</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Entity Type</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Required</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Order</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -177,6 +204,14 @@ export default function ColumnMappingList() {
                     <TableCell>{m.targetDisplayName}</TableCell>
                     <TableCell>
                       <Chip label={m.dataType} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        color={m.entityType === 'employee-import' ? 'info' : 'secondary'}
+                        label={m.entityType === 'employee-import' ? 'Employee' : 'RMG'}
+                        size="small"
+                        variant="outlined"
+                      />
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -233,7 +268,7 @@ export default function ColumnMappingList() {
               value={formValues.sourceColumn}
             />
             <TextField
-              disabled
+              disabled={Boolean(editing)}
               fullWidth
               label="Target Property"
               onChange={(e) => setFormValues({ ...formValues, targetProperty: e.target.value })}
@@ -256,6 +291,19 @@ export default function ColumnMappingList() {
               {dataTypes.map((dt) => (
                 <MenuItem key={dt} value={dt}>
                   {dt}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              fullWidth
+              label="Entity Type"
+              onChange={(e) => setFormValues({ ...formValues, entityType: e.target.value })}
+              select
+              value={formValues.entityType}
+            >
+              {entityTypes.map((et) => (
+                <MenuItem key={et} value={et}>
+                  {et === 'employee-import' ? 'Employee Import' : 'Resource Allocation'}
                 </MenuItem>
               ))}
             </TextField>

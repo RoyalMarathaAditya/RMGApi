@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -21,7 +21,9 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
 import { allocationService } from '../services/allocationService';
+import { columnMappingService } from '../../columnMappings/services/columnMappingService';
 import type { AllocationDto } from '../types/allocation';
+import type { ColumnMapping } from '../../columnMappings/types/columnMapping';
 import { toastService } from '../../../services/toastService';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
@@ -30,17 +32,108 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
   Completed: 'default',
   Released: 'warning',
   Cancelled: 'error',
+  Billable: 'success',
+  'Non-Billable': 'warning',
+  Shadow: 'info',
+  'Full Time': 'info',
+  'Part Time': 'warning',
+  Contract: 'default',
+  Sow: 'secondary',
+  Available: 'success',
+  'Partially Allocated': 'warning',
+  'Fully Allocated': 'info',
+  Overallocated: 'error',
+  Bench: 'default',
+  'On Leave': 'warning',
 };
+
+interface ColumnDef {
+  field: keyof AllocationDto;
+  headerName: string;
+  dataType: string;
+}
+
+type CellRenderer = (row: AllocationDto) => React.ReactNode;
+
+const cellRenderers: Partial<Record<keyof AllocationDto, CellRenderer>> = {
+  employeeName: (row) => (
+    <>
+      <Typography fontWeight={600} variant="body2">{row.employeeName}</Typography>
+      <Typography variant="caption" color="text.secondary">{row.employeeCode}</Typography>
+    </>
+  ),
+  startDate: (row) => <>{new Date(row.startDate).toLocaleDateString()}</>,
+  endDate: (row) => <>{row.endDate ? new Date(row.endDate).toLocaleDateString() : '-'}</>,
+  allocationPercentage: (row) => <Typography fontWeight={600}>{row.allocationPercentage}%</Typography>,
+  allocationStatus: (row) => (
+    <Chip label={row.allocationStatus} size="small" color={statusColors[row.allocationStatus] ?? 'default'} variant="outlined" />
+  ),
+  totalAllocated: (row) => <>{row.totalAllocated}%</>,
+  availableCapacity: (row) => <>{row.availableCapacity}%</>,
+  employeeCode: (row) => <Typography variant="body2">{row.employeeCode}</Typography>,
+  practice: (row) => <Chip label={row.practice} size="small" variant="outlined" />,
+  designation: (row) => <Typography variant="body2">{row.designation ?? '-'}</Typography>,
+  practiceHead: (row) => <Typography variant="body2">{row.practiceHead ?? '-'}</Typography>,
+  allocationType: (row) => (
+    <Chip label={row.allocationType ?? '-'} size="small" variant="outlined" color={statusColors[row.allocationType ?? ''] ?? 'default'} />
+  ),
+  billableStatus: (row) => (
+    <Chip label={row.billableStatus ?? '-'} size="small" variant="outlined" color={statusColors[row.billableStatus ?? ''] ?? 'default'} />
+  ),
+  resourceStatus: (row) => (
+    <Chip label={row.resourceStatus} size="small" variant="outlined" color={statusColors[row.resourceStatus] ?? 'default'} />
+  ),
+};
+
+function defaultCellRenderer(row: AllocationDto, field: keyof AllocationDto): string {
+  const val = row[field];
+  if (val === null || val === undefined) return '-';
+  return String(val);
+}
+
+const defaultColumns: ColumnDef[] = [
+  { field: 'employeeName', headerName: 'Employee', dataType: 'string' },
+  { field: 'projectName', headerName: 'Project', dataType: 'string' },
+  { field: 'startDate', headerName: 'Start Date', dataType: 'datetime' },
+  { field: 'endDate', headerName: 'End Date', dataType: 'datetime' },
+  { field: 'allocationPercentage', headerName: 'Allocation %', dataType: 'decimal' },
+  { field: 'allocationStatus', headerName: 'Status', dataType: 'string' },
+  { field: 'totalAllocated', headerName: 'Total Allocated', dataType: 'decimal' },
+  { field: 'availableCapacity', headerName: 'Available', dataType: 'decimal' },
+];
 
 export default function ResourceAllocationList() {
   const navigate = useNavigate();
   const [allocations, setAllocations] = useState<AllocationDto[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [columns, setColumns] = useState<ColumnDef[]>(defaultColumns);
 
   useEffect(() => {
     loadAllocations();
+    loadColumns();
   }, []);
+
+  const loadColumns = async () => {
+    try {
+      const data = await columnMappingService.getAll();
+      const active = data
+        .filter((m: ColumnMapping) => m.entityType === 'resource-allocation' && m.isActive)
+        .sort((a: ColumnMapping, b: ColumnMapping) => a.displayOrder - b.displayOrder);
+      if (active.length > 0) {
+        console.log(`[RMG] Loaded ${active.length} dynamic columns from ${data.length} total mappings`);
+        setColumns(active.map((m: ColumnMapping) => ({
+          field: m.targetProperty.charAt(0).toLowerCase() + m.targetProperty.slice(1) as keyof AllocationDto,
+          headerName: m.targetDisplayName,
+          dataType: m.dataType,
+        })));
+      } else {
+        console.warn(`[RMG] No resource-allocation mappings found in ${data.length} total mappings, using defaults`);
+      }
+    } catch (err) {
+      console.error('[RMG] Failed to load column mappings, using defaults:', err);
+    }
+  };
 
   const loadAllocations = async () => {
     try {
@@ -63,6 +156,8 @@ export default function ResourceAllocationList() {
     }
   };
 
+  const colSpan = columns.length + 1;
+
   return (
     <PageContainer title="All Allocations">
       <Stack spacing={2}>
@@ -76,35 +171,20 @@ export default function ResourceAllocationList() {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Employee</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Project</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Start Date</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>End Date</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Allocation %</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Total Allocated</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Available</TableCell>
+                {columns.map((col) => (
+                  <TableCell key={col.field} sx={{ fontWeight: 700 }}>{col.headerName}</TableCell>
+                ))}
                 <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {allocations.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((a) => (
                 <TableRow key={a.id} hover>
-                  <TableCell>
-                    <Typography fontWeight={600} variant="body2">{a.employeeName}</Typography>
-                    <Typography variant="caption" color="text.secondary">{a.employeeCode}</Typography>
-                  </TableCell>
-                  <TableCell>{a.projectName}</TableCell>
-                  <TableCell>{new Date(a.startDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{a.endDate ? new Date(a.endDate).toLocaleDateString() : '-'}</TableCell>
-                  <TableCell>
-                    <Typography fontWeight={600}>{a.allocationPercentage}%</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={a.allocationStatus} size="small" color={statusColors[a.allocationStatus] ?? 'default'} variant="outlined" />
-                  </TableCell>
-                  <TableCell>{a.totalAllocated}%</TableCell>
-                  <TableCell>{a.availableCapacity}%</TableCell>
+                  {columns.map((col) => (
+                    <TableCell key={col.field}>
+                      {cellRenderers[col.field]?.(a) ?? defaultCellRenderer(a, col.field)}
+                    </TableCell>
+                  ))}
                   <TableCell align="right">
                     <Tooltip title="View / Edit">
                       <IconButton size="small" onClick={() => navigate(`/rmg/view/${a.employeeId}`)}>
@@ -121,7 +201,7 @@ export default function ResourceAllocationList() {
               ))}
               {allocations.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>No allocations found</TableCell>
+                  <TableCell colSpan={colSpan} align="center" sx={{ py: 4 }}>No allocations found</TableCell>
                 </TableRow>
               )}
             </TableBody>

@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260709110113_FixBulkImportEmailMatching")]
+    partial class FixBulkImportEmailMatching
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -675,13 +678,6 @@ namespace HRMS.Api.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("employee-import");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -708,7 +704,7 @@ namespace HRMS.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EntityType", "SourceColumn")
+                    b.HasIndex("SourceColumn")
                         .IsUnique()
                         .HasFilter("[IsActive] = 1");
 
@@ -721,7 +717,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 1,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "Emp Id",
@@ -734,7 +729,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 2,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "Full Name",
@@ -747,7 +741,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 3,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "FTE/ Consultant",
@@ -760,7 +753,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 4,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "Role",
@@ -773,7 +765,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 5,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "OU 4 - Practice",
@@ -786,7 +777,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 6,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "OU 5 - Sub-practice",
@@ -799,7 +789,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 7,
-                            EntityType = "employee-import",
                             IsActive = false,
                             IsRequired = false,
                             SourceColumn = "Organization Unit",
@@ -812,7 +801,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 8,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "Location",
@@ -825,7 +813,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 9,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "L1 Manager",
@@ -838,7 +825,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 10,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "Practice Head",
@@ -851,7 +837,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 11,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "email ID",
@@ -864,7 +849,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
                             DisplayOrder = 12,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "Active",
@@ -877,7 +861,6 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "datetime",
                             DisplayOrder = 13,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = true,
                             SourceColumn = "DOJ",
@@ -890,220 +873,11 @@ namespace HRMS.Api.Migrations
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "datetime",
                             DisplayOrder = 14,
-                            EntityType = "employee-import",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "LWD",
                             TargetDisplayName = "LWD",
                             TargetProperty = "LWD"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000001"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 1,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Full Name",
-                            TargetDisplayName = "Full Name",
-                            TargetProperty = "EmployeeName"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000002"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 2,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Emp Id",
-                            TargetDisplayName = "Emp Id",
-                            TargetProperty = "EmployeeCode"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000003"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 3,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Role",
-                            TargetDisplayName = "Role",
-                            TargetProperty = "Designation"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000014"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 4,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Total Experience",
-                            TargetDisplayName = "Total Experience",
-                            TargetProperty = "TotalExperience"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000004"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 5,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "OU 4 - Practice",
-                            TargetDisplayName = "OU 4 - Practice",
-                            TargetProperty = "Practice"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000015"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 6,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "OU 5 - Sub Practice",
-                            TargetDisplayName = "OU 5 - Sub Practice",
-                            TargetProperty = "SubPractice"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000005"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 7,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Project",
-                            TargetDisplayName = "Project",
-                            TargetProperty = "ProjectName"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000006"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "datetime",
-                            DisplayOrder = 8,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Start Date",
-                            TargetDisplayName = "Start Date",
-                            TargetProperty = "StartDate"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000007"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "datetime",
-                            DisplayOrder = 9,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "End Date",
-                            TargetDisplayName = "End Date",
-                            TargetProperty = "EndDate"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000008"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 10,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Allocation %",
-                            TargetDisplayName = "Allocation %",
-                            TargetProperty = "AllocationPercentage"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000009"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 11,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Status",
-                            TargetDisplayName = "Status",
-                            TargetProperty = "AllocationStatus"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000010"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 12,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Billable Status",
-                            TargetDisplayName = "Billable Status",
-                            TargetProperty = "BillableStatus"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000011"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 13,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Allocation Type",
-                            TargetDisplayName = "Allocation Type",
-                            TargetProperty = "AllocationType"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000012"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 14,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Total Allocated",
-                            TargetDisplayName = "Total Allocated",
-                            TargetProperty = "TotalAllocated"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000013"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 15,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Available",
-                            TargetDisplayName = "Available",
-                            TargetProperty = "AvailableCapacity"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000016"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 16,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Resource Status",
-                            TargetDisplayName = "Resource Status",
-                            TargetProperty = "ResourceStatus"
                         });
                 });
 

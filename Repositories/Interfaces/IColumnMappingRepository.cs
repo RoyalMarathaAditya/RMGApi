@@ -6,6 +6,7 @@ namespace HRMS.Api.Repositories.Interfaces
     {
         Task<IEnumerable<ColumnMapping>> GetAllAsync(CancellationToken ct = default);
         Task<IEnumerable<ColumnMapping>> GetAllActiveAsync(CancellationToken ct = default);
+        Task<IEnumerable<ColumnMapping>> GetByEntityTypeAsync(string entityType, bool activeOnly = true, CancellationToken ct = default);
         Task<ColumnMapping?> GetByIdAsync(Guid id, CancellationToken ct = default);
         Task<ColumnMapping> CreateAsync(ColumnMapping mapping, CancellationToken ct = default);
         Task<ColumnMapping> UpdateAsync(ColumnMapping mapping, CancellationToken ct = default);

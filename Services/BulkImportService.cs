@@ -38,7 +38,20 @@ namespace HRMS.Api.Services
             _logger.LogInformation("Starting bulk import. File: {FileName}, UploadedBy: {UploadedBy}",
                 file.FileName, uploadedBy);
 
-            var rows = await ParseExcelAsync(file, cancellationToken);
+            var (rows, columnErrors) = await ParseExcelAsync(file, cancellationToken);
+
+            if (columnErrors.Any())
+            {
+                result.Success = false;
+                result.FailedRows = columnErrors.Count;
+                result.Errors = columnErrors.Select(e => new EmployeeImportErrorDto
+                {
+                    RowNumber = 0,
+                    ErrorMessage = e
+                }).ToList();
+                return result;
+            }
+
             if (rows.Count == 0)
             {
                 result.Success = false;
@@ -210,7 +223,7 @@ namespace HRMS.Api.Services
             return package.GetAsByteArray();
         }
 
-        private async Task<List<EmployeeImportRowDto>> ParseExcelAsync(IFormFile file, CancellationToken cancellationToken)
+        private async Task<(List<EmployeeImportRowDto> Rows, List<string> Errors)> ParseExcelAsync(IFormFile file, CancellationToken cancellationToken)
         {
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream, cancellationToken);
@@ -218,9 +231,9 @@ namespace HRMS.Api.Services
 
             using var package = new ExcelPackage(stream);
             var worksheet = package.Workbook.Worksheets[0];
-            if (worksheet.Dimension == null) return new List<EmployeeImportRowDto>();
+            if (worksheet.Dimension == null) return (new List<EmployeeImportRowDto>(), new List<string>());
 
-            var (dynamicRows, uploadedColumns, warnings) = await _dynamicMapper.MapExcelToDtoAsync(worksheet, cancellationToken);
+            var (dynamicRows, uploadedColumns, warnings, errors) = await _dynamicMapper.MapExcelToDtoAsync(worksheet, cancellationToken);
 
             foreach (var warning in warnings)
             {
@@ -229,13 +242,12 @@ namespace HRMS.Api.Services
 
             _lastUploadedColumns = uploadedColumns.Count > 0 ? uploadedColumns : null;
 
-            if (dynamicRows.Count > 0 || warnings.Any(w => w.StartsWith("Missing required")))
+            if (errors.Any())
             {
-                return dynamicRows;
+                return (dynamicRows, errors);
             }
 
-            _logger.LogWarning("No dynamic mapping results and no data parsed");
-            return dynamicRows;
+            return (dynamicRows, new List<string>());
         }
 
         private async Task<List<EmployeeImportErrorDto>> ValidateRowsAsync(List<EmployeeImportRowDto> rows, CancellationToken cancellationToken)

@@ -21,6 +21,13 @@ namespace HRMS.Api.Services
             return ApiResponse<IEnumerable<ColumnMappingDto>>.Ok(result);
         }
 
+        public async Task<ApiResponse<IEnumerable<ColumnMappingDto>>> GetByEntityTypeAsync(string entityType, CancellationToken ct = default)
+        {
+            var mappings = await _repository.GetByEntityTypeAsync(entityType, true, ct);
+            var result = mappings.Select(MapToDto);
+            return ApiResponse<IEnumerable<ColumnMappingDto>>.Ok(result);
+        }
+
         public async Task<ApiResponse<ColumnMappingDto>> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             var mapping = await _repository.GetByIdAsync(id, ct);
@@ -38,6 +45,7 @@ namespace HRMS.Api.Services
                 TargetProperty = request.TargetProperty,
                 TargetDisplayName = request.TargetDisplayName,
                 DataType = request.DataType,
+                EntityType = request.EntityType,
                 IsRequired = request.IsRequired,
                 IsActive = request.IsActive,
                 DisplayOrder = request.DisplayOrder,
@@ -57,6 +65,7 @@ namespace HRMS.Api.Services
             existing.TargetProperty = request.TargetProperty;
             existing.TargetDisplayName = request.TargetDisplayName;
             existing.DataType = request.DataType;
+            existing.EntityType = request.EntityType;
             existing.IsRequired = request.IsRequired;
             existing.IsActive = request.IsActive;
             existing.DisplayOrder = request.DisplayOrder;
@@ -82,6 +91,7 @@ namespace HRMS.Api.Services
             TargetProperty = m.TargetProperty,
             TargetDisplayName = m.TargetDisplayName,
             DataType = m.DataType,
+            EntityType = m.EntityType,
             IsRequired = m.IsRequired,
             IsActive = m.IsActive,
             DisplayOrder = m.DisplayOrder,

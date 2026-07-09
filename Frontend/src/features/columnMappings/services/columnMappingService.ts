@@ -6,8 +6,9 @@ function unwrap<T>(response: { data: { success: boolean; data: T } }): T {
 }
 
 export const columnMappingService = {
-  async getAll() {
-    const response = await api.get('/column-mappings');
+  async getAll(entityType?: string) {
+    const params = entityType ? { entityType } : {};
+    const response = await api.get('/column-mappings', { params });
     return unwrap(response) as ColumnMapping[];
   },
 
