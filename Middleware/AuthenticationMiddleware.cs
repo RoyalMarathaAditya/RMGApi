@@ -149,8 +149,6 @@ namespace HRMS.Api.Middleware
                     return;
                 }
 
-                // If authentication passes, proceed downstream to your CustomAuthorizationMiddleware
-                await _next(httpContext);
             }
             catch (Exception ex)
             {
@@ -160,7 +158,11 @@ namespace HRMS.Api.Middleware
                     httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     await httpContext.Response.WriteAsJsonAsync(new { message = "Authentication middleware system failure exception.", detail = ex.Message });
                 }
+                return;
             }
+
+            // If authentication passes, proceed downstream to your CustomAuthorizationMiddleware
+            await _next(httpContext);
         }
     }
 }

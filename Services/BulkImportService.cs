@@ -3,6 +3,7 @@ using System.Globalization;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.EmployeeDtos;
 using HRMS.Api.Models;
+using HRMS.Api.Services.Interfaces.UserManagement;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
@@ -15,6 +16,7 @@ namespace HRMS.Api.Services
         private readonly string _connectionString;
         private readonly ILogger<BulkImportService> _logger;
         private readonly DynamicExcelMapper _dynamicMapper;
+        private readonly IUserSynchronizationService _userSyncService;
         private List<UploadColumnInfo>? _lastUploadedColumns;
 
         static BulkImportService()
@@ -22,13 +24,14 @@ namespace HRMS.Api.Services
             ExcelPackage.License.SetNonCommercialOrganization("RMG HRMS");
         }
 
-        public BulkImportService(AppDbContext dbContext, IConfiguration configuration, ILogger<BulkImportService> logger, DynamicExcelMapper dynamicMapper)
+        public BulkImportService(AppDbContext dbContext, IConfiguration configuration, ILogger<BulkImportService> logger, DynamicExcelMapper dynamicMapper, IUserSynchronizationService userSyncService)
         {
             _dbContext = dbContext;
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("DefaultConnection string not found");
             _logger = logger;
             _dynamicMapper = dynamicMapper;
+            _userSyncService = userSyncService;
         }
 
         public async Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken = default)
@@ -99,6 +102,12 @@ namespace HRMS.Api.Services
 
                 await bulkCopy.WriteToServerAsync(dataTable, cancellationToken);
 
+                using var clearRefCmd = new SqlCommand("UPDATE Users SET EmployeeId = NULL WHERE EmployeeId IS NOT NULL", connection, transaction)
+                {
+                    CommandTimeout = 120
+                };
+                await clearRefCmd.ExecuteNonQueryAsync(cancellationToken);
+
                 using var cmd = new SqlCommand("sp_ProcessEmployeeImport", connection, transaction)
                 {
                     CommandType = CommandType.StoredProcedure,
@@ -141,6 +150,15 @@ namespace HRMS.Api.Services
                 };
                 _dbContext.Set<EmployeeImportHistory>().Add(history);
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                try
+                {
+                    await _userSyncService.SyncEmployeesAsync(cancellationToken);
+                }
+                catch (Exception syncEx)
+                {
+                    _logger.LogError(syncEx, "User synchronization failed after bulk import for batch {BatchId}, but employee import was successful", batchId);
+                }
 
                 result.Columns = _lastUploadedColumns;
 

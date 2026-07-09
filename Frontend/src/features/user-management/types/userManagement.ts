@@ -101,4 +101,22 @@ export interface AvailableEmployee {
   id: number;
   fullName: string;
   employeeCode: string;
+  email: string;
+}
+
+export interface EmployeeDetail {
+  id: number;
+  employeeCode: string;
+  fullName: string;
+  email: string;
+  location: string;
+  departmentType: string;
+  designation: string;
+  employeeStatus: string;
+  reportingManagerName: string | null;
+  practiceHeadName: string | null;
+  mobileNumber: string | null;
+  employmentType: string;
+  practice: string;
+  doj: string;
 }
