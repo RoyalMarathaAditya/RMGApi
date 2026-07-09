@@ -13,5 +13,10 @@ namespace HRMS.Api.DTOs.Common
         public string? SearchTerm { get; set; }
         public string? SortBy { get; set; }
         public bool SortDescending { get; set; }
+        public string? RoleFilter { get; set; }
+        public string? StatusFilter { get; set; }
+        public string? PracticeFilter { get; set; }
+        public string? DepartmentFilter { get; set; }
+        public string? DesignationFilter { get; set; }
     }
 }

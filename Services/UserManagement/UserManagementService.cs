@@ -1,0 +1,256 @@
+using HRMS.Api.DTOs.Common;
+using HRMS.Api.DTOs.UserDtos;
+using HRMS.Api.Models;
+using HRMS.Api.Repositories.Interfaces;
+using HRMS.Api.Services.Interfaces.UserManagement;
+using Microsoft.Extensions.Logging;
+
+namespace HRMS.Api.Services.UserManagement
+{
+    public class UserManagementService : IUserManagementService
+    {
+        private readonly IUserRepository _userRepository;
+        private readonly ILogger<UserManagementService> _logger;
+
+        public UserManagementService(IUserRepository userRepository, ILogger<UserManagementService> logger)
+        {
+            _userRepository = userRepository;
+            _logger = logger;
+        }
+
+        public async Task<PagedResponse<UserListDto>> GetUsersAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        {
+            return await _userRepository.GetPagedAsync(pagination, cancellationToken);
+        }
+
+        public async Task<UserListDto?> GetUserByIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null) return null;
+
+            return new UserListDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                UserName = user.UserName,
+                Email = user.Email,
+                Phone = user.Phone,
+                Role = user.Role,
+                EmployeeId = user.EmployeeId,
+                EmployeeCode = user.Employee?.EmployeeCode,
+                EmployeeName = user.Employee?.FullName,
+                Designation = user.Employee?.Designation?.Name,
+                Practice = user.Employee?.Practice?.Name,
+                Department = user.Employee?.DepartmentType?.Name,
+                IsActive = user.IsActive,
+                IsLocked = user.IsLocked,
+                LastLoginDate = user.LastLoginDate,
+                CreatedAt = user.CreatedAt,
+                CreatedBy = user.CreatedBy,
+                ModifiedBy = user.ModifiedBy,
+                ModifiedOn = user.ModifiedOn,
+                FailedLoginCount = user.FailedLoginCount,
+                LockedDate = user.LockedDate,
+                LockedBy = user.LockedBy
+            };
+        }
+
+        public async Task<ApiResponse<UserListDto>> CreateUserAsync(CreateUserDto dto, string? createdBy, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(dto.UserName))
+                return ApiResponse<UserListDto>.Fail("Username is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return ApiResponse<UserListDto>.Fail("Email is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                return ApiResponse<UserListDto>.Fail("Password is required.");
+
+            if (dto.Password != dto.ConfirmPassword)
+                return ApiResponse<UserListDto>.Fail("Passwords do not match.");
+
+            if (dto.Password.Length < 8 || !dto.Password.Any(char.IsUpper) ||
+                !dto.Password.Any(char.IsLower) || !dto.Password.Any(char.IsDigit) ||
+                !dto.Password.Any(c => !char.IsLetterOrDigit(c)))
+                return ApiResponse<UserListDto>.Fail("Password must be at least 8 characters with uppercase, lowercase, number, and special character.");
+
+            if (!await _userRepository.IsEmailUniqueAsync(dto.Email, null, cancellationToken))
+                return ApiResponse<UserListDto>.Fail("Email already exists.");
+
+            if (!await _userRepository.IsUserNameUniqueAsync(dto.UserName, null, cancellationToken))
+                return ApiResponse<UserListDto>.Fail("Username already exists.");
+
+            if (!string.IsNullOrWhiteSpace(dto.Phone) && !await _userRepository.IsPhoneUniqueAsync(dto.Phone, null, cancellationToken))
+                return ApiResponse<UserListDto>.Fail("Phone number already exists.");
+
+            var user = new User
+            {
+                Name = dto.Name,
+                UserName = dto.UserName,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Role = dto.Role,
+                EmployeeId = dto.EmployeeId,
+                IsActive = dto.IsActive,
+                CreatedBy = createdBy,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var created = await _userRepository.CreateAsync(user, cancellationToken);
+
+            return ApiResponse<UserListDto>.Ok(new UserListDto
+            {
+                Id = created.Id,
+                Name = created.Name,
+                UserName = created.UserName,
+                Email = created.Email,
+                Phone = created.Phone,
+                Role = created.Role,
+                EmployeeId = created.EmployeeId,
+                IsActive = created.IsActive,
+                CreatedAt = created.CreatedAt
+            }, "User created successfully.");
+        }
+
+        public async Task<ApiResponse<UserListDto>> UpdateUserAsync(int id, UpdateUserDto dto, string? modifiedBy, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null)
+                return ApiResponse<UserListDto>.Fail("User not found.");
+
+            if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != user.Email)
+            {
+                if (!await _userRepository.IsEmailUniqueAsync(dto.Email, id, cancellationToken))
+                    return ApiResponse<UserListDto>.Fail("Email already exists.");
+                user.Email = dto.Email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Phone) && dto.Phone != user.Phone)
+            {
+                if (!await _userRepository.IsPhoneUniqueAsync(dto.Phone, id, cancellationToken))
+                    return ApiResponse<UserListDto>.Fail("Phone number already exists.");
+                user.Phone = dto.Phone;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Role))
+                user.Role = dto.Role;
+
+            if (dto.IsActive.HasValue)
+                user.IsActive = dto.IsActive.Value;
+
+            user.ModifiedBy = modifiedBy;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            return ApiResponse<UserListDto>.Ok(new UserListDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                UserName = user.UserName,
+                Email = user.Email,
+                Phone = user.Phone,
+                Role = user.Role,
+                IsActive = user.IsActive,
+                ModifiedBy = user.ModifiedBy
+            }, "User updated successfully.");
+        }
+
+        public async Task<ApiResponse<bool>> DeleteUserAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            await _userRepository.DeleteAsync(user, cancellationToken);
+            return ApiResponse<bool>.Ok(true, "User deleted successfully.");
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordDto dto, CancellationToken cancellationToken = default)
+        {
+            if (dto.NewPassword != dto.ConfirmPassword)
+                return ApiResponse<bool>.Fail("Passwords do not match.");
+
+            if (dto.NewPassword.Length < 8 || !dto.NewPassword.Any(char.IsUpper) ||
+                !dto.NewPassword.Any(char.IsLower) || !dto.NewPassword.Any(char.IsDigit) ||
+                !dto.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
+                return ApiResponse<bool>.Fail("Password must be at least 8 characters with uppercase, lowercase, number, and special character.");
+
+            var user = await _userRepository.GetByIdAsync(dto.UserId, cancellationToken);
+            if (user is null)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return ApiResponse<bool>.Ok(true, "Password reset successfully.");
+        }
+
+        public async Task<ApiResponse<bool>> LockUserAsync(int id, string? lockedBy, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            user.IsLocked = true;
+            user.LockedDate = DateTime.UtcNow;
+            user.LockedBy = lockedBy;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return ApiResponse<bool>.Ok(true, "User locked successfully.");
+        }
+
+        public async Task<ApiResponse<bool>> UnlockUserAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            user.IsLocked = false;
+            user.FailedLoginCount = 0;
+            user.LockedDate = null;
+            user.LockedBy = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return ApiResponse<bool>.Ok(true, "User unlocked successfully.");
+        }
+
+        public async Task<ApiResponse<bool>> ActivateUserAsync(int id, string? modifiedBy, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            user.IsActive = true;
+            user.ModifiedBy = modifiedBy;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return ApiResponse<bool>.Ok(true, "User activated successfully.");
+        }
+
+        public async Task<ApiResponse<bool>> DeactivateUserAsync(int id, string? modifiedBy, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            if (user is null)
+                return ApiResponse<bool>.Fail("User not found.");
+
+            user.IsActive = false;
+            user.ModifiedBy = modifiedBy;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+            return ApiResponse<bool>.Ok(true, "User deactivated successfully.");
+        }
+
+        public async Task<List<Employee>> GetAvailableEmployeesAsync(CancellationToken cancellationToken = default)
+        {
+            return await _userRepository.GetEmployeesWithoutUserAsync(cancellationToken);
+        }
+    }
+}

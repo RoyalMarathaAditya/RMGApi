@@ -7,10 +7,13 @@ using HRMS.Api.Repositories;
 using HRMS.Api.Repositories.Interfaces;
 using HRMS.Api.Repositories.Interfaces.RMG;
 using HRMS.Api.Repositories.RMG;
+using HRMS.Api.Repositories.UserManagement;
 using HRMS.Api.Services;
 using HRMS.Api.Services.Interfaces;
 using HRMS.Api.Services.Interfaces.RMG;
+using HRMS.Api.Services.Interfaces.UserManagement;
 using HRMS.Api.Services.RMG;
+using HRMS.Api.Services.UserManagement;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Api.Extensions
@@ -68,6 +71,11 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IAgeingBucketService, AgeingBucketService>();
             services.AddScoped<IColumnMappingService, ColumnMappingService>();
             services.AddScoped<IColumnValueMappingService, ColumnValueMappingService>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserManagementService, UserManagementService>();
+            services.AddScoped<IRoleManagementService, RoleManagementService>();
+            services.AddScoped<IPermissionService, PermissionService>();
 
             services.AddScoped<IResourceAllocationRepository, ResourceAllocationRepository>();
             services.AddScoped<IResourceAllocationHistoryRepository, ResourceAllocationHistoryRepository>();

@@ -1,6 +1,7 @@
 using HRMS.Api.Configurations;
 using HRMS.Api.Data.Seeds;
 using HRMS.Api.Models;
+using HRMS.Api.Models.Permissions;
 using HRMS.Api.Models.RMG;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,6 +50,9 @@ namespace HRMS.Api.Data
         public DbSet<EmployeeImportHistory> EmployeeImportHistory { get; set; }
         public DbSet<ColumnMapping> ColumnMappings { get; set; }
         public DbSet<ColumnValueMapping> ColumnValueMappings { get; set; }
+
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
