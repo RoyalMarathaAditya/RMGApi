@@ -63,6 +63,7 @@ const menuItems: MenuItem[] = [
     icon: BusinessOutlinedIcon, label: 'Masters Management',
     children: [
       { icon: PeopleOutlinedIcon, label: 'Client Management', path: '/masters/clients' },
+      { icon: WorkOutlineOutlinedIcon, label: 'Project Management', path: '/masters/projects' },
       { icon: BadgeOutlinedIcon, label: 'Designation Management', path: '/designations' },
     ],
   },

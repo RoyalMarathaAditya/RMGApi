@@ -145,7 +145,7 @@ export default function DesignationList() {
               <TableBody>
                 {filtered.map((d) => (
                   <TableRow key={d.id} hover>
-                    <TableCell>{d.code}</TableCell>
+                    <TableCell>{d.code || '-'}</TableCell>
                     <TableCell>{d.name}</TableCell>
                     <TableCell>{d.sortOrder}</TableCell>
                     <TableCell>
@@ -197,6 +197,7 @@ export default function DesignationList() {
               fullWidth
               label="Code"
               onChange={(e) => setFormValues({ ...formValues, code: e.target.value })}
+              required
               value={formValues.code}
             />
             <TextField
