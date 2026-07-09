@@ -1,6 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import ReplayIcon from '@mui/icons-material/Replay';
 import {
   Alert,
   Box,
@@ -22,8 +23,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PageContainer from '../../../components/common/PageContainer';
+import TableLoader from '../../../components/common/TableLoader';
 import { toastService } from '../../../services/toastService';
 import type { CreateRoleDto, RoleDto } from '../types/userManagement';
 import { roleService } from '../services/roleService';
@@ -33,23 +35,46 @@ const defaultForm: CreateRoleDto = { name: '', description: '', isActive: true }
 export default function Roles() {
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<RoleDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoleDto | null>(null);
   const [form, setForm] = useState<CreateRoleDto>(defaultForm);
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const loadData = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
+    setLoadError('');
     try {
       const data = await roleService.getRoles();
-      setRoles(data);
-    } catch { toastService.error('Failed to load roles'); }
-    finally { setLoading(false); }
+      if (!controller.signal.aborted) {
+        setRoles(data);
+      }
+    } catch (err: any) {
+      if (!controller.signal.aborted) {
+        const message = err?.response?.data?.message || err?.message || 'Failed to load roles';
+        setLoadError(message);
+        toastService.error(message);
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
+    }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [loadData]);
 
   const handleOpenAdd = () => { setEditTarget(null); setForm(defaultForm); setFormError(''); setDialogOpen(true); };
 
@@ -100,8 +125,18 @@ export default function Roles() {
       <Stack spacing={3}>
         <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
           <Typography color="text.secondary" variant="body2">{roles.length} role(s)</Typography>
-          <Button onClick={handleOpenAdd} startIcon={<AddIcon />} variant="contained">Add Role</Button>
+          <Button disabled={loading} onClick={handleOpenAdd} startIcon={<AddIcon />} variant="contained">Add Role</Button>
         </Stack>
+
+        {loadError && !loading && (
+          <Alert
+            action={<Button color="inherit" onClick={loadData} size="small" startIcon={<ReplayIcon />}>Retry</Button>}
+            severity="error"
+            sx={{ borderRadius: 2 }}
+          >
+            {loadError}
+          </Alert>
+        )}
 
         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
           <TableContainer>
@@ -116,29 +151,31 @@ export default function Roles() {
                   <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}><Typography color="text.secondary">Loading...</Typography></TableCell></TableRow>
-                ) : roles.map((r) => (
-                  <TableRow key={r.id} hover>
-                    <TableCell><Typography fontWeight={600}>{r.name}</Typography></TableCell>
-                    <TableCell>{r.description ?? '-'}</TableCell>
-                    <TableCell>{r.userCount}</TableCell>
-                    <TableCell><Chip color={r.isActive ? 'success' : 'default'} label={r.isActive ? 'Active' : 'Inactive'} size="small" variant="outlined" /></TableCell>
-                    <TableCell>{new Date(r.createdOn).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <IconButton color="primary" onClick={() => handleOpenEdit(r)} size="small"><EditIcon fontSize="small" /></IconButton>
-                      <IconButton onClick={() => handleToggleActive(r)} size="small">
-                        <Chip color={r.isActive ? 'warning' : 'success'} label={r.isActive ? 'Deactivate' : 'Activate'} size="small" variant="outlined" />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => setDeleteTarget(r)} size="small"><DeleteIcon fontSize="small" /></IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!loading && roles.length === 0 && (
-                  <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}><Typography color="text.secondary">No roles found</Typography></TableCell></TableRow>
-                )}
-              </TableBody>
+              {loading ? (
+                <TableLoader columns={6} rows={8} />
+              ) : (
+                <TableBody>
+                  {roles.map((r) => (
+                    <TableRow key={r.id} hover>
+                      <TableCell><Typography fontWeight={600}>{r.name}</Typography></TableCell>
+                      <TableCell>{r.description ?? '-'}</TableCell>
+                      <TableCell>{r.userCount}</TableCell>
+                      <TableCell><Chip color={r.isActive ? 'success' : 'default'} label={r.isActive ? 'Active' : 'Inactive'} size="small" variant="outlined" /></TableCell>
+                      <TableCell>{new Date(r.createdOn).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <IconButton color="primary" onClick={() => handleOpenEdit(r)} size="small"><EditIcon fontSize="small" /></IconButton>
+                        <IconButton onClick={() => handleToggleActive(r)} size="small">
+                          <Chip color={r.isActive ? 'warning' : 'success'} label={r.isActive ? 'Deactivate' : 'Activate'} size="small" variant="outlined" />
+                        </IconButton>
+                        <IconButton color="error" onClick={() => setDeleteTarget(r)} size="small"><DeleteIcon fontSize="small" /></IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {roles.length === 0 && (
+                    <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}><Typography color="text.secondary">No roles found.</Typography></TableCell></TableRow>
+                  )}
+                </TableBody>
+              )}
             </Table>
           </TableContainer>
         </Paper>

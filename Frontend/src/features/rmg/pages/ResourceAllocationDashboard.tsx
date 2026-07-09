@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -23,6 +25,7 @@ import {
 } from '@mui/material';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
+import ReplayIcon from '@mui/icons-material/Replay';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
@@ -33,6 +36,7 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
+import PageLoader from '../../../components/common/PageLoader';
 import type { DashboardSummaryDto, DashboardGridDto } from '../types/dashboard';
 import { dashboardService } from '../services/dashboardService';
 
@@ -50,31 +54,49 @@ export default function ResourceAllocationDashboard() {
   const [summary, setSummary] = useState<DashboardSummaryDto | null>(null);
   const [gridData, setGridData] = useState<DashboardGridDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [practiceFilter, setPracticeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const loadData = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-  const loadData = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const [summaryData, grid] = await Promise.all([
         dashboardService.getSummary(),
         dashboardService.getGridData(),
       ]);
-      setSummary(summaryData);
-      setGridData(grid);
-    } catch {
-      console.error('Failed to load dashboard data');
+      if (!controller.signal.aborted) {
+        setSummary(summaryData);
+        setGridData(grid);
+      }
+    } catch (err: any) {
+      if (!controller.signal.aborted) {
+        const message = err?.response?.data?.message || err?.message || 'Failed to load dashboard data';
+        console.error('Dashboard load error:', err);
+        setLoadError(message);
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [loadData]);
 
   const summaryCards = useMemo(() => {
     if (!summary) return [];
@@ -115,25 +137,43 @@ export default function ResourceAllocationDashboard() {
 
   const paginatedData = filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  if (loading) {
+    return <PageLoader message="Loading Resource Allocation Dashboard..." />;
+  }
+
+  if (loadError) {
+    return (
+      <PageContainer title="Resource Allocation Dashboard">
+        <Alert
+          action={<Button color="inherit" onClick={loadData} size="small" startIcon={<ReplayIcon />}>Retry</Button>}
+          severity="error"
+          sx={{ borderRadius: 2 }}
+        >
+          {loadError}
+        </Alert>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer title="Resource Allocation Dashboard">
       <Stack spacing={3}>
-<Box
-            sx={{
-              display: 'grid',
-              gap: 1.5,
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(4, 1fr)',
-                lg: 'repeat(7, 1fr)',
-              },
-              width: '100%',
-            }}
-          >
-            {summaryCards.map((card) => (
-              <Card key={card.label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 1.5,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(4, 1fr)',
+              lg: 'repeat(7, 1fr)',
+            },
+            width: '100%',
+          }}
+        >
+          {summaryCards.map((card) => (
+            <Card key={card.label} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Stack alignItems="center" spacing={0.5}>
                   <Box
                     alignItems="center"
@@ -166,6 +206,7 @@ export default function ResourceAllocationDashboard() {
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
               <TextField
+                disabled={loading}
                 size="small"
                 placeholder="Search name or code..."
                 value={searchTerm}
@@ -181,13 +222,13 @@ export default function ResourceAllocationDashboard() {
                 }}
                 sx={{ minWidth: 250 }}
               />
-              <Select size="small" value={practiceFilter} onChange={(e) => { setPracticeFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
+              <Select disabled={loading} size="small" value={practiceFilter} onChange={(e) => { setPracticeFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
                 <MenuItem value="">All Practices</MenuItem>
                 {practices.map((p) => (
                   <MenuItem key={p} value={p}>{p}</MenuItem>
                 ))}
               </Select>
-              <Select size="small" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
+              <Select disabled={loading} size="small" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
                 <MenuItem value="">All Status</MenuItem>
                 <MenuItem value="Available">Available</MenuItem>
                 <MenuItem value="Partially Allocated">Partially Allocated</MenuItem>
@@ -195,7 +236,7 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="Overallocated">Overallocated</MenuItem>
                 <MenuItem value="On Leave">On Leave</MenuItem>
               </Select>
-              <IconButton onClick={loadData}><RefreshOutlinedIcon /></IconButton>
+              <IconButton disabled={loading} onClick={loadData}><RefreshOutlinedIcon /></IconButton>
             </Stack>
           </Stack>
 
@@ -273,7 +314,7 @@ export default function ResourceAllocationDashboard() {
                 {paginatedData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                      <Typography color="text.secondary">No resources found</Typography>
+                      <Typography color="text.secondary">No resources found.</Typography>
                     </TableCell>
                   </TableRow>
                 )}
@@ -288,6 +329,7 @@ export default function ResourceAllocationDashboard() {
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
             rowsPerPageOptions={[10, 25, 50, 100]}
+            disabled={loading}
           />
         </Paper>
       </Stack>

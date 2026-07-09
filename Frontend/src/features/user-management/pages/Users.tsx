@@ -4,6 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
+import ReplayIcon from '@mui/icons-material/Replay';
 import {
   Alert,
   Autocomplete,
@@ -32,8 +33,9 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PageContainer from '../../../components/common/PageContainer';
+import TableLoader from '../../../components/common/TableLoader';
 import { toastService } from '../../../services/toastService';
 import type {
   AvailableEmployee,
@@ -68,6 +70,7 @@ const defaultCreateForm: CreateUserDto = {
 export default function Users() {
   const [data, setData] = useState<PagedResponse<UserListDto> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,9 +90,15 @@ export default function Users() {
   const [resetPwdForm, setResetPwdForm] = useState<ResetPasswordDto>({ userId: 0, newPassword: '', confirmPassword: '' });
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const loadData = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
+    setLoadError('');
     try {
       const params: PaginationParams = {
         pageNumber: page + 1,
@@ -101,16 +110,27 @@ export default function Users() {
         statusFilter: statusFilter || undefined,
       };
       const result = await userService.getUsers(params);
-      setData(result);
-    } catch {
-      toastService.error('Failed to load users');
+      if (!controller.signal.aborted) {
+        setData(result);
+      }
+    } catch (err: any) {
+      if (!controller.signal.aborted) {
+        const message = err?.response?.data?.message || err?.message || 'Failed to load users';
+        setLoadError(message);
+        toastService.error(message);
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [page, rowsPerPage, searchTerm, sortBy, sortDesc, roleFilter, statusFilter]);
 
   useEffect(() => {
     loadData();
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [loadData]);
 
   useEffect(() => {
@@ -233,30 +253,41 @@ export default function Users() {
           <Typography color="text.secondary" variant="body2">
             {data ? `${data.totalCount} user(s)` : ''}
           </Typography>
-          <Button onClick={handleOpenAdd} startIcon={<AddIcon />} variant="contained">
+          <Button disabled={loading} onClick={handleOpenAdd} startIcon={<AddIcon />} variant="contained">
             Add User
           </Button>
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <TextField
+            disabled={loading}
             fullWidth
             placeholder="Search by name, username, email..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
             slotProps={{ input: { startAdornment: <InputAdornment position="start"><Typography color="text.secondary">🔍</Typography></InputAdornment> } }}
           />
-          <Select size="small" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
+          <Select disabled={loading} size="small" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
             <MenuItem value="">All Roles</MenuItem>
             {roles.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
           </Select>
-          <Select size="small" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
+          <Select disabled={loading} size="small" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
             <MenuItem value="">All Status</MenuItem>
             <MenuItem value="active">Active</MenuItem>
             <MenuItem value="inactive">Inactive</MenuItem>
             <MenuItem value="locked">Locked</MenuItem>
           </Select>
         </Stack>
+
+        {loadError && !loading && (
+          <Alert
+            action={<Button color="inherit" onClick={loadData} size="small" startIcon={<ReplayIcon />}>Retry</Button>}
+            severity="error"
+            sx={{ borderRadius: 2 }}
+          >
+            {loadError}
+          </Alert>
+        )}
 
         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
           <TableContainer>
@@ -281,47 +312,49 @@ export default function Users() {
                   ))}
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><Typography color="text.secondary">Loading...</Typography></TableCell></TableRow>
-                ) : data?.items.map((u) => (
-                  <TableRow key={u.id} hover>
-                    <TableCell>
-                      <Typography fontWeight={600} variant="body2">{u.name}</Typography>
-                      <Typography color="text.secondary" variant="caption">{u.employeeCode ? `${u.employeeCode}` : ''}</Typography>
-                    </TableCell>
-                    <TableCell>{u.userName ?? '-'}</TableCell>
-                    <TableCell>{u.email}</TableCell>
-                    <TableCell><Chip label={u.role} size="small" variant="outlined" /></TableCell>
-                    <TableCell>
-                      <Chip
-                        label={u.isLocked ? 'Locked' : u.isActive ? 'Active' : 'Inactive'}
-                        color={u.isLocked ? 'warning' : u.isActive ? 'success' : 'error'}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>{u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleDateString() : '-'}</TableCell>
-                    <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.5}>
-                        <Tooltip title="View"><IconButton size="small" onClick={() => setViewUser(u)}><RemoveRedEyeOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title="Edit"><IconButton size="small" onClick={() => handleEdit(u)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title={u.isLocked ? 'Unlock' : 'Lock'}>
-                          <IconButton size="small" onClick={() => u.isLocked ? handleUnlock(u.id) : handleLock(u.id)}>
-                            {u.isLocked ? <LockOpenIcon fontSize="small" /> : <LockIcon fontSize="small" />}
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Reset Password"><IconButton size="small" onClick={() => { setResetPwdTarget(u); setResetPwdForm({ userId: u.id, newPassword: '', confirmPassword: '' }); setFormError(''); }}><LockOpenIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!loading && data?.items.length === 0 && (
-                  <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><Typography color="text.secondary">No users found</Typography></TableCell></TableRow>
-                )}
-              </TableBody>
+              {loading ? (
+                <TableLoader columns={8} rows={8} />
+              ) : (
+                <TableBody>
+                  {data?.items.map((u) => (
+                    <TableRow key={u.id} hover>
+                      <TableCell>
+                        <Typography fontWeight={600} variant="body2">{u.name}</Typography>
+                        <Typography color="text.secondary" variant="caption">{u.employeeCode ? `${u.employeeCode}` : ''}</Typography>
+                      </TableCell>
+                      <TableCell>{u.userName ?? '-'}</TableCell>
+                      <TableCell>{u.email}</TableCell>
+                      <TableCell><Chip label={u.role} size="small" variant="outlined" /></TableCell>
+                      <TableCell>
+                        <Chip
+                          label={u.isLocked ? 'Locked' : u.isActive ? 'Active' : 'Inactive'}
+                          color={u.isLocked ? 'warning' : u.isActive ? 'success' : 'error'}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>{u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleDateString() : '-'}</TableCell>
+                      <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={0.5}>
+                          <Tooltip title="View"><IconButton size="small" onClick={() => setViewUser(u)}><RemoveRedEyeOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+                          <Tooltip title="Edit"><IconButton size="small" onClick={() => handleEdit(u)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+                          <Tooltip title={u.isLocked ? 'Unlock' : 'Lock'}>
+                            <IconButton size="small" onClick={() => u.isLocked ? handleUnlock(u.id) : handleLock(u.id)}>
+                              {u.isLocked ? <LockOpenIcon fontSize="small" /> : <LockIcon fontSize="small" />}
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Reset Password"><IconButton size="small" onClick={() => { setResetPwdTarget(u); setResetPwdForm({ userId: u.id, newPassword: '', confirmPassword: '' }); setFormError(''); }}><LockOpenIcon fontSize="small" /></IconButton></Tooltip>
+                          <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {data?.items.length === 0 && (
+                    <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><Typography color="text.secondary">No users found.</Typography></TableCell></TableRow>
+                  )}
+                </TableBody>
+              )}
             </Table>
           </TableContainer>
           <TablePagination
@@ -332,6 +365,7 @@ export default function Users() {
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
             rowsPerPageOptions={[10, 25, 50]}
+            disabled={loading}
           />
         </Paper>
       </Stack>
