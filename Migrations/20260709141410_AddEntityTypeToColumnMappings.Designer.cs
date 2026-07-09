@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260709141410_AddEntityTypeToColumnMappings")]
+    partial class AddEntityTypeToColumnMappings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -938,23 +941,10 @@ namespace HRMS.Api.Migrations
                         },
                         new
                         {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000014"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 4,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Total Experience",
-                            TargetDisplayName = "Total Experience",
-                            TargetProperty = "TotalExperience"
-                        },
-                        new
-                        {
                             Id = new Guid("b1000000-0000-0000-0000-000000000004"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
-                            DisplayOrder = 5,
+                            DisplayOrder = 4,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -964,23 +954,10 @@ namespace HRMS.Api.Migrations
                         },
                         new
                         {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000015"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 6,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "OU 5 - Sub Practice",
-                            TargetDisplayName = "OU 5 - Sub Practice",
-                            TargetProperty = "SubPractice"
-                        },
-                        new
-                        {
                             Id = new Guid("b1000000-0000-0000-0000-000000000005"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
-                            DisplayOrder = 7,
+                            DisplayOrder = 5,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -993,7 +970,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000006"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "datetime",
-                            DisplayOrder = 8,
+                            DisplayOrder = 6,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1006,7 +983,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000007"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "datetime",
-                            DisplayOrder = 9,
+                            DisplayOrder = 7,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1019,7 +996,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000008"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "decimal",
-                            DisplayOrder = 10,
+                            DisplayOrder = 8,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1032,7 +1009,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000009"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
-                            DisplayOrder = 11,
+                            DisplayOrder = 9,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1045,7 +1022,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000010"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
-                            DisplayOrder = 12,
+                            DisplayOrder = 10,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1058,7 +1035,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000011"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "string",
-                            DisplayOrder = 13,
+                            DisplayOrder = 11,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1071,7 +1048,7 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000012"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "decimal",
-                            DisplayOrder = 14,
+                            DisplayOrder = 12,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
@@ -1084,26 +1061,13 @@ namespace HRMS.Api.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000013"),
                             CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DataType = "decimal",
-                            DisplayOrder = 15,
+                            DisplayOrder = 13,
                             EntityType = "resource-allocation",
                             IsActive = true,
                             IsRequired = false,
                             SourceColumn = "Available",
                             TargetDisplayName = "Available",
                             TargetProperty = "AvailableCapacity"
-                        },
-                        new
-                        {
-                            Id = new Guid("b1000000-0000-0000-0000-000000000016"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "string",
-                            DisplayOrder = 16,
-                            EntityType = "resource-allocation",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Resource Status",
-                            TargetDisplayName = "Resource Status",
-                            TargetProperty = "ResourceStatus"
                         });
                 });
 

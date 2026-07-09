@@ -39,6 +39,8 @@ import PageContainer from '../../../components/common/PageContainer';
 import PageLoader from '../../../components/common/PageLoader';
 import type { DashboardSummaryDto, DashboardGridDto } from '../types/dashboard';
 import { dashboardService } from '../services/dashboardService';
+import { columnMappingService } from '../../columnMappings/services/columnMappingService';
+import type { ColumnMapping } from '../../columnMappings/types/columnMapping';
 
 const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'default'> = {
   Available: 'success',
@@ -48,6 +50,62 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
   Bench: 'default',
   'On Leave': 'error',
 };
+
+interface ColumnDef {
+  field: keyof DashboardGridDto;
+  headerName: string;
+  dataType: string;
+}
+
+type CellRenderer = (row: DashboardGridDto) => React.ReactNode;
+
+const cellRenderers: Partial<Record<keyof DashboardGridDto, CellRenderer>> = {
+  employeeName: (row) => (
+    <Typography fontWeight={600} variant="body2">{row.employeeName}</Typography>
+  ),
+  employeeCode: (row) => <>{row.employeeCode}</>,
+  designation: (row) => <>{row.designation ?? '-'}</>,
+  totalExperience: (row) => <>{row.totalExperience > 0 ? `${row.totalExperience} Years` : '-'}</>,
+  practice: (row) => <>{row.practice}</>,
+  subPractice: (row) => (
+    row.subPractice ? (
+      <Tooltip title={row.subPractice} placement="bottom-start">
+        <Typography variant="body2" noWrap>{row.subPractice}</Typography>
+      </Tooltip>
+    ) : <>{'-'}</>
+  ),
+  allocationPercentage: (row) => (
+    <Typography fontWeight={600} color={row.allocationPercentage > 100 ? 'error.main' : row.allocationPercentage >= 100 ? 'warning.main' : 'text.primary'}>
+      {row.allocationPercentage}%
+    </Typography>
+  ),
+  availableCapacity: (row) => <>{row.availableCapacity}%</>,
+  resourceStatus: (row) => (
+    <Chip label={row.resourceStatus} size="small" color={statusColors[row.resourceStatus] ?? 'default'} variant="outlined" />
+  ),
+};
+
+function defaultCellRenderer(row: DashboardGridDto, field: keyof DashboardGridDto) {
+  const val = row[field];
+  return <Typography variant="body2" noWrap>{val === null || val === undefined ? '-' : String(val)}</Typography>;
+}
+
+const dashboardFieldSet = new Set<keyof DashboardGridDto>([
+  'employeeName', 'employeeCode', 'designation', 'totalExperience',
+  'practice', 'subPractice', 'allocationPercentage', 'availableCapacity', 'resourceStatus',
+]);
+
+const defaultColumns: ColumnDef[] = [
+  { field: 'employeeName', headerName: 'Employee', dataType: 'string' },
+  { field: 'employeeCode', headerName: 'Code', dataType: 'string' },
+  { field: 'designation', headerName: 'Designation', dataType: 'string' },
+  { field: 'totalExperience', headerName: 'Total Experience', dataType: 'decimal' },
+  { field: 'practice', headerName: 'Practice', dataType: 'string' },
+  { field: 'subPractice', headerName: 'Sub Practice', dataType: 'string' },
+  { field: 'allocationPercentage', headerName: 'Allocation %', dataType: 'decimal' },
+  { field: 'availableCapacity', headerName: 'Availability %', dataType: 'decimal' },
+  { field: 'resourceStatus', headerName: 'Status', dataType: 'string' },
+];
 
 export default function ResourceAllocationDashboard() {
   const navigate = useNavigate();
@@ -60,7 +118,31 @@ export default function ResourceAllocationDashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [columns, setColumns] = useState<ColumnDef[]>(defaultColumns);
   const abortRef = useRef<AbortController | null>(null);
+
+  const loadColumns = useCallback(async () => {
+    try {
+      const data = await columnMappingService.getAll();
+      const active = data
+        .filter((m: ColumnMapping) => m.entityType === 'resource-allocation' && m.isActive)
+        .sort((a: ColumnMapping, b: ColumnMapping) => a.displayOrder - b.displayOrder);
+      if (active.length > 0) {
+        const cols = active
+          .map((m: ColumnMapping) => ({
+            field: m.targetProperty.charAt(0).toLowerCase() + m.targetProperty.slice(1) as keyof DashboardGridDto,
+            headerName: m.targetDisplayName,
+            dataType: m.dataType,
+          }))
+          .filter((col) => dashboardFieldSet.has(col.field));
+        if (cols.length > 0) {
+          setColumns(cols);
+        }
+      }
+    } catch (err) {
+      console.error('[Dashboard] Failed to load column mappings:', err);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     abortRef.current?.abort();
@@ -93,10 +175,11 @@ export default function ResourceAllocationDashboard() {
 
   useEffect(() => {
     loadData();
+    loadColumns();
     return () => {
       abortRef.current?.abort();
     };
-  }, [loadData]);
+  }, [loadData, loadColumns]);
 
   const summaryCards = useMemo(() => {
     if (!summary) return [];
@@ -241,18 +324,12 @@ export default function ResourceAllocationDashboard() {
           </Stack>
 
           <TableContainer>
-            <Table size="small">
+            <Table size="small" sx={{ '& .MuiTableCell-root': { whiteSpace: 'nowrap', pl: 1.5, pr: '10px' } }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Employee</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Code</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Designation</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Total Experience</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Practice</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Sub Practice</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Allocation %</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Availability %</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  {columns.map((col) => (
+                    <TableCell key={col.field} sx={{ fontWeight: 700 }}>{col.headerName}</TableCell>
+                  ))}
                   <TableCell sx={{ fontWeight: 700 }} align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -264,42 +341,11 @@ export default function ResourceAllocationDashboard() {
                     sx={{ cursor: 'pointer' }}
                     onClick={() => navigate(`/rmg/view/${row.employeeId}`)}
                   >
-                    <TableCell>
-                      <Typography fontWeight={600} variant="body2">{row.employeeName}</Typography>
-                    </TableCell>
-                    <TableCell>{row.employeeCode}</TableCell>
-                    <TableCell>{row.designation ?? '-'}</TableCell>
-                    <TableCell>{row.totalExperience > 0 ? `${row.totalExperience} Years` : '-'}</TableCell>
-                    <TableCell>{row.practice}</TableCell>
-                    <TableCell>
-                      {row.subPractice ? (
-                        <Tooltip title={row.subPractice}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              maxWidth: 150,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              display: 'block',
-                            }}
-                          >
-                            {row.subPractice}
-                          </Typography>
-                        </Tooltip>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Typography fontWeight={600} color={row.allocationPercentage > 100 ? 'error.main' : row.allocationPercentage >= 100 ? 'warning.main' : 'text.primary'}>
-                        {row.allocationPercentage}%
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{row.availableCapacity}%</TableCell>
-                    <TableCell>
-                      <Chip label={row.resourceStatus} size="small" color={statusColors[row.resourceStatus] ?? 'default'} variant="outlined" />
-                    </TableCell>
+                    {columns.map((col) => (
+                      <TableCell key={col.field}>
+                        {cellRenderers[col.field]?.(row) ?? defaultCellRenderer(row, col.field)}
+                      </TableCell>
+                    ))}
                     <TableCell align="right">
                       <Stack direction="row" spacing={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
                         <Tooltip title="View Details">
@@ -313,7 +359,7 @@ export default function ResourceAllocationDashboard() {
                 ))}
                 {paginatedData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={columns.length + 1} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">No resources found.</Typography>
                     </TableCell>
                   </TableRow>

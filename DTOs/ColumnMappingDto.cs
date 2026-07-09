@@ -7,6 +7,7 @@ namespace HRMS.Api.DTOs
         public string TargetProperty { get; set; } = string.Empty;
         public string TargetDisplayName { get; set; } = string.Empty;
         public string DataType { get; set; } = "string";
+        public string EntityType { get; set; } = "employee-import";
         public bool IsRequired { get; set; }
         public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }
@@ -20,6 +21,7 @@ namespace HRMS.Api.DTOs
         public string TargetProperty { get; set; } = string.Empty;
         public string TargetDisplayName { get; set; } = string.Empty;
         public string DataType { get; set; } = "string";
+        public string EntityType { get; set; } = "employee-import";
         public bool IsRequired { get; set; }
         public bool IsActive { get; set; } = true;
         public int DisplayOrder { get; set; }
@@ -31,6 +33,7 @@ namespace HRMS.Api.DTOs
         public string TargetProperty { get; set; } = string.Empty;
         public string TargetDisplayName { get; set; } = string.Empty;
         public string DataType { get; set; } = "string";
+        public string EntityType { get; set; } = "employee-import";
         public bool IsRequired { get; set; }
         public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }

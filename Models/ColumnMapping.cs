@@ -19,6 +19,9 @@ namespace HRMS.Api.Models
         [MaxLength(50)]
         public string DataType { get; set; } = "string";
 
+        [MaxLength(100)]
+        public string EntityType { get; set; } = "employee-import";
+
         public bool IsRequired { get; set; }
 
         public bool IsActive { get; set; } = true;

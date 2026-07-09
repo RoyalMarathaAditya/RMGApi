@@ -13,7 +13,8 @@ namespace HRMS.Api.Configurations
             builder.Property(e => e.TargetProperty).HasMaxLength(200).IsRequired();
             builder.Property(e => e.TargetDisplayName).HasMaxLength(200);
             builder.Property(e => e.DataType).HasMaxLength(50).IsRequired();
-            builder.HasIndex(e => e.SourceColumn).IsUnique().HasFilter("[IsActive] = 1");
+            builder.Property(e => e.EntityType).HasMaxLength(100).IsRequired().HasDefaultValue("employee-import");
+            builder.HasIndex(e => new { e.EntityType, e.SourceColumn }).IsUnique().HasFilter("[IsActive] = 1");
         }
     }
 }

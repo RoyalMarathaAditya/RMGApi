@@ -18,8 +18,15 @@ namespace HRMS.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken ct)
+        public async Task<IActionResult> GetAll([FromQuery] string? entityType, CancellationToken ct)
         {
+            if (!string.IsNullOrEmpty(entityType))
+            {
+                _logger.LogInformation("Fetching column mappings for entity type: {EntityType}", entityType);
+                var filtered = await _service.GetByEntityTypeAsync(entityType, ct);
+                return Ok(filtered);
+            }
+
             _logger.LogInformation("Fetching all column mappings...");
             var result = await _service.GetAllAsync(ct);
             return Ok(result);

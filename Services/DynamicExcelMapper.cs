@@ -28,18 +28,19 @@ namespace HRMS.Api.Services
             _logger = logger;
         }
 
-        public async Task<(List<EmployeeImportRowDto> Rows, List<UploadColumnInfo> Columns, List<string> Warnings)> MapExcelToDtoAsync(
+        public async Task<(List<EmployeeImportRowDto> Rows, List<UploadColumnInfo> Columns, List<string> Warnings, List<string> Errors)> MapExcelToDtoAsync(
             ExcelWorksheet worksheet, CancellationToken ct)
         {
             var rows = new List<EmployeeImportRowDto>();
             var columns = new List<UploadColumnInfo>();
             var warnings = new List<string>();
+            var errors = new List<string>();
 
-            var mappings = (await _mappingRepository.GetAllActiveAsync(ct)).ToList();
+            var mappings = (await _mappingRepository.GetByEntityTypeAsync("employee-import", true, ct)).ToList();
             if (mappings.Count == 0)
             {
-                warnings.Add("No active column mappings found in the database.");
-                return (rows, columns, warnings);
+                errors.Add("No active column mappings found in the database. Please configure column mappings first.");
+                return (rows, columns, warnings, errors);
             }
 
             var valueMappings = (await _valueMappingRepository.GetAllActiveAsync(ct))
@@ -56,8 +57,8 @@ namespace HRMS.Api.Services
 
             if (missingRequired.Any())
             {
-                warnings.Add($"Missing required columns: {string.Join(", ", missingRequired)}");
-                return (rows, columns, warnings);
+                errors.Add($"Missing required column(s) in Excel: {string.Join(", ", missingRequired)}. Please ensure these columns exist with the correct header name in column mappings.");
+                return (rows, columns, warnings, errors);
             }
 
             foreach (var mapping in mappings)
@@ -135,7 +136,7 @@ namespace HRMS.Api.Services
             _logger.LogInformation("Mapped {RowCount} rows with {MappingCount} mappings and {ColumnCount} columns",
                 rows.Count, mappings.Count, columns.Count);
 
-            return (rows, columns, warnings);
+            return (rows, columns, warnings, errors);
         }
 
         private static Dictionary<string, int> BuildHeaderMap(
