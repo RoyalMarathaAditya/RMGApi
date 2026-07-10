@@ -85,7 +85,8 @@ namespace HRMS.Api.Profiles
             #endregion
 
             #region Existing
-            CreateMap<User, UserDto>();
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null));
             CreateMap<CSMRevenueType, CSMRevenueTypeDto>();
             #endregion
 

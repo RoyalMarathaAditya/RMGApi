@@ -47,6 +47,7 @@ import type {
   PagedResponse,
   PaginationParams,
   ResetPasswordDto,
+  RoleDto,
   UpdateUserDto,
   UserListDto,
 } from '../types/userManagement';
@@ -61,7 +62,7 @@ const defaultCreateForm: CreateUserDto = {
   phone: '',
   password: '',
   confirmPassword: '',
-  role: 'Employee',
+  roleId: '',
   isActive: true,
 };
 
@@ -85,7 +86,7 @@ export default function Users() {
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortDesc, setSortDesc] = useState(false);
-  const [roles, setRoles] = useState<string[]>([]);
+  const [roles, setRoles] = useState<RoleDto[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
   const [rolesError, setRolesError] = useState('');
   const [availableEmployees, setAvailableEmployees] = useState<AvailableEmployee[]>([]);
@@ -117,7 +118,7 @@ export default function Users() {
         searchTerm: searchTerm || undefined,
         sortBy,
         sortDescending: sortDesc,
-        roleFilter: roleFilter || undefined,
+        roleIdFilter: roleFilter || undefined,
         statusFilter: statusFilter || undefined,
       };
       const result = await userService.getUsers(params);
@@ -150,7 +151,7 @@ export default function Users() {
       setRolesError('');
       try {
         const res = await roleService.getRoles();
-        setRoles(res.map(r => r.name));
+        setRoles(res);
       } catch {
         setRolesError('Unable to load roles');
         setRoles([]);
@@ -208,13 +209,13 @@ export default function Users() {
 
   const handleEdit = (user: UserListDto) => {
     setEditTarget(user);
-    setEditForm({ role: user.role, isActive: user.isActive });
+    setEditForm({ roleId: user.roleId, isActive: user.isActive });
     setFormError('');
   };
 
   const handleSaveAdd = async () => {
     if (!createForm.employeeId) { setFormError('Please select an employee'); return; }
-    if (!createForm.role) { setFormError('Please select a role'); return; }
+    if (!createForm.roleId) { setFormError('Please select a role'); return; }
     if (!createForm.email.trim()) { setFormError('Email is required'); return; }
     if (!createForm.name.trim()) { setFormError('Name is required'); return; }
     if (!createForm.userName.trim()) { setFormError('Username is required'); return; }
@@ -333,7 +334,7 @@ export default function Users() {
           />
           <Select disabled={loading} size="small" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
             <MenuItem value="">All Roles</MenuItem>
-            {roles.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+            {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
           </Select>
           <Select disabled={loading} size="small" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
             <MenuItem value="">All Status</MenuItem>
@@ -388,7 +389,7 @@ export default function Users() {
                       </TableCell>
                       <TableCell>{u.userName ?? '-'}</TableCell>
                       <TableCell>{u.email}</TableCell>
-                      <TableCell><Chip label={u.role} size="small" variant="outlined" /></TableCell>
+                      <TableCell><Chip label={u.roleName} size="small" variant="outlined" /></TableCell>
                       <TableCell><UserStatusChip isActive={u.isActive} isLocked={u.isLocked} /></TableCell>
                       <TableCell>{u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleDateString() : '-'}</TableCell>
                       <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
@@ -496,9 +497,9 @@ export default function Users() {
             ) : rolesError ? (
               <Alert severity="warning">{rolesError}</Alert>
             ) : (
-              <Select value={createForm.role} onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })} displayEmpty>
+              <Select value={createForm.roleId} onChange={(e) => setCreateForm({ ...createForm, roleId: e.target.value })} displayEmpty>
                 <MenuItem value="" disabled>Select Role</MenuItem>
-                {roles.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </Select>
             )}
             <TextField label="Password" required type="password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} />
@@ -521,7 +522,10 @@ export default function Users() {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {formError && <Alert severity="error">{formError}</Alert>}
-            <TextField label="Role" disabled value={editForm.role ?? ''} />
+            <Select size="small" value={editForm.roleId ?? ''} onChange={(e) => setEditForm({ ...editForm, roleId: e.target.value })} displayEmpty fullWidth>
+              <MenuItem value="" disabled>Select Role</MenuItem>
+              {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
+            </Select>
             <Typography color="text.secondary" variant="caption">Employee details (Name, Code, Email, Practice, Designation) are managed in Employee Master.</Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Active:</Typography>
@@ -588,7 +592,7 @@ export default function Users() {
           <Box>
             <Typography color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontSize: 11, mb: 1 }}>Account Details</Typography>
             <Stack spacing={1}>
-              <Row label="Role" value={viewUser?.role} />
+              <Row label="Role" value={viewUser?.roleName} />
               <Row label="Status" value={viewUser?.isLocked ? 'Locked' : viewUser?.isActive ? 'Active' : 'Inactive'} />
               <Row label="Last Login" value={viewUser?.lastLoginDate ? new Date(viewUser.lastLoginDate).toLocaleString() : '-'} />
               <Row label="Failed Login Count" value={String(viewUser?.failedLoginCount ?? 0)} />

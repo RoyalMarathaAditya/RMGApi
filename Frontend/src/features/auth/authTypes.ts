@@ -2,7 +2,8 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: string;
+  roleId: string;
+  roleName: string;
 }
 
 export interface AuthState {

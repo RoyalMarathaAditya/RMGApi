@@ -12,7 +12,12 @@ namespace HRMS.Api.Configurations
             builder.Property(u => u.Email).HasMaxLength(100).IsRequired();
             builder.Property(u => u.Name).HasMaxLength(100).IsRequired();
             builder.Property(u => u.PasswordHash).HasMaxLength(255).IsRequired();
-            builder.Property(u => u.Role).HasMaxLength(50).IsRequired();
+            builder.Property(u => u.RoleId).IsRequired();
+            builder.HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(u => u.RoleId);
         }
     }
 }

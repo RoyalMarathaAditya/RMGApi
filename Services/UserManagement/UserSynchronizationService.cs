@@ -20,6 +20,17 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
         {
             _logger.LogInformation("Starting user synchronization from employees...");
 
+            var employeeRoleId = await _dbContext.RoleMasters
+                .Where(r => r.Name == "Employee" && !r.IsDeleted)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (employeeRoleId == Guid.Empty)
+            {
+                _logger.LogError("Employee role not found in RoleMasters table. Sync aborted.");
+                return;
+            }
+
             var employees = await _dbContext.Employees
                 .AsNoTracking()
                 .IgnoreQueryFilters()
@@ -29,6 +40,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
 
             var existingUsers = await _dbContext.Users
                 .IgnoreQueryFilters()
+                .Include(u => u.Role)
                 .Where(u => !u.IsDeleted)
                 .ToListAsync(cancellationToken);
 
@@ -55,7 +67,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
 
                 if (matchedUser != null)
                 {
-                    if (matchedUser.Role == "Admin") continue;
+                    if (matchedUser.Role != null && matchedUser.Role.Name == "Admin") continue;
 
                     var hasChanges = UpdateUserFromEmployee(matchedUser, employee);
 
@@ -73,7 +85,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
                 }
                 else
                 {
-                    var newUser = CreateUserFromEmployee(employee, usersToCreate);
+                    var newUser = CreateUserFromEmployee(employee, usersToCreate, employeeRoleId);
                     usersToCreate.Add(newUser);
                 }
             }
@@ -153,7 +165,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
             return hasChanges;
         }
 
-        private User CreateUserFromEmployee(Employee employee, List<User> pendingUsers)
+        private User CreateUserFromEmployee(Employee employee, List<User> pendingUsers, Guid employeeRoleId)
         {
             var userName = employee.EmployeeCode;
             var suffix = 1;
@@ -173,7 +185,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
                 UserName = userName,
                 Email = employee.Email,
                 PasswordHash = passwordHash,
-                Role = "Employee",
+                RoleId = employeeRoleId,
                 EmployeeId = employee.Id,
                 IsActive = IsEmployeeActive(employee),
                 IsDeleted = false,

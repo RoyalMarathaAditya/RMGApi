@@ -22,7 +22,7 @@ export const userService = {
     if (params.searchTerm) query.set('searchTerm', params.searchTerm);
     if (params.sortBy) query.set('sortBy', params.sortBy);
     if (params.sortDescending) query.set('sortDescending', 'true');
-    if (params.roleFilter) query.set('roleFilter', params.roleFilter);
+    if (params.roleIdFilter) query.set('roleIdFilter', params.roleIdFilter);
     if (params.statusFilter) query.set('statusFilter', params.statusFilter);
     const response = await api.get<PagedResponse<UserListDto>>(`/users?${query.toString()}`);
     return unwrap(response);

@@ -29,7 +29,7 @@ namespace HRMS.Api.Services.UserManagement
                     Name = r.Name,
                     Description = r.Description,
                     IsActive = r.IsActive,
-                    UserCount = _dbContext.Users.Count(u => u.Role == r.Name && !u.IsDeleted),
+                    UserCount = _dbContext.Users.Count(u => u.RoleId == r.Id && !u.IsDeleted),
                     CreatedOn = r.CreatedOn
                 })
                 .OrderBy(r => r.Name)
@@ -50,7 +50,7 @@ namespace HRMS.Api.Services.UserManagement
                 Name = role.Name,
                 Description = role.Description,
                 IsActive = role.IsActive,
-                UserCount = await _dbContext.Users.CountAsync(u => u.Role == role.Name && !u.IsDeleted, cancellationToken),
+                UserCount = await _dbContext.Users.CountAsync(u => u.RoleId == role.Id && !u.IsDeleted, cancellationToken),
                 CreatedOn = role.CreatedOn
             };
         }
@@ -117,7 +117,7 @@ namespace HRMS.Api.Services.UserManagement
                 Name = role.Name,
                 Description = role.Description,
                 IsActive = role.IsActive,
-                UserCount = await _dbContext.Users.CountAsync(u => u.Role == role.Name && !u.IsDeleted, cancellationToken),
+                UserCount = await _dbContext.Users.CountAsync(u => u.RoleId == role.Id && !u.IsDeleted, cancellationToken),
                 CreatedOn = role.CreatedOn
             }, "Role updated successfully.");
         }
@@ -128,7 +128,7 @@ namespace HRMS.Api.Services.UserManagement
             if (role is null)
                 return ApiResponse<bool>.Fail("Role not found.");
 
-            var userCount = await _dbContext.Users.CountAsync(u => u.Role == role.Name && !u.IsDeleted, cancellationToken);
+            var userCount = await _dbContext.Users.CountAsync(u => u.RoleId == role.Id && !u.IsDeleted, cancellationToken);
             if (userCount > 0)
                 return ApiResponse<bool>.Fail("Cannot delete role. It is assigned to users.");
 

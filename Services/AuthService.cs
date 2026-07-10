@@ -59,7 +59,8 @@ await _unitOfWork.SaveAsync(cancellationToken);
                         Id = user.Id,
                         Email = user.Email,
                         Name = user.Name,
-                        Role = user.Role,
+                        RoleId = user.RoleId,
+                        RoleName = user.Role?.Name ?? string.Empty,
                     },
                 };
             }
@@ -106,7 +107,8 @@ await _unitOfWork.SaveAsync(cancellationToken);
                         Id = user.Id,
                         Email = user.Email,
                         Name = user.Name,
-                        Role = user.Role,
+                        RoleId = user.RoleId,
+                        RoleName = user.Role?.Name ?? string.Empty,
                     },
                 };
             }
@@ -130,7 +132,8 @@ await _unitOfWork.SaveAsync(cancellationToken);
                     Id = user.Id,
                     Email = user.Email,
                     Name = user.Name,
-                    Role = user.Role,
+                    RoleId = user.RoleId,
+                    RoleName = user.Role?.Name ?? string.Empty,
                 };
             }
             catch (Exception ex)
@@ -165,7 +168,7 @@ await _unitOfWork.SaveAsync(cancellationToken);
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
             };
 
             var keyBytes = Convert.FromBase64String(_jwtSettings.Key);

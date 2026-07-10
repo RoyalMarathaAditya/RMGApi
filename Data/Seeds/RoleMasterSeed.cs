@@ -16,7 +16,8 @@ namespace HRMS.Api.Data.Seeds
                 new RoleMaster { Id = Guid.Parse("66666666-6666-6666-6666-666666666666"), Name = "L1 Manager", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
                 new RoleMaster { Id = Guid.Parse("77777777-7777-7777-7777-777777777777"), Name = "Employee", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
                 new RoleMaster { Id = Guid.Parse("88888888-8888-8888-8888-888888888888"), Name = "CxO", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-                new RoleMaster { Id = Guid.Parse("99999999-9999-9999-9999-999999999999"), Name = "Admin", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+                new RoleMaster { Id = Guid.Parse("99999999-9999-9999-9999-999999999999"), Name = "Admin", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new RoleMaster { Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Name = "Super Admin", IsActive = true, CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
             );
         }
     }

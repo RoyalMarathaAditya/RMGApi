@@ -20,6 +20,7 @@ namespace HRMS.Api.Repositories.UserManagement
         {
             var query = _dbContext.Users
                 .AsNoTracking()
+                .Include(u => u.Role)
                 .Where(u => !u.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(pagination.SearchTerm))
@@ -31,9 +32,9 @@ namespace HRMS.Api.Repositories.UserManagement
                     u.Email.ToLower().Contains(term));
             }
 
-            if (!string.IsNullOrWhiteSpace(pagination.RoleFilter))
+            if (!string.IsNullOrWhiteSpace(pagination.RoleIdFilter) && Guid.TryParse(pagination.RoleIdFilter, out var roleId))
             {
-                query = query.Where(u => u.Role == pagination.RoleFilter);
+                query = query.Where(u => u.RoleId == roleId);
             }
 
             if (!string.IsNullOrWhiteSpace(pagination.StatusFilter))
@@ -53,7 +54,7 @@ namespace HRMS.Api.Repositories.UserManagement
             {
                 "name" => pagination.SortDescending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
                 "username" => pagination.SortDescending ? query.OrderByDescending(u => u.UserName ?? "") : query.OrderBy(u => u.UserName ?? ""),
-                "role" => pagination.SortDescending ? query.OrderByDescending(u => u.Role) : query.OrderBy(u => u.Role),
+                "role" => pagination.SortDescending ? query.OrderByDescending(u => u.Role != null ? u.Role.Name : "") : query.OrderBy(u => u.Role != null ? u.Role.Name : ""),
                 "createdat" => pagination.SortDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
                 "lastlogindate" => pagination.SortDescending ? query.OrderByDescending(u => u.LastLoginDate) : query.OrderBy(u => u.LastLoginDate),
                 _ => query.OrderBy(u => u.Name)
@@ -69,7 +70,8 @@ namespace HRMS.Api.Repositories.UserManagement
                     UserName = u.UserName,
                     Email = u.Email,
                     Phone = u.Phone,
-                    Role = u.Role,
+                    RoleId = u.RoleId,
+                    RoleName = u.Role != null ? u.Role.Name : string.Empty,
                     EmployeeId = u.EmployeeId,
                     IsActive = u.IsActive,
                     IsLocked = u.IsLocked,
@@ -96,6 +98,7 @@ namespace HRMS.Api.Repositories.UserManagement
         public async Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Users
+                .Include(u => u.Role)
                 .Include(u => u.Employee)
                     .ThenInclude(e => e!.Designation)
                 .Include(u => u.Employee)
@@ -108,6 +111,7 @@ namespace HRMS.Api.Repositories.UserManagement
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted, cancellationToken);
         }
 

@@ -26,9 +26,10 @@ namespace HRMS.Api.Models
         [MaxLength(255)]
         public string PasswordHash { get; set; } = null!;
 
-        [Required]
-        [MaxLength(50)]
-        public string Role { get; set; } = "Employee";
+        public Guid RoleId { get; set; }
+
+        [ForeignKey("RoleId")]
+        public RoleMaster? Role { get; set; }
 
         public int? EmployeeId { get; set; }
 

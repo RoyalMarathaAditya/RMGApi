@@ -35,7 +35,8 @@ namespace HRMS.Api.Services.UserManagement
                 UserName = user.UserName,
                 Email = user.Email,
                 Phone = user.Phone,
-                Role = user.Role,
+                RoleId = user.RoleId,
+                RoleName = user.Role?.Name ?? string.Empty,
                 EmployeeId = user.EmployeeId,
                 EmployeeCode = user.Employee?.EmployeeCode,
                 EmployeeName = user.Employee?.FullName,
@@ -83,6 +84,9 @@ namespace HRMS.Api.Services.UserManagement
             if (!string.IsNullOrWhiteSpace(dto.Phone) && !await _userRepository.IsPhoneUniqueAsync(dto.Phone, null, cancellationToken))
                 return ApiResponse<UserListDto>.Fail("Phone number already exists.");
 
+            if (dto.RoleId == Guid.Empty)
+                return ApiResponse<UserListDto>.Fail("Role is required.");
+
             var user = new User
             {
                 Name = dto.Name,
@@ -90,7 +94,7 @@ namespace HRMS.Api.Services.UserManagement
                 Email = dto.Email,
                 Phone = dto.Phone,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = dto.Role,
+                RoleId = dto.RoleId,
                 EmployeeId = dto.EmployeeId,
                 IsActive = dto.IsActive,
                 CreatedBy = createdBy,
@@ -107,7 +111,8 @@ namespace HRMS.Api.Services.UserManagement
                 UserName = created.UserName,
                 Email = created.Email,
                 Phone = created.Phone,
-                Role = created.Role,
+                RoleId = created.RoleId,
+                RoleName = created.Role?.Name ?? string.Empty,
                 EmployeeId = created.EmployeeId,
                 IsActive = created.IsActive,
                 CreatedAt = created.CreatedAt
@@ -134,8 +139,8 @@ namespace HRMS.Api.Services.UserManagement
                 user.Phone = dto.Phone;
             }
 
-            if (!string.IsNullOrWhiteSpace(dto.Role))
-                user.Role = dto.Role;
+            if (dto.RoleId.HasValue && dto.RoleId.Value != Guid.Empty)
+                user.RoleId = dto.RoleId.Value;
 
             if (dto.IsActive.HasValue)
                 user.IsActive = dto.IsActive.Value;
@@ -152,7 +157,8 @@ namespace HRMS.Api.Services.UserManagement
                 UserName = user.UserName,
                 Email = user.Email,
                 Phone = user.Phone,
-                Role = user.Role,
+                RoleId = user.RoleId,
+                RoleName = user.Role?.Name ?? string.Empty,
                 IsActive = user.IsActive,
                 ModifiedBy = user.ModifiedBy
             }, "User updated successfully.");

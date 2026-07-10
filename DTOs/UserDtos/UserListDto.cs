@@ -1,5 +1,3 @@
-using HRMS.Api.DTOs.MasterDtos;
-
 namespace HRMS.Api.DTOs.UserDtos
 {
     public class UserListDto
@@ -9,7 +7,8 @@ namespace HRMS.Api.DTOs.UserDtos
         public string? UserName { get; set; }
         public string Email { get; set; } = string.Empty;
         public string? Phone { get; set; }
-        public string Role { get; set; } = string.Empty;
+        public Guid RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
         public int? EmployeeId { get; set; }
         public string? EmployeeCode { get; set; }
         public string? EmployeeName { get; set; }

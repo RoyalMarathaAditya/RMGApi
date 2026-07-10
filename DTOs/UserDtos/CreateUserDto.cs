@@ -9,7 +9,7 @@ namespace HRMS.Api.DTOs.UserDtos
         public string? Phone { get; set; }
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
-        public string Role { get; set; } = "Employee";
+        public Guid RoleId { get; set; }
         public bool IsActive { get; set; } = true;
     }
 }

@@ -4,7 +4,8 @@ export interface UserListDto {
   userName: string | null;
   email: string;
   phone: string | null;
-  role: string;
+  roleId: string;
+  roleName: string;
   employeeId: number | null;
   employeeCode: string | null;
   employeeName: string | null;
@@ -31,14 +32,14 @@ export interface CreateUserDto {
   phone: string;
   password: string;
   confirmPassword: string;
-  role: string;
+  roleId: string;
   isActive: boolean;
 }
 
 export interface UpdateUserDto {
   phone?: string;
   email?: string;
-  role?: string;
+  roleId?: string;
   isActive?: boolean;
 }
 
@@ -64,7 +65,7 @@ export interface PaginationParams {
   searchTerm?: string;
   sortBy?: string;
   sortDescending?: boolean;
-  roleFilter?: string;
+  roleIdFilter?: string;
   statusFilter?: string;
 }
 

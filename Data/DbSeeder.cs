@@ -178,12 +178,13 @@ namespace HRMS.Api.Data.Seeders
 
             if (!await context.Users.AnyAsync())
             {
+                var adminRoleId = Guid.Parse("99999999-9999-9999-9999-999999999999");
                 context.Users.Add(new User
                 {
                     Email = "admin@rmg.com",
                     Name = "Admin User",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                    Role = "Admin",
+                    RoleId = adminRoleId,
                     IsActive = true
                 });
             }
