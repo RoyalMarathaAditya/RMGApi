@@ -76,6 +76,7 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IUserManagementService, UserManagementService>();
             services.AddScoped<IRoleManagementService, RoleManagementService>();
             services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
             services.AddScoped<IResourceAllocationRepository, ResourceAllocationRepository>();
             services.AddScoped<IResourceAllocationHistoryRepository, ResourceAllocationHistoryRepository>();

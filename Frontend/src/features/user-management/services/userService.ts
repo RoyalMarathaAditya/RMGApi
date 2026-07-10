@@ -7,6 +7,7 @@ import type {
   PagedResponse,
   PaginationParams,
   AvailableEmployee,
+  EmployeeDetail,
 } from '../types/userManagement';
 
 function unwrap<T>(response: { data: T }): T {
@@ -75,5 +76,10 @@ export const userService = {
   async deactivateUser(id: number): Promise<{ success: boolean; message: string }> {
     const response = await api.post(`/users/${id}/deactivate`);
     return unwrap(response);
+  },
+
+  async getEmployeeDetail(employeeId: number): Promise<EmployeeDetail> {
+    const response = await api.get<any>(`/employees/${employeeId}`);
+    return response.data.data as EmployeeDetail;
   },
 };

@@ -22,7 +22,7 @@ namespace HRMS.Api.Services.UserManagement
         {
             return await _dbContext.RoleMasters
                 .AsNoTracking()
-                .Where(r => !r.IsDeleted)
+                .Where(r => !r.IsDeleted && r.IsActive)
                 .Select(r => new RoleDto
                 {
                     Id = r.Id,

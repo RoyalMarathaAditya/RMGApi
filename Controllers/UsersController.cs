@@ -3,14 +3,13 @@ using System.Security.Claims;
 using HRMS.Api.DTOs.Common;
 using HRMS.Api.DTOs.UserDtos;
 using HRMS.Api.Services.Interfaces.UserManagement;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.Api.Controllers
 {
     [ApiController]
     [Route("api/users")]
-    [Authorize]
+    [CustomAuthorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserManagementService _userService;
@@ -47,7 +46,7 @@ namespace HRMS.Api.Controllers
         public async Task<IActionResult> GetAvailableEmployees(CancellationToken cancellationToken)
         {
             var employees = await _userService.GetAvailableEmployeesAsync(cancellationToken);
-            return Ok(employees.Select(e => new { e.Id, e.FullName, e.EmployeeCode }));
+            return Ok(employees.Select(e => new { e.Id, e.FullName, e.EmployeeCode, e.Email }));
         }
 
         [HttpPost]

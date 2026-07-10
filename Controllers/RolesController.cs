@@ -1,13 +1,12 @@
 using HRMS.Api.DTOs.UserDtos;
 using HRMS.Api.Services.Interfaces.UserManagement;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.Api.Controllers
 {
     [ApiController]
     [Route("api/roles")]
-    [Authorize]
+    [CustomAuthorize]
     public class RolesController : ControllerBase
     {
         private readonly IRoleManagementService _roleService;
