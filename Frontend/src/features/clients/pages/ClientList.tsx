@@ -13,10 +13,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
   InputAdornment,
+  InputLabel,
   MenuItem,
   Paper,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -295,24 +298,29 @@ export default function ClientList() {
             }}
             value={searchText}
           />
-          <TextField
-            label="Filter by Status"
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(0);
-            }}
-            select
-            slotProps={{ select: { displayEmpty: true } }}
-            sx={{ minWidth: 200 }}
-            value={statusFilter}
-          >
-            <MenuItem value="">All Statuses</MenuItem>
-            {statuses.map((s) => (
-              <MenuItem key={s.id} value={s.id}>
-                {s.name}
-              </MenuItem>
-            ))}
-          </TextField>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="status-filter-label">Filter by Status</InputLabel>
+            <Select
+              labelId="status-filter-label"
+              label="Filter by Status"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(0);
+              }}
+              renderValue={(v) => {
+                if (!v) return <em style={{ fontStyle: 'normal' }}>All Statuses</em>;
+                return statuses.find((s) => s.id === v)?.name ?? v;
+              }}
+            >
+              <MenuItem value="">All Statuses</MenuItem>
+              {statuses.map((s) => (
+                <MenuItem key={s.id} value={s.id}>
+                  {s.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Stack>
 
         {error ? <Alert severity="error">{error}</Alert> : null}

@@ -4,6 +4,7 @@ export interface ColumnMapping {
   targetProperty: string;
   targetDisplayName: string;
   dataType: string;
+  entityType: string;
   isRequired: boolean;
   isActive: boolean;
   displayOrder: number;
@@ -16,6 +17,7 @@ export interface ColumnMappingFormValues {
   targetProperty: string;
   targetDisplayName: string;
   dataType: string;
+  entityType: string;
   isRequired: boolean;
   isActive: boolean;
   displayOrder: number;

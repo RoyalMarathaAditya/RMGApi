@@ -31,6 +31,20 @@ namespace HRMS.Api.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<ColumnMapping>> GetByEntityTypeAsync(string entityType, bool activeOnly = true, CancellationToken ct = default)
+        {
+            var query = _dbContext.Set<ColumnMapping>()
+                .AsNoTracking()
+                .Where(m => m.EntityType == entityType);
+
+            if (activeOnly)
+                query = query.Where(m => m.IsActive);
+
+            return await query
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync(ct);
+        }
+
         public async Task<ColumnMapping?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _dbContext.Set<ColumnMapping>()
