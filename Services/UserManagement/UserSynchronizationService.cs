@@ -119,9 +119,9 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
         {
             var matchedUser = existingUsers.FirstOrDefault(u => u.EmployeeId == employee.Id);
 
-            if (matchedUser == null && !string.IsNullOrWhiteSpace(employee.EmployeeCode))
+            if (matchedUser == null && !string.IsNullOrWhiteSpace(employee.Email))
             {
-                usersByUserName.TryGetValue(employee.EmployeeCode, out matchedUser);
+                usersByUserName.TryGetValue(employee.Email, out matchedUser);
             }
 
             if (matchedUser == null && !string.IsNullOrWhiteSpace(employee.Email))
@@ -148,7 +148,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
                 hasChanges = true;
             }
 
-            var desiredUserName = employee.EmployeeCode;
+            var desiredUserName = employee.Email;
             if (!string.IsNullOrWhiteSpace(desiredUserName) && user.UserName != desiredUserName)
             {
                 user.UserName = desiredUserName;
@@ -167,12 +167,12 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
 
         private User CreateUserFromEmployee(Employee employee, List<User> pendingUsers, Guid employeeRoleId)
         {
-            var userName = employee.EmployeeCode;
+            var userName = employee.Email;
             var suffix = 1;
             while (_dbContext.Users.IgnoreQueryFilters().Any(u => u.UserName == userName && !u.IsDeleted)
                 || pendingUsers.Any(u => u.UserName == userName))
             {
-                userName = $"{employee.EmployeeCode}_{suffix}";
+                userName = $"{employee.Email}_{suffix}";
                 suffix++;
             }
 

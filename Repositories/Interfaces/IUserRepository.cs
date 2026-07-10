@@ -9,6 +9,7 @@ namespace HRMS.Api.Repositories.Interfaces
         Task<PagedResponse<UserListDto>> GetPagedAsync(PaginationParams pagination, CancellationToken cancellationToken = default);
         Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+        Task<User?> GetByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default);
         Task<bool> IsUserNameUniqueAsync(string userName, int? excludeId = null, CancellationToken cancellationToken = default);
         Task<bool> IsEmailUniqueAsync(string email, int? excludeId = null, CancellationToken cancellationToken = default);
         Task<bool> IsPhoneUniqueAsync(string phone, int? excludeId = null, CancellationToken cancellationToken = default);

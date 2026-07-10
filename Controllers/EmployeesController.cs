@@ -74,6 +74,14 @@ namespace HRMS.Api.Controllers
             return Ok(columns ?? new List<UploadColumnInfo>());
         }
 
+        [HttpGet("dropdown")]
+        public async Task<IActionResult> GetDropdown(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Fetching employee dropdown...");
+            var employees = await _employeeService.GetDropdownAsync(cancellationToken);
+            return Ok(employees);
+        }
+
         [HttpGet("leaders")]
         public async Task<IActionResult> GetLeaders(CancellationToken cancellationToken)
         {

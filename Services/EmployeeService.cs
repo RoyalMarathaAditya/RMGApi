@@ -148,6 +148,24 @@ namespace HRMS.Api.Services.Interfaces
             });
         }
 
+        public async Task<List<EmployeeDropdownDto>> GetDropdownAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Employees
+                .AsNoTracking()
+                .Include(e => e.EmployeeStatus)
+                .Where(e => !e.IsDeleted && e.EmployeeStatus.Name == "Active")
+                .OrderBy(e => e.FullName)
+                .Select(e => new EmployeeDropdownDto
+                {
+                    EmployeeId = e.Id,
+                    EmployeeCode = e.EmployeeCode,
+                    EmployeeName = e.FullName,
+                    Email = e.Email,
+                    MobileNumber = e.MobileNumber
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<ApiResponse<IEnumerable<EmployeeDto>>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(searchTerm))

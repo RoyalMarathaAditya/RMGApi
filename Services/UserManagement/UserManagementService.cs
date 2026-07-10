@@ -70,22 +70,23 @@ namespace HRMS.Api.Services.UserManagement
             if (dto.Password != dto.ConfirmPassword)
                 return ApiResponse<UserListDto>.Fail("Passwords do not match.");
 
-            if (dto.Password.Length < 8 || !dto.Password.Any(char.IsUpper) ||
-                !dto.Password.Any(char.IsLower) || !dto.Password.Any(char.IsDigit) ||
-                !dto.Password.Any(c => !char.IsLetterOrDigit(c)))
-                return ApiResponse<UserListDto>.Fail("Password must be at least 8 characters with uppercase, lowercase, number, and special character.");
-
             if (!await _userRepository.IsEmailUniqueAsync(dto.Email, null, cancellationToken))
                 return ApiResponse<UserListDto>.Fail("Email already exists.");
 
             if (!await _userRepository.IsUserNameUniqueAsync(dto.UserName, null, cancellationToken))
                 return ApiResponse<UserListDto>.Fail("Username already exists.");
 
-            if (!string.IsNullOrWhiteSpace(dto.Phone) && !await _userRepository.IsPhoneUniqueAsync(dto.Phone, null, cancellationToken))
-                return ApiResponse<UserListDto>.Fail("Phone number already exists.");
+
 
             if (dto.RoleId == Guid.Empty)
                 return ApiResponse<UserListDto>.Fail("Role is required.");
+
+            if (dto.EmployeeId.HasValue)
+            {
+                var existingUserForEmployee = await _userRepository.GetByEmployeeIdAsync(dto.EmployeeId.Value, cancellationToken);
+                if (existingUserForEmployee != null)
+                    return ApiResponse<UserListDto>.Fail("A user account already exists for the selected employee.");
+            }
 
             var user = new User
             {
@@ -132,18 +133,21 @@ namespace HRMS.Api.Services.UserManagement
                 user.Email = dto.Email;
             }
 
-            if (!string.IsNullOrWhiteSpace(dto.Phone) && dto.Phone != user.Phone)
-            {
-                if (!await _userRepository.IsPhoneUniqueAsync(dto.Phone, id, cancellationToken))
-                    return ApiResponse<UserListDto>.Fail("Phone number already exists.");
+            if (dto.Phone is not null && dto.Phone != user.Phone)
                 user.Phone = dto.Phone;
-            }
 
             if (dto.RoleId.HasValue && dto.RoleId.Value != Guid.Empty)
                 user.RoleId = dto.RoleId.Value;
 
             if (dto.IsActive.HasValue)
                 user.IsActive = dto.IsActive.Value;
+
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                if (dto.Password != dto.ConfirmPassword)
+                    return ApiResponse<UserListDto>.Fail("Passwords do not match.");
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
 
             user.ModifiedBy = modifiedBy;
             user.UpdatedAt = DateTime.UtcNow;
@@ -159,8 +163,22 @@ namespace HRMS.Api.Services.UserManagement
                 Phone = user.Phone,
                 RoleId = user.RoleId,
                 RoleName = user.Role?.Name ?? string.Empty,
+                EmployeeId = user.EmployeeId,
+                EmployeeCode = user.Employee?.EmployeeCode,
+                EmployeeName = user.Employee?.FullName,
+                Designation = user.Employee?.Designation?.Name,
+                Practice = user.Employee?.Practice?.Name,
+                Department = user.Employee?.DepartmentType?.Name,
                 IsActive = user.IsActive,
-                ModifiedBy = user.ModifiedBy
+                IsLocked = user.IsLocked,
+                CreatedAt = user.CreatedAt,
+                CreatedBy = user.CreatedBy,
+                ModifiedBy = user.ModifiedBy,
+                ModifiedOn = user.ModifiedOn,
+                LastLoginDate = user.LastLoginDate,
+                FailedLoginCount = user.FailedLoginCount,
+                LockedDate = user.LockedDate,
+                LockedBy = user.LockedBy
             }, "User updated successfully.");
         }
 

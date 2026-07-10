@@ -6,6 +6,8 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
 import ReplayIcon from '@mui/icons-material/Replay';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {
   Alert,
   Autocomplete,
@@ -66,6 +68,18 @@ const defaultCreateForm: CreateUserDto = {
   isActive: true,
 };
 
+const defaultEditForm = {
+  employeeId: null as number | null,
+  name: '',
+  userName: '',
+  email: '',
+  phone: '',
+  roleId: '',
+  isActive: true,
+  password: '',
+  confirmPassword: '',
+};
+
 interface ConfirmState {
   open: boolean;
   title: string;
@@ -97,9 +111,13 @@ export default function Users() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [resetPwdTarget, setResetPwdTarget] = useState<UserListDto | null>(null);
   const [createForm, setCreateForm] = useState<CreateUserDto>(defaultCreateForm);
-  const [editForm, setEditForm] = useState<UpdateUserDto>({});
+  const [editForm, setEditForm] = useState(defaultEditForm);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
   const [resetPwdForm, setResetPwdForm] = useState<ResetPasswordDto>({ userId: 0, newPassword: '', confirmPassword: '' });
   const [formError, setFormError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, title: '', message: '', confirmLabel: '', onConfirm: () => {} });
   const abortRef = useRef<AbortController | null>(null);
@@ -167,12 +185,13 @@ export default function Users() {
   };
 
   const handleOpenAdd = async () => {
-    setCreateForm(defaultCreateForm);
+    const employeeRole = roles.find(r => r.name === 'Employee');
+    setCreateForm({ ...defaultCreateForm, roleId: employeeRole?.id ?? '' });
     setEmployeeDetail(null);
     setFormError('');
     setAddDialogOpen(true);
     try {
-      const employees = await userService.getAvailableEmployees();
+      const employees = await userService.getDropdownEmployees();
       setAvailableEmployees(employees);
     } catch {
       setAvailableEmployees([]);
@@ -183,33 +202,30 @@ export default function Users() {
   const handleEmployeeChange = async (employee: AvailableEmployee | null) => {
     setCreateForm({
       ...createForm,
-      employeeId: employee?.id ?? null,
-      name: employee?.fullName ?? '',
-      userName: employee?.employeeCode ?? '',
+      employeeId: employee?.employeeId ?? null,
+      name: employee?.employeeName ?? '',
+      userName: employee?.email ?? '',
       email: employee?.email ?? '',
+      phone: employee?.mobileNumber ?? '',
+      password: 'NV@123',
+      confirmPassword: 'NV@123',
     });
     setEmployeeDetail(null);
-    if (employee?.id) {
-      try {
-        const detail = await userService.getEmployeeDetail(employee.id);
-        setEmployeeDetail(detail);
-        setCreateForm(prev => ({
-          ...prev,
-          employeeId: detail.id,
-          name: detail.fullName,
-          userName: detail.employeeCode,
-          email: detail.email,
-          isActive: detail.employeeStatus === 'Active',
-        }));
-      } catch {
-        toastService.error('Failed to load employee details');
-      }
-    }
   };
 
-  const handleEdit = (user: UserListDto) => {
+  const handleEdit = async (user: UserListDto) => {
     setEditTarget(user);
-    setEditForm({ roleId: user.roleId, isActive: user.isActive });
+    setEditForm({
+      employeeId: user.employeeId ?? null,
+      name: user.name,
+      userName: user.userName ?? user.email,
+      email: user.email,
+      phone: user.phone ?? '',
+      roleId: user.roleId,
+      isActive: user.isActive,
+      password: '********',
+      confirmPassword: '********',
+    });
     setFormError('');
   };
 
@@ -234,9 +250,27 @@ export default function Users() {
 
   const handleSaveEdit = async () => {
     if (!editTarget) return;
+    if (!editForm.roleId) { setFormError('Please select a role'); return; }
+    if (!editForm.email.trim()) { setFormError('Email is required'); return; }
+    if (editForm.password !== editForm.confirmPassword) { setFormError('Passwords do not match'); return; }
+
+    const dto: UpdateUserDto = {
+      roleId: editForm.roleId,
+      isActive: editForm.isActive,
+    };
+
+    if (editForm.phone !== editTarget.phone) {
+      dto.phone = editForm.phone || '';
+    }
+
+    if (editForm.password && editForm.password !== '********') {
+      dto.password = editForm.password;
+      dto.confirmPassword = editForm.confirmPassword;
+    }
+
     setFormError(''); setSaving(true);
     try {
-      await userService.updateUser(editTarget.id, editForm);
+      await userService.updateUser(editTarget.id, dto);
       toastService.success('User updated successfully');
       setEditTarget(null);
       loadData();
@@ -472,23 +506,17 @@ export default function Users() {
             {formError && <Alert severity="error">{formError}</Alert>}
             <Autocomplete
               options={availableEmployees}
-              getOptionLabel={(o) => `${o.fullName} (${o.employeeCode})`}
+              getOptionLabel={(o) => `${o.employeeName} (${o.employeeCode})`}
               onChange={(_, v) => handleEmployeeChange(v)}
-              renderInput={(params) => <TextField {...params} label="Search Employee" placeholder="Type to search..." />}
+              renderInput={(params) => <TextField {...params} label="Search Employee *" placeholder="Type to search..." />}
             />
-            <TextField label="Employee Code" disabled value={createForm.userName} />
+            <TextField label="Employee Code" disabled value={availableEmployees.find(e => e.employeeId === createForm.employeeId)?.employeeCode ?? '-'} />
             <TextField label="Employee Name" disabled value={createForm.name} />
-            <TextField label="Email" required type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} />
-            <TextField label="Username" value={createForm.userName} onChange={(e) => setCreateForm({ ...createForm, userName: e.target.value })} />
-            {employeeDetail && (
-              <>
-                <TextField label="Department" disabled value={employeeDetail.departmentType || '-'} />
-                <TextField label="Designation" disabled value={employeeDetail.designation || '-'} />
-                <TextField label="Location" disabled value={employeeDetail.location || '-'} />
-                <TextField label="Manager" disabled value={employeeDetail.reportingManagerName || '-'} />
-                <TextField label="Status" disabled value={employeeDetail.employeeStatus} />
-              </>
-            )}
+            <TextField label="Email" required type="email" disabled value={createForm.email} />
+            <TextField label="Contact No" value={createForm.phone} onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })} />
+            <TextField label="Username" disabled value={createForm.userName} />
+            <TextField label="Department" disabled value={employeeDetail?.departmentType ?? '-'} />
+            <TextField label="Designation" disabled value={employeeDetail?.designation ?? '-'} />
             {rolesLoading ? (
               <Stack direction="row" alignItems="center" spacing={1}>
                 <CircularProgress size={20} />
@@ -502,8 +530,10 @@ export default function Users() {
                 {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </Select>
             )}
-            <TextField label="Password" required type="password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} />
-            <TextField label="Confirm Password" required type="password" value={createForm.confirmPassword} onChange={(e) => setCreateForm({ ...createForm, confirmPassword: e.target.value })} />
+            <TextField label="Password" required type={showPassword ? 'text' : 'password'} value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end">{showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
+            <TextField label="Confirm Password" required type={showConfirmPassword ? 'text' : 'password'} value={createForm.confirmPassword} onChange={(e) => setCreateForm({ ...createForm, confirmPassword: e.target.value })}
+              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">{showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Is Active:</Typography>
               <input type="checkbox" checked={createForm.isActive} onChange={(e) => setCreateForm({ ...createForm, isActive: e.target.checked })} />
@@ -517,25 +547,41 @@ export default function Users() {
       </Dialog>
 
       {/* Edit User Dialog */}
-      <Dialog fullWidth maxWidth="sm" onClose={() => setEditTarget(null)} open={Boolean(editTarget)}>
+      <Dialog fullWidth maxWidth="md" onClose={() => setEditTarget(null)} open={Boolean(editTarget)}>
         <DialogTitle>Edit User - {editTarget?.name}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {formError && <Alert severity="error">{formError}</Alert>}
-            <Select size="small" value={editForm.roleId ?? ''} onChange={(e) => setEditForm({ ...editForm, roleId: e.target.value })} displayEmpty fullWidth>
-              <MenuItem value="" disabled>Select Role</MenuItem>
-              {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
-            </Select>
-            <Typography color="text.secondary" variant="caption">Employee details (Name, Code, Email, Practice, Designation) are managed in Employee Master.</Typography>
+            <TextField label="Employee Name" disabled value={editForm.name} />
+            <TextField label="Email" required type="email" disabled value={editForm.email} />
+            <TextField label="Contact No" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
+            <TextField label="Username" disabled value={editForm.userName} />
+            {rolesLoading ? (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <CircularProgress size={20} />
+                <Typography variant="body2" color="text.secondary">Loading roles...</Typography>
+              </Stack>
+            ) : rolesError ? (
+              <Alert severity="warning">{rolesError}</Alert>
+            ) : (
+              <Select value={editForm.roleId} onChange={(e) => setEditForm({ ...editForm, roleId: e.target.value })} displayEmpty>
+                <MenuItem value="" disabled>Select Role</MenuItem>
+                {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
+              </Select>
+            )}
+            <TextField label="Password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowEditPassword(!showEditPassword)} edge="end">{showEditPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
+            <TextField label="Confirm Password" type={showEditConfirmPassword ? 'text' : 'password'} value={editForm.confirmPassword} onChange={(e) => setEditForm({ ...editForm, confirmPassword: e.target.value })}
+              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)} edge="end">{showEditConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
             <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="body2">Active:</Typography>
-              <input type="checkbox" checked={editForm.isActive ?? false} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
+              <Typography variant="body2">Is Active:</Typography>
+              <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
             </Stack>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditTarget(null)}>Cancel</Button>
-          <Button onClick={handleSaveEdit} disabled={saving} variant="contained">{saving ? 'Saving...' : 'Save'}</Button>
+          <Button onClick={handleSaveEdit} disabled={saving} variant="contained">{saving ? 'Saving...' : 'Update'}</Button>
         </DialogActions>
       </Dialog>
 

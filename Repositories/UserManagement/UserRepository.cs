@@ -108,6 +108,12 @@ namespace HRMS.Api.Repositories.UserManagement
                 .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted, cancellationToken);
         }
 
+        public async Task<User?> GetByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.EmployeeId == employeeId && !u.IsDeleted, cancellationToken);
+        }
+
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Users

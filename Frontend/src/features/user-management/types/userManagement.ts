@@ -41,6 +41,8 @@ export interface UpdateUserDto {
   email?: string;
   roleId?: string;
   isActive?: boolean;
+  password?: string;
+  confirmPassword?: string;
 }
 
 export interface ResetPasswordDto {
@@ -99,10 +101,11 @@ export interface RolePermissionDto {
 }
 
 export interface AvailableEmployee {
-  id: number;
-  fullName: string;
+  employeeId: number;
+  employeeName: string;
   employeeCode: string;
   email: string;
+  mobileNumber: string | null;
 }
 
 export interface EmployeeDetail {

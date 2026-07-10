@@ -13,5 +13,6 @@ namespace HRMS.Api.Services
         Task<ApiResponse<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResponse<EmployeeDto>>> GetPagedAsync(PaginationParams parameters, CancellationToken cancellationToken = default);
         Task<ApiResponse<IEnumerable<EmployeeDto>>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default);
+        Task<List<EmployeeDropdownDto>> GetDropdownAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -38,6 +38,11 @@ export const userService = {
     return unwrap(response);
   },
 
+  async getDropdownEmployees(): Promise<AvailableEmployee[]> {
+    const response = await api.get<AvailableEmployee[]>('/employees/dropdown');
+    return unwrap(response);
+  },
+
   async createUser(dto: CreateUserDto): Promise<{ success: boolean; message: string; data?: UserListDto }> {
     const response = await api.post('/users', dto);
     return unwrap(response);
