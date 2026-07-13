@@ -72,8 +72,8 @@ function normalizeEmployee(data: any): Employee {
 }
 
 export const employeeService = {
-  async getAll() {
-    const response = await api.get('/employees');
+  async getAll(params?: { fullName?: string; practiceId?: string; doj?: string; statusId?: string }) {
+    const response = await api.get('/employees', { params });
     const list: any[] = unwrap(response);
     return list.map(normalizeEmployee);
   },
@@ -155,6 +155,23 @@ export const employeeService = {
       },
     });
     return response.data as BulkUploadResponse;
+  },
+
+  async exportEmployees(params?: { fullName?: string; practiceId?: string; doj?: string; statusId?: string }) {
+    const response = await api.get('/employees/export', {
+      params,
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    const disposition = response.headers['content-disposition'];
+    const match = disposition?.match(/filename=(.+)/);
+    link.download = match?.[1] ?? `Employees_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   },
 
   downloadTemplate() {

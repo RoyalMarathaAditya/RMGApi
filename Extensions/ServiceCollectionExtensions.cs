@@ -71,6 +71,7 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IAgeingBucketService, AgeingBucketService>();
             services.AddScoped<IColumnMappingService, ColumnMappingService>();
             services.AddScoped<IColumnValueMappingService, ColumnValueMappingService>();
+            services.AddScoped<IExcelExportService, ExcelExportService>();
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserManagementService, UserManagementService>();

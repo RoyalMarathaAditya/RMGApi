@@ -15,12 +15,25 @@ const initialState: EmployeeState = {
   filters: {
     search: '',
     status: 'All',
+    practiceId: '',
+    doj: '',
+    statusId: '',
   },
   loading: false,
   error: null,
 };
 
-export const fetchEmployees = createAsyncThunk('employees/fetchEmployees', employeeService.getAll);
+export const fetchEmployees = createAsyncThunk(
+  'employees/fetchEmployees',
+  async (params?: { fullName?: string; practiceId?: string; doj?: string; statusId?: string }) => {
+    const queryParams: Record<string, string> = {};
+    if (params?.fullName) queryParams.fullName = params.fullName;
+    if (params?.practiceId) queryParams.practiceId = params.practiceId;
+    if (params?.doj) queryParams.doj = params.doj;
+    if (params?.statusId) queryParams.statusId = params.statusId;
+    return employeeService.getAll(Object.keys(queryParams).length > 0 ? queryParams : undefined);
+  },
+);
 
 export const createEmployee = createAsyncThunk(
   'employees/createEmployee',
@@ -46,6 +59,12 @@ const employeeSlice = createSlice({
     },
     setEmployeeStatusFilter(state, action: { payload: EmployeeFilters['status'] }) {
       state.filters.status = action.payload;
+    },
+    setEmployeeFilter(state, action: { payload: Partial<EmployeeFilters> }) {
+      Object.assign(state.filters, action.payload);
+    },
+    clearEmployeeFilters(state) {
+      state.filters = { ...initialState.filters };
     },
   },
   extraReducers: (builder) => {
@@ -76,5 +95,5 @@ const employeeSlice = createSlice({
   },
 });
 
-export const { setEmployeeSearch, setEmployeeStatusFilter } = employeeSlice.actions;
+export const { setEmployeeSearch, setEmployeeStatusFilter, setEmployeeFilter, clearEmployeeFilters } = employeeSlice.actions;
 export default employeeSlice.reducer;
