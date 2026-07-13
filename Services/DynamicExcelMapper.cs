@@ -49,6 +49,8 @@ namespace HRMS.Api.Services
 
             var headerMap = BuildHeaderMap(worksheet, mappings, warnings);
 
+            ct.ThrowIfCancellationRequested();
+
             var requiredMappings = mappings.Where(m => m.IsRequired).ToList();
             var missingRequired = requiredMappings
                 .Where(m => !headerMap.ContainsKey(m.SourceColumn))
@@ -89,6 +91,8 @@ namespace HRMS.Api.Services
 
             for (int row = 2; row <= worksheet.Dimension.Rows; row++)
             {
+                ct.ThrowIfCancellationRequested();
+
                 var dto = new EmployeeImportRowDto { RowNumber = row };
 
                 foreach (var mapping in mappings)
