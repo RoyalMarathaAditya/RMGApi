@@ -146,7 +146,7 @@ export const employeeService = {
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post('/employees/bulk-upload', formData, {
-      timeout: 120000,
+      timeout: 0,
       headers: { 'Content-Type': undefined },
       onUploadProgress: (e) => {
         if (e.total && onProgress) {

@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.EmployeeDtos;
@@ -36,6 +37,7 @@ namespace HRMS.Api.Services
 
         public async Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken = default)
         {
+            var sw = Stopwatch.StartNew();
             var result = new EmployeeBulkUploadResultDto();
 
             _logger.LogInformation("Starting bulk import. File: {FileName}, UploadedBy: {UploadedBy}",
@@ -52,6 +54,9 @@ namespace HRMS.Api.Services
                     RowNumber = 0,
                     ErrorMessage = e
                 }).ToList();
+                sw.Stop();
+                _logger.LogInformation("Bulk import completed (column errors). File: {FileName}, Elapsed: {ElapsedMs}ms, Result: {Success}",
+                    file.FileName, sw.ElapsedMilliseconds, result.Success);
                 return result;
             }
 
@@ -59,6 +64,9 @@ namespace HRMS.Api.Services
             {
                 result.Success = false;
                 result.Errors.Add(new EmployeeImportErrorDto { ErrorMessage = "No data found in the uploaded file." });
+                sw.Stop();
+                _logger.LogInformation("Bulk import completed (no data). File: {FileName}, Elapsed: {ElapsedMs}ms, Result: {Success}",
+                    file.FileName, sw.ElapsedMilliseconds, result.Success);
                 return result;
             }
 
@@ -73,6 +81,9 @@ namespace HRMS.Api.Services
                 result.Errors = errors;
                 result.ErrorFileUrl = await SaveErrorReportAsync(errors, cancellationToken);
                 result.ImportedRows = rows;
+                sw.Stop();
+                _logger.LogInformation("Bulk import completed (validation errors). File: {FileName}, Elapsed: {ElapsedMs}ms, TotalRows: {TotalRows}, FailedRows: {FailedRows}",
+                    file.FileName, sw.ElapsedMilliseconds, result.TotalRows, result.FailedRows);
                 return result;
             }
 
@@ -143,6 +154,9 @@ namespace HRMS.Api.Services
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     result.Success = false;
+                    sw.Stop();
+                    _logger.LogInformation("Bulk import completed (SP failed rows). File: {FileName}, Elapsed: {ElapsedMs}ms, FailedRows: {FailedRows}",
+                        file.FileName, sw.ElapsedMilliseconds, result.FailedRows);
                     return result;
                 }
 
@@ -181,7 +195,8 @@ namespace HRMS.Api.Services
             catch (Exception ex)
             {
                 try { transaction.Rollback(); } catch { }
-                _logger.LogError(ex, "Bulk import failed for batch {BatchId}. Total rows: {TotalRows}", batchId, rows.Count);
+                sw.Stop();
+                _logger.LogError(ex, "Bulk import failed for batch {BatchId}. File: {FileName}, Elapsed: {ElapsedMs}ms, Total rows: {TotalRows}", batchId, file.FileName, sw.ElapsedMilliseconds, rows.Count);
                 result.Success = false;
                 result.TotalRows = rows.Count;
                 result.FailedRows = rows.Count;
@@ -189,6 +204,9 @@ namespace HRMS.Api.Services
                 return result;
             }
 
+            sw.Stop();
+            _logger.LogInformation("Bulk import completed successfully. File: {FileName}, Elapsed: {ElapsedMs}ms, TotalRows: {TotalRows}, SuccessRows: {SuccessRows}, DeletedRows: {DeletedRows}",
+                file.FileName, sw.ElapsedMilliseconds, result.TotalRows, result.SuccessRows, result.DeletedRows);
             return result;
         }
 

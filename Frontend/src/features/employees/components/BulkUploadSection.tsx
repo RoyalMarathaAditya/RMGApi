@@ -25,6 +25,7 @@ interface UploadResult {
   failedRows: number;
   errors: Array<{ rowNumber: number; employeeName: string | null; email: string | null; errorMessage: string }>;
   errorFileUrl: string | null;
+  _elapsed?: string;
 }
 
 export default function BulkUploadSection({
@@ -75,19 +76,26 @@ export default function BulkUploadSection({
     setProgress(0);
     setResult(null);
 
+    const startTime = Date.now();
+
     try {
       const res = await employeeService.uploadEmployees(file, setProgress);
-      setResult(res);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`[Upload] ${file.name} completed in ${elapsed}s. Success: ${res.success}, Rows: ${res.totalRows}`);
+      setResult({ ...res, _elapsed: elapsed });
       if (res.success) {
         if (onImportComplete) onImportComplete(res);
       }
     } catch (err: any) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       const serverMsg = err?.response?.data?.message || err?.response?.data?.title || err?.message || 'Upload failed. Please try again.';
+      console.error(`[Upload] ${file.name} failed after ${elapsed}s: ${serverMsg}`);
       setResult({
         success: false,
         totalRows: 0,
         successRows: 0,
         failedRows: 0,
+        _elapsed: elapsed,
         errors: [{ rowNumber: 0, employeeName: null, email: null, errorMessage: serverMsg }],
         errorFileUrl: null,
       });
@@ -164,7 +172,7 @@ export default function BulkUploadSection({
             <Box>
               <LinearProgress variant="determinate" value={progress} />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                {progress}%
+                {progress < 100 ? `${progress}%` : 'Processing...'}
               </Typography>
             </Box>
           )}
@@ -173,12 +181,12 @@ export default function BulkUploadSection({
             <Stack spacing={1}>
               {result.success ? (
                 <Alert severity="success">
-                  Import completed. {result.successRows} of {result.totalRows} employees imported successfully.
+                  Import completed in {result._elapsed ?? '?'}s. {result.successRows} of {result.totalRows} employees imported successfully.
                   {result.failedRows > 0 && ` ${result.failedRows} rows failed.`}
                 </Alert>
               ) : (
                 <Alert severity="error">
-                  Import failed. {result.failedRows} of {result.totalRows} rows have errors.
+                  Import failed after {result._elapsed ?? '?'}s. {result.failedRows} of {result.totalRows} rows have errors.
                 </Alert>
               )}
 
