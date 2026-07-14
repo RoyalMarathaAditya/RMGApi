@@ -15,15 +15,30 @@ namespace HRMS.Api.Controllers
     {
         private readonly IEmployeeService _employeeService;
         private readonly IBulkImportService _bulkImportService;
+        private readonly IExcelExportService _excelExportService;
         private readonly AppDbContext _db;
         private readonly ILogger<EmployeesController> _logger;
 
-        public EmployeesController(IEmployeeService employeeService, IBulkImportService bulkImportService, AppDbContext db, ILogger<EmployeesController> logger)
+        public EmployeesController(IEmployeeService employeeService, IBulkImportService bulkImportService, IExcelExportService excelExportService, AppDbContext db, ILogger<EmployeesController> logger)
         {
             _employeeService = employeeService;
             _bulkImportService = bulkImportService;
+            _excelExportService = excelExportService;
             _db = db;
             _logger = logger;
+        }
+
+        [HttpGet("export")]
+        public async Task<IActionResult> Export(
+            [FromQuery] string? fullName,
+            [FromQuery] Guid? practiceId,
+            [FromQuery] DateTime? doj,
+            [FromQuery] Guid? statusId,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Exporting employees to Excel...");
+            var bytes = await _excelExportService.ExportEmployeesAsync(fullName, practiceId, doj, statusId, cancellationToken);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Employees_{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx");
         }
 
         [HttpGet("download-template")]
@@ -95,10 +110,15 @@ namespace HRMS.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? fullName,
+            [FromQuery] Guid? practiceId,
+            [FromQuery] DateTime? doj,
+            [FromQuery] Guid? statusId,
+            CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching employees...");
-            var result = await _employeeService.GetAllAsync(cancellationToken);
+            _logger.LogInformation("Fetching employees with filters - FullName: {FullName}, PracticeId: {PracticeId}, DOJ: {DOJ}, StatusId: {StatusId}", fullName, practiceId, doj, statusId);
+            var result = await _employeeService.GetAllAsync(fullName, practiceId, doj, statusId, cancellationToken);
             return Ok(result);
         }
 

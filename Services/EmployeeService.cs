@@ -21,10 +21,31 @@ namespace HRMS.Api.Services.Interfaces
             _mapper = mapper;
         }
 
-        public async Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllAsync(string? fullName = null, Guid? practiceId = null, DateTime? doj = null, Guid? statusId = null, CancellationToken cancellationToken = default)
         {
-            var employees = await GetEmployeeQuery()
-                .ToListAsync(cancellationToken);
+            var query = GetEmployeeQuery();
+
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                query = query.Where(x => x.FullName.Contains(fullName));
+            }
+
+            if (practiceId.HasValue)
+            {
+                query = query.Where(x => x.PracticeId == practiceId.Value);
+            }
+
+            if (doj.HasValue)
+            {
+                query = query.Where(x => x.DOJ.Year == doj.Value.Year && x.DOJ.Month == doj.Value.Month);
+            }
+
+            if (statusId.HasValue)
+            {
+                query = query.Where(x => x.StatusId == statusId.Value);
+            }
+
+            var employees = await query.ToListAsync(cancellationToken);
 
             var result = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
             return ApiResponse<IEnumerable<EmployeeDto>>.Ok(result);

@@ -8,6 +8,8 @@ namespace HRMS.Api.Repositories.Interfaces
         Task<IEnumerable<ColumnMapping>> GetAllActiveAsync(CancellationToken ct = default);
         Task<IEnumerable<ColumnMapping>> GetByEntityTypeAsync(string entityType, bool activeOnly = true, CancellationToken ct = default);
         Task<ColumnMapping?> GetByIdAsync(Guid id, CancellationToken ct = default);
+        Task<bool> ExistsByEntityTypeAndSourceColumnAsync(string entityType, string sourceColumn, Guid? excludeId = null, CancellationToken ct = default);
+        Task<bool> ExistsByEntityTypeAndTargetDisplayNameAsync(string entityType, string targetDisplayName, Guid? excludeId = null, CancellationToken ct = default);
         Task<ColumnMapping> CreateAsync(ColumnMapping mapping, CancellationToken ct = default);
         Task<ColumnMapping> UpdateAsync(ColumnMapping mapping, CancellationToken ct = default);
         Task DeleteAsync(ColumnMapping mapping, CancellationToken ct = default);

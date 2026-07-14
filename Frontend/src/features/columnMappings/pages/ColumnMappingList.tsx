@@ -111,6 +111,29 @@ export default function ColumnMappingList() {
       setFormError('Source Column and Target Property are required');
       return;
     }
+    const duplicateSource = mappings.some(m =>
+      m.id !== editing?.id &&
+      m.entityType === formValues.entityType &&
+      m.sourceColumn.toLowerCase() === formValues.sourceColumn.trim().toLowerCase() &&
+      m.isActive
+    );
+    if (duplicateSource) {
+      setFormError(`Source column '${formValues.sourceColumn}' already exists in ${formValues.entityType}`);
+      return;
+    }
+    const displayName = formValues.targetDisplayName.trim();
+    if (displayName) {
+      const duplicateDisplayName = mappings.some(m =>
+        m.id !== editing?.id &&
+        m.entityType === formValues.entityType &&
+        m.targetDisplayName.toLowerCase() === displayName.toLowerCase() &&
+        m.isActive
+      );
+      if (duplicateDisplayName) {
+        setFormError(`Target display name '${formValues.targetDisplayName}' already exists in ${formValues.entityType}`);
+        return;
+      }
+    }
     setFormError('');
     try {
       if (editing) {
