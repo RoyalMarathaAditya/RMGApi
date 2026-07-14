@@ -210,6 +210,273 @@ namespace HRMS.Api.Services
             return result;
         }
 
+        public async Task<EmployeeBulkUploadPreviewDto> PreviewAsync(IFormFile file, CancellationToken cancellationToken = default)
+        {
+            var result = new EmployeeBulkUploadPreviewDto();
+
+            var (rows, columnErrors) = await ParseExcelAsync(file, cancellationToken);
+
+            if (columnErrors.Any())
+            {
+                result.Success = false;
+                result.ErrorMessage = string.Join("; ", columnErrors);
+                return result;
+            }
+
+            if (rows.Count == 0)
+            {
+                result.Success = false;
+                result.ErrorMessage = "No data found in the uploaded file.";
+                return result;
+            }
+
+            result.TotalRows = rows.Count;
+
+            var validationErrors = await ValidateRowsAsync(rows, cancellationToken);
+            if (validationErrors.Any())
+            {
+                result.Success = false;
+                result.ErrorMessage = "Validation failed. Please fix errors and try again.";
+                return result;
+            }
+
+            await AutoGenerateEmployeeCodesAsync(rows, cancellationToken);
+
+            var importedEmails = rows.Select(r => r.Email?.Trim().ToLowerInvariant() ?? "")
+                .Where(e => !string.IsNullOrEmpty(e))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var allDbEmails = await _dbContext.Employees
+                .IgnoreQueryFilters()
+                .Where(e => !e.IsDeleted)
+                .Select(e => e.Email)
+                .ToListAsync(cancellationToken);
+
+            var dbEmailSet = allDbEmails
+                .Select(e => e?.Trim().ToLowerInvariant() ?? "")
+                .Where(e => !string.IsNullOrEmpty(e))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var matchingEmails = importedEmails.Where(e => dbEmailSet.Contains(e)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var newEmails = importedEmails.Except(matchingEmails, StringComparer.OrdinalIgnoreCase).ToList();
+            var deletedEmails = dbEmailSet.Except(importedEmails, StringComparer.OrdinalIgnoreCase).ToList();
+
+            var matchingEmployees = new List<Employee>();
+            if (matchingEmails.Any())
+            {
+                matchingEmployees = await _dbContext.Employees
+                    .IgnoreQueryFilters()
+                    .Where(e => !e.IsDeleted && matchingEmails.Contains(e.Email))
+                    .Include(e => e.Designation)
+                    .Include(e => e.EmploymentType)
+                    .Include(e => e.Practice)
+                    .Include(e => e.SubPractice)
+                    .Include(e => e.Location)
+                    .Include(e => e.EmployeeStatus)
+                    .ToListAsync(cancellationToken);
+            }
+
+            var employeeByEmail = matchingEmployees
+                .GroupBy(e => e.Email?.Trim().ToLowerInvariant() ?? "")
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var columnMappings = await _dbContext.Set<Models.ColumnMapping>()
+                .AsNoTracking()
+                .Where(m => m.EntityType == "employee-import" && m.IsActive)
+                .ToListAsync(cancellationToken);
+
+            var displayNameMap = columnMappings
+                .GroupBy(m => m.TargetProperty, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().TargetDisplayName ?? g.Key, StringComparer.OrdinalIgnoreCase);
+
+            var changes = new List<EmployeeChangeDto>();
+
+            foreach (var row in rows)
+            {
+                var emailKey = row.Email?.Trim().ToLowerInvariant() ?? "";
+                if (string.IsNullOrEmpty(emailKey) || !employeeByEmail.TryGetValue(emailKey, out var existing))
+                    continue;
+
+                var fieldChanges = ComputeFieldChanges(existing, row, displayNameMap);
+                if (fieldChanges.Any())
+                {
+                    changes.Add(new EmployeeChangeDto
+                    {
+                        Email = row.Email ?? "",
+                        EmployeeCode = row.EmployeeCode ?? existing.EmployeeCode,
+                        FullName = row.FullName,
+                        FieldChanges = fieldChanges
+                    });
+                }
+            }
+
+            var newEmployeeInfos = rows
+                .Where(r => newEmails.Contains(r.Email?.Trim().ToLowerInvariant() ?? ""))
+                .Select(r => new SimpleEmployeeInfo { Email = r.Email, FullName = r.FullName })
+                .ToList();
+
+            var deletedEmployeeInfos = new List<SimpleEmployeeInfo>();
+            if (deletedEmails.Any())
+            {
+                deletedEmployeeInfos = await _dbContext.Employees
+                    .IgnoreQueryFilters()
+                    .Where(e => !e.IsDeleted && deletedEmails.Contains(e.Email))
+                    .Select(e => new SimpleEmployeeInfo { Email = e.Email, FullName = e.FullName })
+                    .ToListAsync(cancellationToken);
+            }
+
+            result.TotalRows = rows.Count;
+            result.NewEmployees = newEmployeeInfos.Count;
+            result.UpdatedEmployees = changes.Count;
+            result.DeletedEmployees = deletedEmployeeInfos.Count;
+            result.Changes = changes;
+            result.NewEmployeeList = newEmployeeInfos;
+            result.DeletedEmployeeList = deletedEmployeeInfos;
+
+            return result;
+        }
+
+        private static List<FieldChangeDto> ComputeFieldChanges(Employee existing, EmployeeImportRowDto row, Dictionary<string, string> displayNameMap)
+        {
+            var changes = new List<FieldChangeDto>();
+
+            var oldFullName = existing.FullName ?? "";
+            var newFullName = row.FullName ?? "";
+            if (!string.Equals(oldFullName.Trim(), newFullName.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.FullName), "Full Name"),
+                    OldValue = oldFullName,
+                    NewValue = newFullName
+                });
+
+            var oldEmployeeCode = existing.EmployeeCode ?? "";
+            var newEmployeeCode = row.EmployeeCode ?? "";
+            if (!string.Equals(oldEmployeeCode.Trim(), newEmployeeCode.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.EmployeeCode), "Emp Id"),
+                    OldValue = oldEmployeeCode,
+                    NewValue = newEmployeeCode
+                });
+
+            var oldEmail = existing.Email ?? "";
+            var newEmail = row.Email ?? "";
+            if (!string.Equals(oldEmail.Trim(), newEmail.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.Email), "email ID"),
+                    OldValue = oldEmail,
+                    NewValue = newEmail
+                });
+
+            var oldDesignation = existing.Designation?.Name ?? "";
+            var newDesignation = row.Designation ?? "";
+            if (!string.Equals(oldDesignation.Trim(), newDesignation.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.Designation), "Role"),
+                    OldValue = oldDesignation,
+                    NewValue = newDesignation
+                });
+
+            var oldEmployeeType = existing.EmploymentType?.Name ?? "";
+            var newEmployeeType = row.EmployeeType ?? "";
+            if (!string.Equals(oldEmployeeType.Trim(), newEmployeeType.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.EmployeeType), "FTE/ Consultant"),
+                    OldValue = oldEmployeeType,
+                    NewValue = newEmployeeType
+                });
+
+            var oldPractice = existing.Practice?.Name ?? "";
+            var newPractice = row.Practice ?? "";
+            if (!string.Equals(oldPractice.Trim(), newPractice.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.Practice), "OU 4 - Practice"),
+                    OldValue = oldPractice,
+                    NewValue = newPractice
+                });
+
+            var oldSubPractice = existing.SubPractice?.Name ?? "";
+            var newSubPractice = row.SubPractice ?? "";
+            if (!string.Equals(oldSubPractice.Trim(), newSubPractice.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.SubPractice), "OU 5 - Sub-practice"),
+                    OldValue = string.IsNullOrEmpty(oldSubPractice) ? null : oldSubPractice,
+                    NewValue = string.IsNullOrEmpty(newSubPractice) ? null : newSubPractice
+                });
+
+            var oldLocation = existing.Location?.Name ?? "";
+            var newLocation = row.NVLocation ?? "";
+            if (!string.Equals(oldLocation.Trim(), newLocation.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.NVLocation), "Location"),
+                    OldValue = string.IsNullOrEmpty(oldLocation) ? null : oldLocation,
+                    NewValue = string.IsNullOrEmpty(newLocation) ? null : newLocation
+                });
+
+            var oldReportingManager = existing.ReportingManagerName ?? "";
+            var newReportingManager = row.ReportingManager ?? "";
+            if (!string.Equals(oldReportingManager.Trim(), newReportingManager.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.ReportingManager), "L1 Manager"),
+                    OldValue = string.IsNullOrEmpty(oldReportingManager) ? null : oldReportingManager,
+                    NewValue = string.IsNullOrEmpty(newReportingManager) ? null : newReportingManager
+                });
+
+            var oldPracticeHead = existing.PracticeHeadName ?? "";
+            var newPracticeHead = row.PracticeHead ?? "";
+            if (!string.Equals(oldPracticeHead.Trim(), newPracticeHead.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.PracticeHead), "Practice Head"),
+                    OldValue = string.IsNullOrEmpty(oldPracticeHead) ? null : oldPracticeHead,
+                    NewValue = string.IsNullOrEmpty(newPracticeHead) ? null : newPracticeHead
+                });
+
+            var oldActiveStatus = existing.EmployeeStatus?.Name ?? "";
+            var newActiveStatus = row.ActiveStatus ?? "";
+            if (!string.Equals(oldActiveStatus.Trim(), newActiveStatus.Trim(), StringComparison.OrdinalIgnoreCase))
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.ActiveStatus), "Active"),
+                    OldValue = string.IsNullOrEmpty(oldActiveStatus) ? null : oldActiveStatus,
+                    NewValue = string.IsNullOrEmpty(newActiveStatus) ? null : newActiveStatus
+                });
+
+            var oldDoj = existing.DOJ;
+            if (row.DOJ.HasValue && oldDoj.Date != row.DOJ.Value.Date)
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.DOJ), "DOJ"),
+                    OldValue = oldDoj.ToString("yyyy-MM-dd"),
+                    NewValue = row.DOJ.Value.ToString("yyyy-MM-dd")
+                });
+
+            var oldLwd = existing.LWD;
+            if (row.LWD.HasValue && oldLwd?.Date != row.LWD.Value.Date)
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.LWD), "LWD"),
+                    OldValue = oldLwd?.ToString("yyyy-MM-dd"),
+                    NewValue = row.LWD.Value.ToString("yyyy-MM-dd")
+                });
+
+            return changes;
+        }
+
+        private static string GetDisplayName(Dictionary<string, string> displayNameMap, string propertyName, string fallback)
+        {
+            return displayNameMap.TryGetValue(propertyName, out var name) ? name : fallback;
+        }
+
         public byte[] GenerateTemplate()
         {
             using var package = new ExcelPackage();
