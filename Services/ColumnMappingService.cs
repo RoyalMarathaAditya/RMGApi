@@ -38,6 +38,10 @@ namespace HRMS.Api.Services
 
         public async Task<ApiResponse<ColumnMappingDto>> CreateAsync(CreateColumnMappingDto request, CancellationToken ct = default)
         {
+            var duplicateCheck = await CheckDuplicatesAsync(request.EntityType, request.SourceColumn, request.TargetDisplayName, null, ct);
+            if (duplicateCheck is not null)
+                return duplicateCheck;
+
             var mapping = new ColumnMapping
             {
                 Id = Guid.NewGuid(),
@@ -61,6 +65,10 @@ namespace HRMS.Api.Services
             if (existing is null)
                 return ApiResponse<ColumnMappingDto>.Fail("Column mapping not found");
 
+            var duplicateCheck = await CheckDuplicatesAsync(request.EntityType, request.SourceColumn, request.TargetDisplayName, id, ct);
+            if (duplicateCheck is not null)
+                return duplicateCheck;
+
             existing.SourceColumn = request.SourceColumn;
             existing.TargetProperty = request.TargetProperty;
             existing.TargetDisplayName = request.TargetDisplayName;
@@ -73,6 +81,18 @@ namespace HRMS.Api.Services
 
             var updated = await _repository.UpdateAsync(existing, ct);
             return ApiResponse<ColumnMappingDto>.Ok(MapToDto(updated), "Column mapping updated successfully");
+        }
+
+        private async Task<ApiResponse<ColumnMappingDto>?> CheckDuplicatesAsync(string entityType, string sourceColumn, string targetDisplayName, Guid? excludeId, CancellationToken ct)
+        {
+            if (await _repository.ExistsByEntityTypeAndSourceColumnAsync(entityType, sourceColumn, excludeId, ct))
+                return ApiResponse<ColumnMappingDto>.Fail($"Source column '{sourceColumn}' already exists in {entityType}");
+
+            if (!string.IsNullOrWhiteSpace(targetDisplayName) &&
+                await _repository.ExistsByEntityTypeAndTargetDisplayNameAsync(entityType, targetDisplayName, excludeId, ct))
+                return ApiResponse<ColumnMappingDto>.Fail($"Target display name '{targetDisplayName}' already exists in {entityType}");
+
+            return null;
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(Guid id, CancellationToken ct = default)
