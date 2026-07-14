@@ -70,6 +70,26 @@ namespace HRMS.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost("bulk-upload/preview")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> BulkUploadPreview(IFormFile file, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Previewing bulk upload... File: {FileName}", file?.FileName);
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded." });
+
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (extension != ".xlsx" && extension != ".xls")
+                return BadRequest(new { message = "Only .xlsx and .xls files are accepted." });
+
+            if (file.Length > 10 * 1024 * 1024)
+                return BadRequest(new { message = "File size must not exceed 10 MB." });
+
+            var preview = await _bulkImportService.PreviewAsync(file, cancellationToken);
+            return Ok(preview);
+        }
+
         [HttpGet("last-upload-columns")]
         public async Task<IActionResult> GetLastUploadColumns(CancellationToken cancellationToken)
         {

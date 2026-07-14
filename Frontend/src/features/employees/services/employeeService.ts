@@ -6,6 +6,31 @@ export interface UploadColumnInfo {
   header: string;
 }
 
+export interface BulkUploadPreview {
+  success: boolean;
+  errorMessage?: string;
+  totalRows: number;
+  newEmployees: number;
+  updatedEmployees: number;
+  deletedEmployees: number;
+  changes: EmployeeChange[];
+  newEmployeeList: { email: string; fullName: string }[];
+  deletedEmployeeList: { email: string; fullName: string }[];
+}
+
+export interface EmployeeChange {
+  email: string;
+  employeeCode: string;
+  fullName: string;
+  fieldChanges: FieldChange[];
+}
+
+export interface FieldChange {
+  fieldName: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
 export interface BulkUploadResponse {
   success: boolean;
   totalRows: number;
@@ -140,6 +165,16 @@ export const employeeService = {
   async delete(id: number) {
     await api.delete(`/employees/${id}`);
     return id;
+  },
+
+  async previewUpload(file: File): Promise<BulkUploadPreview> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/employees/bulk-upload/preview', formData, {
+      timeout: 0,
+      headers: { 'Content-Type': undefined },
+    });
+    return response.data as BulkUploadPreview;
   },
 
   async uploadEmployees(file: File, onProgress?: (percent: number) => void): Promise<BulkUploadResponse> {
