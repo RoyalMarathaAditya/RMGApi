@@ -16,7 +16,8 @@ import {
 } from '@mui/material';
 import { useRef, useState } from 'react';
 import { employeeService } from '../services/employeeService';
-import type { BulkUploadResponse } from '../services/employeeService';
+import type { BulkUploadResponse, BulkUploadPreview } from '../services/employeeService';
+import BulkUploadPreviewDialog from './BulkUploadPreviewDialog';
 
 interface UploadResult {
   success: boolean;
@@ -38,6 +39,9 @@ export default function BulkUploadSection({
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [preview, setPreview] = useState<BulkUploadPreview | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isValidFile = (f: File) => {
@@ -70,11 +74,12 @@ export default function BulkUploadSection({
 
   const handleBrowse = () => inputRef.current?.click();
 
-  const handleUpload = async () => {
+  const runImport = async () => {
     if (!file) return;
     setUploading(true);
     setProgress(0);
     setResult(null);
+    setPreviewDialogOpen(false);
 
     const startTime = Date.now();
 
@@ -104,10 +109,40 @@ export default function BulkUploadSection({
     }
   };
 
+  const handleUpload = async () => {
+    if (!file) return;
+    setPreviewLoading(true);
+    setResult(null);
+
+    try {
+      const previewData = await employeeService.previewUpload(file);
+      setPreview(previewData);
+      setPreviewDialogOpen(true);
+    } catch (err: any) {
+      const serverMsg = err?.response?.data?.message || err?.response?.data?.title || err?.message || 'Preview failed. Please try again.';
+      setResult({
+        success: false,
+        totalRows: 0,
+        successRows: 0,
+        failedRows: 0,
+        errors: [{ rowNumber: 0, employeeName: null, email: null, errorMessage: serverMsg }],
+        errorFileUrl: null,
+      });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handlePreviewCancel = () => {
+    setPreviewDialogOpen(false);
+    setPreview(null);
+  };
+
   const handleClear = () => {
     setFile(null);
     setResult(null);
     setProgress(0);
+    setPreview(null);
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -160,13 +195,22 @@ export default function BulkUploadSection({
           </Typography>
 
           <Stack direction="row" spacing={1}>
-            <Button variant="contained" size="small" onClick={handleUpload} disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Upload'}
+            <Button variant="contained" size="small" onClick={handleUpload} disabled={uploading || previewLoading}>
+              {previewLoading ? 'Previewing...' : uploading ? 'Uploading...' : 'Upload'}
             </Button>
-            <Button variant="text" size="small" onClick={handleClear} disabled={uploading}>
+            <Button variant="text" size="small" onClick={handleClear} disabled={uploading || previewLoading}>
               Clear
             </Button>
           </Stack>
+
+          {previewLoading && (
+            <Box>
+              <LinearProgress />
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                Analyzing changes...
+              </Typography>
+            </Box>
+          )}
 
           {uploading && (
             <Box>
@@ -228,6 +272,14 @@ export default function BulkUploadSection({
             </Stack>
           )}
         </Stack>
+      )}
+      {preview && (
+        <BulkUploadPreviewDialog
+          open={previewDialogOpen}
+          preview={preview}
+          onConfirm={runImport}
+          onCancel={handlePreviewCancel}
+        />
       )}
     </Paper>
   );

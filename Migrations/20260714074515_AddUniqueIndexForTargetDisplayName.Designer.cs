@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260714074515_AddUniqueIndexForTargetDisplayName")]
+    partial class AddUniqueIndexForTargetDisplayName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1056,6 +1059,19 @@ namespace HRMS.Api.Migrations
                             SourceColumn = "Billable Status",
                             TargetDisplayName = "Billable Status",
                             TargetProperty = "BillableStatus"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000011"),
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DataType = "string",
+                            DisplayOrder = 13,
+                            EntityType = "resource-allocation",
+                            IsActive = true,
+                            IsRequired = false,
+                            SourceColumn = "Allocation Type",
+                            TargetDisplayName = "Allocation Type",
+                            TargetProperty = "AllocationType"
                         },
                         new
                         {
@@ -4912,6 +4928,10 @@ namespace HRMS.Api.Migrations
 
                     b.Property<string>("AllocationStatus")
                         .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("AllocationType")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 

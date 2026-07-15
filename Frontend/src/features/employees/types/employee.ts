@@ -59,4 +59,7 @@ export interface EmployeeFormValues {
 export interface EmployeeFilters {
   search: string;
   status: string;
+  practiceId: string;
+  doj: string;
+  statusId: string;
 }

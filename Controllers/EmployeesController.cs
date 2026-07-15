@@ -15,15 +15,30 @@ namespace HRMS.Api.Controllers
     {
         private readonly IEmployeeService _employeeService;
         private readonly IBulkImportService _bulkImportService;
+        private readonly IExcelExportService _excelExportService;
         private readonly AppDbContext _db;
         private readonly ILogger<EmployeesController> _logger;
 
-        public EmployeesController(IEmployeeService employeeService, IBulkImportService bulkImportService, AppDbContext db, ILogger<EmployeesController> logger)
+        public EmployeesController(IEmployeeService employeeService, IBulkImportService bulkImportService, IExcelExportService excelExportService, AppDbContext db, ILogger<EmployeesController> logger)
         {
             _employeeService = employeeService;
             _bulkImportService = bulkImportService;
+            _excelExportService = excelExportService;
             _db = db;
             _logger = logger;
+        }
+
+        [HttpGet("export")]
+        public async Task<IActionResult> Export(
+            [FromQuery] string? fullName,
+            [FromQuery] Guid? practiceId,
+            [FromQuery] DateTime? doj,
+            [FromQuery] Guid? statusId,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Exporting employees to Excel...");
+            var bytes = await _excelExportService.ExportEmployeesAsync(fullName, practiceId, doj, statusId, cancellationToken);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Employees_{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx");
         }
 
         [HttpGet("download-template")]
@@ -53,6 +68,26 @@ namespace HRMS.Api.Controllers
             var uploadedBy = User.Identity?.Name;
             var result = await _bulkImportService.ImportAsync(file, uploadedBy, cancellationToken);
             return Ok(result);
+        }
+
+        [HttpPost("bulk-upload/preview")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> BulkUploadPreview(IFormFile file, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Previewing bulk upload... File: {FileName}", file?.FileName);
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded." });
+
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (extension != ".xlsx" && extension != ".xls")
+                return BadRequest(new { message = "Only .xlsx and .xls files are accepted." });
+
+            if (file.Length > 10 * 1024 * 1024)
+                return BadRequest(new { message = "File size must not exceed 10 MB." });
+
+            var preview = await _bulkImportService.PreviewAsync(file, cancellationToken);
+            return Ok(preview);
         }
 
         [HttpGet("last-upload-columns")]
@@ -95,10 +130,15 @@ namespace HRMS.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? fullName,
+            [FromQuery] Guid? practiceId,
+            [FromQuery] DateTime? doj,
+            [FromQuery] Guid? statusId,
+            CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching employees...");
-            var result = await _employeeService.GetAllAsync(cancellationToken);
+            _logger.LogInformation("Fetching employees with filters - FullName: {FullName}, PracticeId: {PracticeId}, DOJ: {DOJ}, StatusId: {StatusId}", fullName, practiceId, doj, statusId);
+            var result = await _employeeService.GetAllAsync(fullName, practiceId, doj, statusId, cancellationToken);
             return Ok(result);
         }
 

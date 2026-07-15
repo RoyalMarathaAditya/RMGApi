@@ -52,6 +52,29 @@ namespace HRMS.Api.Repositories
                 .FirstOrDefaultAsync(m => m.Id == id, ct);
         }
 
+        public async Task<bool> ExistsByEntityTypeAndSourceColumnAsync(string entityType, string sourceColumn, Guid? excludeId = null, CancellationToken ct = default)
+        {
+            return await _dbContext.Set<ColumnMapping>()
+                .AnyAsync(m =>
+                    m.IsActive &&
+                    m.EntityType == entityType &&
+                    EF.Functions.Like(m.SourceColumn, sourceColumn) &&
+                    (!excludeId.HasValue || m.Id != excludeId.Value), ct);
+        }
+
+        public async Task<bool> ExistsByEntityTypeAndTargetDisplayNameAsync(string entityType, string targetDisplayName, Guid? excludeId = null, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(targetDisplayName))
+                return false;
+
+            return await _dbContext.Set<ColumnMapping>()
+                .AnyAsync(m =>
+                    m.IsActive &&
+                    m.EntityType == entityType &&
+                    EF.Functions.Like(m.TargetDisplayName, targetDisplayName) &&
+                    (!excludeId.HasValue || m.Id != excludeId.Value), ct);
+        }
+
         public async Task<ColumnMapping> CreateAsync(ColumnMapping mapping, CancellationToken ct = default)
         {
             _dbContext.Set<ColumnMapping>().Add(mapping);

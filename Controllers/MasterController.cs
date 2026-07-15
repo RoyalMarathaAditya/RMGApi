@@ -38,11 +38,12 @@ namespace HRMS.Api.Controllers
                 "departmenttypes" => _db.DepartmentTypeMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 "designations" => _db.DesignationMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 "csmrevengetypes" => _db.CSMRevenueTypes.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
+                "subpractices" => _db.SubPracticeMasters.Where(x => x.IsActive).Select(x => new MasterDto { Id = x.Id, Name = x.Name }),
                 _ => null
             };
 
             if (query is null)
-                return NotFound(new { message = $"Master type '{type}' not found. Valid types: roles, employmenttypes, statuses, workmodels, locations, practices, skills, leavetypes, pricingtypes, projecttypes, departmenttypes, designations, csmrevengetypes" });
+                return NotFound(new { message = $"Master type '{type}' not found. Valid types: roles, employmenttypes, statuses, workmodels, locations, practices, skills, leavetypes, pricingtypes, projecttypes, departmenttypes, designations, csmrevengetypes, subpractices" });
 
             var data = await query.OrderBy(x => x.Name).ToListAsync(cancellationToken);
             return Ok(data);

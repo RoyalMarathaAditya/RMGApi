@@ -5,6 +5,7 @@ namespace HRMS.Api.Services
     public interface IBulkImportService
     {
         Task<EmployeeBulkUploadResultDto> ImportAsync(IFormFile file, string? uploadedBy, CancellationToken cancellationToken = default);
+        Task<EmployeeBulkUploadPreviewDto> PreviewAsync(IFormFile file, CancellationToken cancellationToken = default);
         byte[] GenerateTemplate();
         byte[] GenerateErrorReport(List<EmployeeImportErrorDto> errors);
     }
