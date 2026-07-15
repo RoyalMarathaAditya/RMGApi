@@ -16,7 +16,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
         public string AllocationStatus { get; set; } = string.Empty;
-        public string? AllocationType { get; set; }
         public string? BillableStatus { get; set; }
         public string? Notes { get; set; }
         public decimal TotalAllocated { get; set; }
@@ -32,7 +31,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
         public string? AllocationStatus { get; set; }
-        public string? AllocationType { get; set; }
         public string? BillableStatus { get; set; }
         public string? Notes { get; set; }
     }
@@ -44,7 +42,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal? AllocationPercentage { get; set; }
         public string? AllocationStatus { get; set; }
-        public string? AllocationType { get; set; }
         public string? BillableStatus { get; set; }
         public string? Notes { get; set; }
     }
@@ -68,7 +65,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
         public string? BillableStatus { get; set; }
-        public string? AllocationType { get; set; }
         public string AllocationStatus { get; set; } = string.Empty;
         public string? ActionItem { get; set; }
         public string? Remarks { get; set; }
@@ -91,7 +87,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal AllocationPercentage { get; set; }
         public string? BillableStatus { get; set; }
-        public string? AllocationType { get; set; }
         public string? AllocationStatus { get; set; }
         public string? ActionItem { get; set; }
         public string? Remarks { get; set; }
@@ -113,7 +108,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal? AllocationPercentage { get; set; }
         public string? BillableStatus { get; set; }
-        public string? AllocationType { get; set; }
         public string? AllocationStatus { get; set; }
         public string? ActionItem { get; set; }
         public string? Remarks { get; set; }
@@ -145,5 +139,27 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public decimal AllocatedCapacity { get; set; }
         public decimal AvailableCapacity { get; set; }
         public string ResourceStatus { get; set; } = string.Empty;
+    }
+
+    public class BulkProjectAllocationDto
+    {
+        public List<int> EmployeeIds { get; set; } = new();
+        public int ProjectId { get; set; }
+        public int? ClientId { get; set; }
+        public Guid? ProjectStatusId { get; set; }
+        public Guid? StatusId { get; set; }
+        public Guid? ProbableNextAssignmentId { get; set; }
+        public DateTime? ProbableNextAssignmentDate { get; set; }
+        public Guid? BillableDateProbabilityId { get; set; }
+        public Guid? CurrentBillingStatusId { get; set; }
+        public Guid? BillingBucketId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public decimal AllocationPercentage { get; set; }
+        public string? BillableStatus { get; set; }
+        public string? AllocationStatus { get; set; }
+        public string? ActionItem { get; set; }
+        public string? Remarks { get; set; }
+        public string? Engineering { get; set; }
     }
 }

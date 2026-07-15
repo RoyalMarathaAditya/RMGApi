@@ -11,7 +11,6 @@ namespace HRMS.Api.Configurations
             builder.ToTable("ResourceAllocations");
             builder.Property(ra => ra.AllocationStatus).HasMaxLength(50).IsRequired();
             builder.Property(ra => ra.AllocationPercentage).HasPrecision(5, 2);
-            builder.Property(ra => ra.AllocationType).HasMaxLength(50);
             builder.Property(ra => ra.BillableStatus).HasMaxLength(50);
             builder.Property(ra => ra.Notes).HasMaxLength(1000);
             builder.Property(ra => ra.CreatedBy).HasMaxLength(100);

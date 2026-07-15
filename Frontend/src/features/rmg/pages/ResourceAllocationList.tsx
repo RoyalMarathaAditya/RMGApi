@@ -35,10 +35,6 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
   Billable: 'success',
   'Non-Billable': 'warning',
   Shadow: 'info',
-  'Full Time': 'info',
-  'Part Time': 'warning',
-  Contract: 'default',
-  Sow: 'secondary',
   Available: 'success',
   'Partially Allocated': 'warning',
   'Fully Allocated': 'info',
@@ -74,9 +70,6 @@ const cellRenderers: Partial<Record<keyof AllocationDto, CellRenderer>> = {
   practice: (row) => <Chip label={row.practice} size="small" variant="outlined" />,
   designation: (row) => <Typography variant="body2">{row.designation ?? '-'}</Typography>,
   practiceHead: (row) => <Typography variant="body2">{row.practiceHead ?? '-'}</Typography>,
-  allocationType: (row) => (
-    <Chip label={row.allocationType ?? '-'} size="small" variant="outlined" color={statusColors[row.allocationType ?? ''] ?? 'default'} />
-  ),
   billableStatus: (row) => (
     <Chip label={row.billableStatus ?? '-'} size="small" variant="outlined" color={statusColors[row.billableStatus ?? ''] ?? 'default'} />
   ),

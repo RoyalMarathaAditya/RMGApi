@@ -70,7 +70,6 @@ namespace HRMS.Api.Services.RMG
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
                 AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History",
-                AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
                 Notes = dto.Notes,
                 CreatedBy = userName
@@ -102,7 +101,6 @@ namespace HRMS.Api.Services.RMG
                 allocation.AllocationStatus = dto.EndDate.Value.Date >= DateTime.Today ? "Current" : "History";
             }
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
-            if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.Notes is not null) allocation.Notes = dto.Notes;
             allocation.ModifiedBy = userName;
@@ -235,7 +233,6 @@ namespace HRMS.Api.Services.RMG
                     EndDate = a.EndDate,
                     AllocationPercentage = a.AllocationPercentage,
                     BillableStatus = a.BillableStatus,
-                    AllocationType = a.AllocationType,
                     AllocationStatus = a.AllocationStatus,
                     ActionItem = a.ActionItem,
                     Remarks = a.Remarks
@@ -278,7 +275,6 @@ namespace HRMS.Api.Services.RMG
                 EndDate = dto.EndDate,
                 AllocationPercentage = dto.AllocationPercentage,
                 AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= today ? "Current" : "History",
-                AllocationType = dto.AllocationType,
                 BillableStatus = dto.BillableStatus,
                 ActionItem = dto.ActionItem,
                 Remarks = dto.Remarks,
@@ -295,6 +291,80 @@ namespace HRMS.Api.Services.RMG
             _logger.LogInformation("Project allocation {AllocationId} created in {ElapsedMs}ms", created.Id, sw.ElapsedMilliseconds);
             await SaveHistoryAsync(created, "Created", userName, null, cancellationToken);
             return await ToProjectAllocationDtoAsync(created, cancellationToken);
+        }
+
+        public async Task<List<ProjectAllocationDto>> AddBulkProjectAllocationAsync(BulkProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Bulk adding project allocations for {Count} employees, ProjectId={ProjectId} User={User}",
+                dto.EmployeeIds.Count, dto.ProjectId, userName);
+            var sw = Stopwatch.StartNew();
+
+            if (dto.EndDate.HasValue && dto.EndDate.Value.Date < dto.StartDate.Date)
+                throw new InvalidOperationException("End Date cannot be earlier than Start Date.");
+
+            var today = DateTime.UtcNow.Date;
+            var results = new List<ProjectAllocationDto>();
+
+            var existingAllocations = await _dbContext.ResourceAllocations
+                .Where(ra => dto.EmployeeIds.Contains(ra.EmployeeId)
+                    && ra.ProjectId == dto.ProjectId
+                    && !ra.IsDeleted
+                    && ra.AllocationStatus != "Cancelled"
+                    && ra.AllocationStatus != "Released"
+                    && ra.AllocationStatus != "History")
+                .Select(ra => ra.Employee.FullName)
+                .ToListAsync(cancellationToken);
+
+            if (existingAllocations.Any())
+                throw new InvalidOperationException($"The following employees are already assigned to this project: {string.Join(", ", existingAllocations)}.");
+
+            foreach (var employeeId in dto.EmployeeIds)
+            {
+                var employee = await _dbContext.Employees
+                    .FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken)
+                    ?? throw new InvalidOperationException($"Employee with ID {employeeId} not found.");
+
+                var totalAllocated = await GetTotalAllocatedAsync(employeeId, null, cancellationToken);
+                if (totalAllocated + dto.AllocationPercentage > 100)
+                    throw new InvalidOperationException($"Total allocation cannot exceed 100% for employee {employee.FullName}. Current allocation: {totalAllocated}%.");
+
+                var allocation = new ResourceAllocation
+                {
+                    EmployeeId = employeeId,
+                    ProjectId = dto.ProjectId,
+                    ClientId = dto.ClientId,
+                    ProjectStatusId = dto.ProjectStatusId,
+                    StatusId = dto.StatusId,
+                    ProbableNextAssignmentId = dto.ProbableNextAssignmentId,
+                    ProbableNextAssignmentDate = dto.ProbableNextAssignmentDate,
+                    BillableDateProbabilityId = dto.BillableDateProbabilityId,
+                    CurrentBillingStatusId = dto.CurrentBillingStatusId,
+                    BillingBucketId = dto.BillingBucketId,
+                    AgeingBucketId = null,
+                    StartDate = dto.StartDate,
+                    EndDate = dto.EndDate,
+                    AllocationPercentage = dto.AllocationPercentage,
+                    AllocationStatus = dto.EndDate.HasValue && dto.EndDate.Value.Date >= today ? "Current" : "History",
+                    BillableStatus = dto.BillableStatus,
+                    ActionItem = dto.ActionItem,
+                    Remarks = dto.Remarks,
+                    Engineering = dto.Engineering,
+                    Duration = dto.EndDate.HasValue ? (int?)(dto.EndDate.Value.Date - dto.StartDate.Date).Days : null,
+                    Ageing = (int?)Math.Max(0, (int)Math.Round(((today - dto.StartDate.Date).Days + 1) * dto.AllocationPercentage / 100m)),
+                    CreatedBy = userName
+                };
+
+                allocation.AgeingBucketId = await DetermineAgeingBucketIdAsync(allocation.Ageing, cancellationToken);
+
+                var created = await _repository.CreateAsync(allocation, cancellationToken);
+                _logger.LogInformation("Bulk project allocation {AllocationId} created for EmployeeId={EmployeeId}", created.Id, employeeId);
+                await SaveHistoryAsync(created, "Created", userName, null, cancellationToken);
+                results.Add(await ToProjectAllocationDtoAsync(created, cancellationToken));
+            }
+
+            sw.Stop();
+            _logger.LogInformation("Bulk added {Count} project allocations in {ElapsedMs}ms", results.Count, sw.ElapsedMilliseconds);
+            return results;
         }
 
         public async Task<ProjectAllocationDto?> UpdateProjectAllocationAsync(int allocationId, UpdateProjectAllocationDto dto, string userName, CancellationToken cancellationToken = default)
@@ -329,7 +399,6 @@ namespace HRMS.Api.Services.RMG
             var today = DateTime.UtcNow.Date;
 
             if (dto.AllocationPercentage.HasValue) allocation.AllocationPercentage = dto.AllocationPercentage.Value;
-            if (dto.AllocationType is not null) allocation.AllocationType = dto.AllocationType;
             if (dto.BillableStatus is not null) allocation.BillableStatus = dto.BillableStatus;
             if (dto.ActionItem is not null) allocation.ActionItem = dto.ActionItem;
             if (dto.Remarks is not null) allocation.Remarks = dto.Remarks;
@@ -564,7 +633,6 @@ namespace HRMS.Api.Services.RMG
                         EndDate = a.EndDate,
                         AllocationPercentage = a.AllocationPercentage,
                         BillablePercentage = a.BillableStatus == "Billable" ? a.AllocationPercentage : 0,
-                        AllocationType = a.AllocationType,
                         BillableStatus = a.BillableStatus,
                         Status = a.Status?.Name,
                         CurrentBillingStatus = a.CurrentBillingStatus?.Name,
@@ -659,7 +727,6 @@ namespace HRMS.Api.Services.RMG
                 EndDate = allocation.EndDate,
                 AllocationPercentage = allocation.AllocationPercentage,
                 AllocationStatus = allocation.AllocationStatus,
-                AllocationType = allocation.AllocationType,
                 BillableStatus = allocation.BillableStatus,
                 Notes = allocation.Notes,
                 TotalAllocated = myAllocation,
@@ -690,7 +757,6 @@ namespace HRMS.Api.Services.RMG
                 EndDate = allocation.EndDate,
                 AllocationPercentage = allocation.AllocationPercentage,
                 BillableStatus = allocation.BillableStatus,
-                AllocationType = allocation.AllocationType,
                 AllocationStatus = allocation.AllocationStatus,
                 ActionItem = allocation.ActionItem,
                 Remarks = allocation.Remarks,

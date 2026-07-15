@@ -12,6 +12,7 @@ import type {
   ProjectAllocationDto,
   EmployeeCapacitySummaryDto,
   EmployeeResourceDetailsDto,
+  BulkProjectAllocationDto,
 } from '../types/allocation';
 
 function unwrap<T>(response: { data: T }): T {
@@ -62,6 +63,11 @@ export const allocationService = {
     const response = await api.get<EmployeeAllocationDto>(`/resource-allocations/employee/${employeeId}`, {
       params: { _t: Date.now() },
     });
+    return unwrap(response);
+  },
+
+  async addBulkProjectAllocation(values: BulkProjectAllocationDto): Promise<ProjectAllocationDto[]> {
+    const response = await api.post<ProjectAllocationDto[]>('/resource-allocations/bulk-project', values);
     return unwrap(response);
   },
 

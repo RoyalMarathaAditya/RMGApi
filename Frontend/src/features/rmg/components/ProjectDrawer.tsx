@@ -108,7 +108,6 @@ export default function ProjectDrawer({ open, onClose, project }: ProjectDrawerP
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, mb: 2.5 }}>
         <Row label="Allocation %" value={project.allocationPercentage != null ? `${project.allocationPercentage}%` : null} />
-        <Row label="Allocation Type" value={project.allocationType} />
         <Row label="Status" value={project.status} />
         <Row label="Billable Status" value={project.billableStatus} />
         <Row label="Current Billing Status" value={project.currentBillingStatus} />
