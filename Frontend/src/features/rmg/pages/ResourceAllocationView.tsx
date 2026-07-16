@@ -40,7 +40,7 @@ import EditExperienceModal from '../components/EditExperienceModal';
 import { allocationService } from '../services/allocationService';
 import api from '../../../services/api';
 import { toastService } from '../../../services/toastService';
-import { ALLOCATION_TYPES, BILLABLE_STATUSES } from '../types/allocation';
+import { BILLABLE_STATUSES } from '../types/allocation';
 import type { EmployeeResourceDetailsDto, ProjectAllocationDetailDto, ProjectAllocationDto, AddProjectAllocationDto, UpdateProjectAllocationDto, ApiProject } from '../types/allocation';
 
 function safeArray<T>(arr: T[] | null | undefined | unknown): T[] {
@@ -158,7 +158,6 @@ export default function ResourceAllocationView() {
     startDate: '',
     endDate: '',
     allocationPercentage: '' as string | number,
-    allocationType: '',
     billableStatus: '',
     allocationStatus: 'Active',
     engineering: null as boolean | null,
@@ -339,7 +338,7 @@ export default function ResourceAllocationView() {
       billingBucketId: null, ageingBucketId: null,
       actionItem: null, remarks: null,
       startDate: '', endDate: '', allocationPercentage: '',
-      allocationType: '', billableStatus: '', allocationStatus: 'History',
+      billableStatus: '', allocationStatus: 'History',
       engineering: null,
     });
     setFormError('');
@@ -381,7 +380,6 @@ export default function ResourceAllocationView() {
         startDate: matched.startDate.split('T')[0],
         endDate: matched.endDate ? matched.endDate.split('T')[0] : '',
         allocationPercentage: matched.allocationPercentage,
-        allocationType: matched.allocationType ?? '',
         billableStatus: matched.billableStatus ?? '',
         allocationStatus: matched.allocationStatus,
         engineering: pa.engineering === 'Yes' ? true : pa.engineering === 'No' ? false : null,
@@ -437,10 +435,6 @@ export default function ResourceAllocationView() {
       toastService.warning('Status is required');
       return;
     }
-    if (!formData.allocationType) {
-      toastService.warning('Please select Allocation Type.');
-      return;
-    }
     if (!formData.currentBillingStatusId) {
       toastService.warning('Current Billing Status is required');
       return;
@@ -474,7 +468,6 @@ export default function ResourceAllocationView() {
           startDate: formData.startDate,
           endDate: formData.endDate || null,
           allocationPercentage: allocPct,
-          allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
           allocationStatus: computeAllocationStatus(formData.endDate),
           engineering: formData.engineering ? 'Yes' : 'No',
@@ -497,7 +490,6 @@ export default function ResourceAllocationView() {
           startDate: formData.startDate,
           endDate: formData.endDate || null,
           allocationPercentage: allocPct,
-          allocationType: formData.allocationType,
           billableStatus: formData.billableStatus,
           allocationStatus: computeAllocationStatus(formData.endDate),
           engineering: formData.engineering ? 'Yes' : 'No',
@@ -535,7 +527,6 @@ export default function ResourceAllocationView() {
       endDate: pa.endDate,
       allocationPercentage: pa.allocationPercentage ?? 0,
       billableStatus: null,
-      allocationType: null,
       allocationStatus: '',
     };
     setAllocationToDelete(alloc);
@@ -782,7 +773,6 @@ export default function ResourceAllocationView() {
                             { key: 'startDate', label: 'Start Date' },
                             { key: 'endDate', label: 'End Date' },
                             { key: null as any, label: 'Billable Status' },
-                            { key: null as any, label: 'Allocation Type' },
                             { key: null as any, label: 'Allocation Status' },
                             { key: null as any, label: 'Status' },
                             { key: null as any, label: 'Engineering' },
@@ -852,12 +842,9 @@ export default function ResourceAllocationView() {
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.endDate)}</Typography>
                               </TableCell>
                               <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.billableStatus ?? '—'}</Typography>
-                              </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.allocationType ?? '—'}</Typography>
-                              </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                              <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.billableStatus ?? '—'}</Typography>
+                            </TableCell>
+                            <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
                                 <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.allocationStatus ?? '—'}</Typography>
                               </TableCell>
                               <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
@@ -1110,22 +1097,6 @@ export default function ResourceAllocationView() {
               onChange={(e) => setFormData((prev) => ({ ...prev, allocationPercentage: e.target.value }))}
               slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: 1, max: 100 } }}
             />
-            <TextField
-              select
-              label="Allocation Type *"
-              fullWidth
-              size="small"
-              value={formData.allocationType}
-              onChange={(e) => setFormData((prev) => ({ ...prev, allocationType: e.target.value }))}
-              slotProps={{ inputLabel: { shrink: true } }}
-            >
-              <MenuItem value="" disabled sx={{ color: 'text.disabled' }}>
-                Select Allocation Type
-              </MenuItem>
-              {ALLOCATION_TYPES.map((t) => (
-                <MenuItem key={t} value={t}>{t}</MenuItem>
-              ))}
-            </TextField>
             <TextField
               select
               label="Billable Status *"

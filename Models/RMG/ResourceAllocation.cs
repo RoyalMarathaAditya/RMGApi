@@ -48,9 +48,6 @@ namespace HRMS.Api.Models.RMG
         public decimal AllocationPercentage { get; set; }
 
         [MaxLength(50)]
-        public string? AllocationType { get; set; }
-
-        [MaxLength(50)]
         public string? BillableStatus { get; set; }
 
         [MaxLength(500)]

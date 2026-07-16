@@ -13,7 +13,6 @@ export interface AllocationDto {
   endDate: string | null;
   allocationPercentage: number;
   allocationStatus: string;
-  allocationType: string | null;
   billableStatus: string | null;
   notes: string | null;
   totalAllocated: number;
@@ -28,7 +27,6 @@ export interface CreateAllocationDto {
   endDate: string | null;
   allocationPercentage: number;
   allocationStatus?: string;
-  allocationType?: string;
   billableStatus?: string;
   notes?: string;
 }
@@ -39,7 +37,6 @@ export interface UpdateAllocationDto {
   endDate?: string | null;
   allocationPercentage?: number;
   allocationStatus?: string;
-  allocationType?: string;
   billableStatus?: string;
   notes?: string;
 }
@@ -64,7 +61,6 @@ export interface ProjectAllocationDto {
   endDate: string | null;
   allocationPercentage: number;
   billableStatus: string | null;
-  allocationType: string | null;
   allocationStatus: string;
   engineering: string | null;
 }
@@ -86,7 +82,6 @@ export interface AddProjectAllocationDto {
   endDate: string | null;
   allocationPercentage: number;
   billableStatus?: string;
-  allocationType?: string;
   allocationStatus?: string;
   engineering?: string;
 }
@@ -108,7 +103,6 @@ export interface UpdateProjectAllocationDto {
   endDate?: string | null;
   allocationPercentage?: number;
   billableStatus?: string;
-  allocationType?: string;
   allocationStatus?: string;
   engineering?: string;
 }
@@ -275,7 +269,6 @@ export interface ProjectAllocationDetailDto {
   endDate: string | null;
   allocationPercentage: number | null;
   billablePercentage: number | null;
-  allocationType: string | null;
   billableStatus: string | null;
   status: string | null;
   currentBillingStatus: string | null;
@@ -292,8 +285,28 @@ export interface ProjectAllocationDetailDto {
   notes: string | null;
 }
 
+export interface BulkProjectAllocationDto {
+  employeeIds: number[];
+  projectId: number;
+  clientId?: number | null;
+  projectStatusId?: string | null;
+  statusId?: string | null;
+  probableNextAssignmentId?: string | null;
+  probableNextAssignmentDate?: string | null;
+  billableDateProbabilityId?: string | null;
+  currentBillingStatusId?: string | null;
+  billingBucketId?: string | null;
+  actionItem?: string | null;
+  remarks?: string | null;
+  startDate: string;
+  endDate: string | null;
+  allocationPercentage: number;
+  billableStatus?: string;
+  allocationStatus?: string;
+  engineering?: string;
+}
+
 export const ALLOCATION_STATUSES = ['Current', 'History', 'Planned', 'Active', 'Completed', 'Released', 'Cancelled'] as const;
 export const RESOURCE_STATUSES = ['Available', 'Partially Allocated', 'Fully Allocated', 'Overallocated', 'Bench', 'On Leave'] as const;
 export const REQUEST_STATUSES = ['Draft', 'Submitted', 'Reviewing', 'Approved', 'Rejected', 'Fulfilled'] as const;
-export const ALLOCATION_TYPES = ['Full Time', 'Part Time', 'Contract', 'Sow'] as const;
 export const BILLABLE_STATUSES = ['Billable', 'Non-Billable', 'Shadow'] as const;

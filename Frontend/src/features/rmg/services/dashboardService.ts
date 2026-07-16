@@ -6,6 +6,20 @@ function unwrap<T>(response: { data: T }): T {
   return response.data;
 }
 
+async function exportBlob(url: string, fallbackPrefix: string) {
+  const response = await api.get(url, { responseType: 'blob' });
+  const blob = new Blob([response.data]);
+  const link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  const disposition = response.headers['content-disposition'];
+  const match = disposition?.match(/filename=(.+)/);
+  link.download = match?.[1] ?? `${fallbackPrefix}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(link.href);
+}
+
 export const dashboardService = {
   async getSummary(): Promise<DashboardSummaryDto> {
     const response = await api.get<DashboardSummaryDto>('/rmg-dashboard/summary');
@@ -25,6 +39,20 @@ export const dashboardService = {
     const url = query ? `/rmg-dashboard/grid?${query}` : '/rmg-dashboard/grid';
     const response = await api.get<DashboardGridDto[]>(url);
     return unwrap(response);
+  },
+
+  async exportGridData(filter?: DashboardFilterDto) {
+    const params = new URLSearchParams();
+    if (filter) {
+      Object.entries(filter).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const query = params.toString();
+    const url = query ? `/rmg-dashboard/export?${query}` : '/rmg-dashboard/export';
+    await exportBlob(url, 'ResourceAllocation');
   },
 
   async getSuitableResources(projectId: number): Promise<ResourceSuggestionDto[]> {

@@ -48,7 +48,6 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public DateTime? EndDate { get; set; }
         public decimal? AllocationPercentage { get; set; }
         public decimal? BillablePercentage { get; set; }
-        public string? AllocationType { get; set; }
         public string? BillableStatus { get; set; }
         public string? Status { get; set; }
         public string? CurrentBillingStatus { get; set; }

@@ -23,7 +23,6 @@ import { fetchEmployees } from '../../../redux/slices/employeeSlice';
 import { allocationService } from '../services/allocationService';
 import type { CreateAllocationDto } from '../types/allocation';
 
-const ALLOCATION_TYPES = ['Full Time', 'Part Time', 'Contract', 'Sow'] as const;
 const BILLABLE_STATUSES = ['Billable', 'Non-Billable', 'Shadow'] as const;
 
 const schema = yup.object({
@@ -32,7 +31,6 @@ const schema = yup.object({
   projectId: yup.number().required('Project is required').positive('Select a valid project'),
   projectName: yup.string(),
   allocationPercentage: yup.number().required('Allocation % is required').min(1, 'Minimum 1%').max(100, 'Maximum 100%'),
-  allocationType: yup.string().required('Allocation type is required').oneOf(ALLOCATION_TYPES),
   billableStatus: yup.string().required('Billable status is required').oneOf(BILLABLE_STATUSES),
   startDate: yup.string().required('Start date is required'),
   endDate: yup.string().nullable(),
@@ -69,7 +67,6 @@ export default function CreateAllocation() {
       startDate: '',
       endDate: null,
       allocationPercentage: 100,
-      allocationType: 'Full Time',
       billableStatus: 'Billable',
       reportingManagerId: null,
       reportingManagerName: null,
@@ -101,7 +98,6 @@ export default function CreateAllocation() {
         endDate: values.endDate || null,
         allocationPercentage: values.allocationPercentage,
         allocationStatus: 'Active',
-        allocationType: values.allocationType,
         billableStatus: values.billableStatus,
         reportingManagerId: values.reportingManagerId || null,
         notes: values.notes || '',
@@ -220,25 +216,6 @@ export default function CreateAllocation() {
                         },
                       }}
                     />
-                  )}
-                />
-
-                <Controller
-                  name="allocationType"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Allocation Type *"
-                      select
-                      fullWidth
-                      error={!!errors.allocationType}
-                      helperText={errors.allocationType?.message}
-                    >
-                      {ALLOCATION_TYPES.map((t) => (
-                        <MenuItem key={t} value={t}>{t}</MenuItem>
-                      ))}
-                    </TextField>
                   )}
                 />
 

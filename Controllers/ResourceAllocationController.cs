@@ -170,6 +170,27 @@ namespace HRMS.Api.Controllers
             }
         }
 
+        [HttpPost("bulk-project")]
+        public async Task<IActionResult> AddBulkProjectAllocation(BulkProjectAllocationDto dto, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Bulk adding project allocations for {Count} employees, ProjectId={ProjectId}",
+                dto.EmployeeIds.Count, dto.ProjectId);
+            try
+            {
+                var userName = User.Identity?.Name ?? "system";
+                var sw = Stopwatch.StartNew();
+                var results = await _service.AddBulkProjectAllocationAsync(dto, userName, cancellationToken);
+                sw.Stop();
+                _logger.LogInformation("Bulk added {Count} project allocations in {ElapsedMs}ms", results.Count, sw.ElapsedMilliseconds);
+                return CreatedAtAction(nameof(GetById), new { id = 0 }, results);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Bulk project allocation failed: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPut("employee/{employeeId}/details")]
         public async Task<IActionResult> UpdateEmployeeDetails(int employeeId, UpdateEmployeeDetailsDto dto, CancellationToken cancellationToken)
         {
