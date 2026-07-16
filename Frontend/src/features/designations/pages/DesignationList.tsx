@@ -1,6 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Alert,
   Box,
@@ -11,6 +12,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  InputAdornment,
   Paper,
   Stack,
   Table,
@@ -18,11 +20,12 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 // Redux: dispatches thunks for designation CRUD, reads designation list and loading state
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import PageContainer from '../../../components/common/PageContainer';
@@ -46,6 +49,8 @@ export default function DesignationList() {
   const dispatch = useAppDispatch();
   const { designations, loading, error } = useAppSelector((state) => state.designations);
   const [searchText, setSearchText] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDesignation, setEditingDesignation] = useState<Designation | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Designation | null>(null);
@@ -57,10 +62,28 @@ export default function DesignationList() {
     void dispatch(fetchDesignations());
   }, [dispatch]);
 
-  const filtered = designations.filter((d) => {
-    const q = searchText.toLowerCase();
-    return !q || d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q);
-  });
+  const filtered = useMemo(
+    () =>
+      designations.filter((d) => {
+        const q = searchText.toLowerCase();
+        return !q || d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q);
+      }),
+    [designations, searchText],
+  );
+
+  const paginated = useMemo(
+    () => filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [filtered, page, rowsPerPage],
+  );
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const handleOpenAdd = () => {
     setEditingDesignation(null);
@@ -124,7 +147,19 @@ export default function DesignationList() {
         <TextField
           fullWidth
           label="Search designations"
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            setPage(0);
+          }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            },
+          }}
           value={searchText}
         />
 
@@ -143,41 +178,59 @@ export default function DesignationList() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered.map((d) => (
-                  <TableRow key={d.id} hover>
-                    <TableCell>{d.code || '-'}</TableCell>
-                    <TableCell>{d.name}</TableCell>
-                    <TableCell>{d.sortOrder}</TableCell>
-                    <TableCell>
-                      <Chip
-                        color={d.isActive ? 'success' : 'default'}
-                        label={d.isActive ? 'Active' : 'Inactive'}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IconButton color="primary" onClick={() => handleOpenEdit(d)} size="small">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => setDeleteTarget(d)} size="small">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                {loading ? (
+                  <TableRow>
+                    <TableCell align="center" colSpan={5}>
+                      <Typography color="text.secondary" py={3}>
+                        Loading...
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))}
-                {filtered.length === 0 && !loading && (
+                ) : paginated.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center">
+                    <TableCell align="center" colSpan={5}>
                       <Typography color="text.secondary" py={3}>
                         No designations found
                       </Typography>
                     </TableCell>
                   </TableRow>
+                ) : (
+                  paginated.map((d) => (
+                    <TableRow key={d.id} hover>
+                      <TableCell>{d.code || '-'}</TableCell>
+                      <TableCell>{d.name}</TableCell>
+                      <TableCell>{d.sortOrder}</TableCell>
+                      <TableCell>
+                        <Chip
+                          color={d.isActive ? 'success' : 'default'}
+                          label={d.isActive ? 'Active' : 'Inactive'}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <IconButton color="primary" onClick={() => handleOpenEdit(d)} size="small">
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton color="error" onClick={() => setDeleteTarget(d)} size="small">
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component="div"
+            count={filtered.length}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
         </Paper>
       </Stack>
 
