@@ -46,6 +46,7 @@ import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurned
 import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import CallSplitOutlinedIcon from '@mui/icons-material/CallSplitOutlined';
+import DownloadIcon from '@mui/icons-material/Download';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
 import PageLoader from '../../../components/common/PageLoader';
@@ -345,8 +346,8 @@ export default function ResourceAllocationDashboard() {
       billableDateProbabilityId: null, currentBillingStatusId: null,
       billingBucketId: null, ageingBucketId: null,
       actionItem: null, remarks: null,
-      startDate: '', endDate: '', allocationPercentage: '',
-            billableStatus: '', allocationStatus: 'History',
+      startDate: new Date().toISOString().slice(0, 10), endDate: '', allocationPercentage: 100,
+            billableStatus: 'Billable', allocationStatus: 'History',
       engineering: null,
     });
     setBulkFormError('');
@@ -439,6 +440,14 @@ export default function ResourceAllocationDashboard() {
     } finally {
       setBulkSaving(false);
     }
+  };
+
+  const handleExport = () => {
+    const filter: Record<string, string> = {};
+    if (searchTerm) filter.SearchTerm = searchTerm;
+    if (practiceFilter) filter.Practice = practiceFilter;
+    if (statusFilter) filter.ResourceStatus = statusFilter;
+    dashboardService.exportGridData(Object.keys(filter).length > 0 ? filter : undefined);
   };
 
   const filteredData = useMemo(() => {
@@ -576,6 +585,17 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="Overallocated">Overallocated</MenuItem>
                 <MenuItem value="On Leave">On Leave</MenuItem>
               </Select>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<DownloadIcon />}
+                onClick={handleExport}
+                disabled={loading}
+                size="medium"
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                Export
+              </Button>
               <IconButton disabled={loading} onClick={loadData}><RefreshOutlinedIcon /></IconButton>
             </Stack>
           </Stack>
@@ -879,59 +899,7 @@ export default function ResourceAllocationDashboard() {
                   />
                 )}
               />
-              <Autocomplete
-                options={probableNextAssignments}
-                getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={probableNextAssignments.find((s) => s.id === bulkFormData.probableNextAssignmentId) ?? null}
-                onChange={(_, value) => {
-                  setBulkFormData((prev) => ({
-                    ...prev,
-                    probableNextAssignmentId: value?.id ?? null,
-                  }));
-                }}
-                fullWidth
-                size="small"
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Probable Next Assignment"
-                    placeholder="Select Probable Next Assignment"
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                )}
-              />
-              <TextField
-                label="Probable Next Assignment Date"
-                type="date"
-                fullWidth
-                size="small"
-                value={bulkFormData.probableNextAssignmentDate ?? ''}
-                onChange={(e) => setBulkFormData((prev) => ({ ...prev, probableNextAssignmentDate: e.target.value || null }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-              <Autocomplete
-                options={billableDateProbabilities}
-                getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={billableDateProbabilities.find((s) => s.id === bulkFormData.billableDateProbabilityId) ?? null}
-                onChange={(_, value) => {
-                  setBulkFormData((prev) => ({
-                    ...prev,
-                    billableDateProbabilityId: value?.id ?? null,
-                  }));
-                }}
-                fullWidth
-                size="small"
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Billable Date Probability"
-                    placeholder="Select Billable Date Probability"
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                )}
-              />
+
               <Autocomplete
                 options={currentBillingStatuses}
                 getOptionLabel={(option) => option.name}
@@ -1023,26 +991,7 @@ export default function ResourceAllocationDashboard() {
                   <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                 </RadioGroup>
               </FormControl>
-              <TextField
-                label="Action Item"
-                fullWidth
-                size="small"
-                multiline
-                minRows={3}
-                value={bulkFormData.actionItem ?? ''}
-                onChange={(e) => setBulkFormData((prev) => ({ ...prev, actionItem: e.target.value || null }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-              <TextField
-                label="Remark"
-                fullWidth
-                size="small"
-                multiline
-                minRows={3}
-                value={bulkFormData.remarks ?? ''}
-                onChange={(e) => setBulkFormData((prev) => ({ ...prev, remarks: e.target.value || null }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
+
             </Box>
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', gap: 1 }}>
