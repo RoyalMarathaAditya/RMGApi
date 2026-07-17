@@ -1,3 +1,5 @@
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
@@ -16,6 +18,7 @@ import api from '../services/api';
 // Redux: dispatch reads user from state for display, dispatches logout on click
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { logout } from '../redux/slices/authSlice';
+import { toggleTheme, selectThemeMode } from '../redux/slices/themeSlice';
 
 interface HeaderProps {
   drawerWidth: number;
@@ -27,6 +30,7 @@ export default function Header({ drawerWidth, isSidebarCollapsed, onSidebarToggl
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const themeMode = useAppSelector(selectThemeMode);
   const appBarWidth = { md: `calc(100% - ${isSidebarCollapsed ? 72 : drawerWidth}px)` };
   const appBarMargin = { md: `${isSidebarCollapsed ? 72 : drawerWidth}px` };
 
@@ -69,6 +73,11 @@ export default function Header({ drawerWidth, isSidebarCollapsed, onSidebarToggl
           </Typography>
         </Box>
         <Stack alignItems="center" direction="row" spacing={{ xs: 1, sm: 2 }}>
+          <Tooltip title={themeMode === 'dark' ? 'Light mode' : 'Dark mode'}>
+            <IconButton aria-label="Toggle theme" onClick={() => dispatch(toggleTheme())}>
+              {themeMode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Notifications">
             <IconButton aria-label="Notifications">
               <NotificationsOutlinedIcon />
