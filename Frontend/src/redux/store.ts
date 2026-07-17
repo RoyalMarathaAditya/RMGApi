@@ -6,6 +6,7 @@ import projectReducer from './slices/projectSlice';
 import projectManagementReducer from './slices/projectManagementSlice';
 import skillReducer from './slices/skillSlice';
 import designationReducer from './slices/designationSlice';
+import themeReducer from './slices/themeSlice';
 
 // Redux store configuration combining all feature slices
 export const store = configureStore({
@@ -17,6 +18,7 @@ export const store = configureStore({
     projectManagement: projectManagementReducer,
     skills: skillReducer,
     designations: designationReducer,
+    theme: themeReducer,
   },
 });
 
