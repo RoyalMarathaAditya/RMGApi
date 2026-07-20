@@ -4,9 +4,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { Chip, Autocomplete, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
 import { Alert, Box, Button, InputAdornment, Stack, TextField, Typography } from '@mui/material';
-import type { GridColDef, GridPaginationModel, GridRowParams } from '@mui/x-data-grid';
+import type { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../../components/common/PageContainer';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import api from '../../../services/api';
@@ -59,7 +58,6 @@ function buildColumns(columnInfo: UploadColumnInfo[]): GridColDef<Employee>[] {
 
 export default function EmployeeList() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const { employees, error, filters, loading } = useAppSelector((state) => state.employees);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -169,13 +167,6 @@ export default function EmployeeList() {
       }
     },
     [dispatch],
-  );
-
-  const handleRowClick = useCallback(
-    (params: GridRowParams<Employee>) => {
-      navigate(`/employees/${params.row.id}`);
-    },
-    [navigate],
   );
 
   return (
@@ -297,7 +288,6 @@ export default function EmployeeList() {
             columns={columns}
             loading={loading}
             onPaginationModelChange={setPaginationModel}
-            onRowClick={handleRowClick}
             paginationModel={paginationModel}
             rows={employees}
           />

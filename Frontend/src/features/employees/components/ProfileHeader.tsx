@@ -1,4 +1,4 @@
-import { Avatar, Box, Chip, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Typography, useTheme } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
@@ -18,19 +18,27 @@ function formatDate(dateStr: string | null | undefined): string {
 }
 
 export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderProps) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  const darkBg = (light: string, dark: string) => isDark ? dark : light;
+
   const kpiItems = [
-    { icon: <LocationOnOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Location', value: data.location ?? '—', bg: '#EFF6FF', iconColor: '#2563EB' },
+    { icon: <LocationOnOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Location', value: data.location ?? '—', bg: darkBg('#EFF6FF', '#1A3A5C'), iconColor: '#2563EB' },
     {
       icon: <AssessmentOutlinedIcon sx={{ fontSize: 14 }} />,
       label: 'Allocation',
       value: `${totalAllocated}%`,
       color: totalAllocated > 100 ? '#DC2626' : totalAllocated >= 80 ? '#F59E0B' : '#16A34A',
-      bg: totalAllocated > 100 ? '#FEE2E2' : totalAllocated >= 80 ? '#FEF3C7' : '#DCFCE7',
+      bg: darkBg(
+        totalAllocated > 100 ? '#FEE2E2' : totalAllocated >= 80 ? '#FEF3C7' : '#DCFCE7',
+        totalAllocated > 100 ? '#5C1A1A' : totalAllocated >= 80 ? '#5C4A1A' : '#1A5C1A',
+      ),
       iconColor: totalAllocated > 100 ? '#DC2626' : totalAllocated >= 80 ? '#F59E0B' : '#16A34A',
     },
-    { icon: <FolderOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Projects', value: data.projectAllocations.length, bg: '#F5F3FF', iconColor: '#7C3AED' },
-    { icon: <CalendarTodayOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Joined', value: formatDate(data.doj), bg: '#FFF7ED', iconColor: '#D97706' },
-    { icon: <PersonOutlineOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Manager', value: data.l1Manager ?? '—', bg: '#ECFDF5', iconColor: '#059669' },
+    { icon: <FolderOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Projects', value: data.projectAllocations.length, bg: darkBg('#F5F3FF', '#3A2A5C'), iconColor: '#7C3AED' },
+    { icon: <CalendarTodayOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Joined', value: formatDate(data.doj), bg: darkBg('#FFF7ED', '#5C3A1A'), iconColor: '#D97706' },
+    { icon: <PersonOutlineOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Manager', value: data.l1Manager ?? '—', bg: darkBg('#ECFDF5', '#1A4A3A'), iconColor: '#059669' },
   ];
 
   return (
@@ -41,9 +49,9 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
         gap: 2,
         height: 152,
         px: 3,
-        bgcolor: '#FFF',
+        bgcolor: theme.palette.background.paper,
         borderRadius: '12px',
-        border: '1px solid #E5E7EB',
+        border: `1px solid ${theme.palette.divider}`,
         boxShadow: '0 1px 3px rgba(0,0,0,.04)',
       }}
     >
@@ -52,29 +60,29 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
           sx={{
             width: 56,
             height: 56,
-            bgcolor: '#2563EB',
+            bgcolor: theme.palette.primary.main,
             fontSize: '1.3rem',
             fontWeight: 700,
-            color: '#FFF',
-            boxShadow: '0 2px 8px rgba(37,99,235,.2)',
+            color: theme.palette.primary.contrastText,
+            boxShadow: `0 2px 8px ${theme.palette.primary.main}33`,
           }}
         >
           {data.employeeName?.charAt(0)?.toUpperCase() ?? '?'}
         </Avatar>
         <Box>
-          <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#111827', lineHeight: 1.2 }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: theme.palette.text.primary, lineHeight: 1.2 }}>
             {data.employeeName}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#2563EB', fontFamily: 'monospace' }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: theme.palette.primary.main, fontFamily: 'monospace' }}>
               {data.employeeCode}
             </Typography>
-            <Typography sx={{ fontSize: 11, color: '#9CA3AF' }}>|</Typography>
-            <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#374151' }}>
+            <Typography sx={{ fontSize: 11, color: theme.palette.text.disabled }}>|</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 500, color: theme.palette.text.secondary }}>
               {data.role ?? '—'}
             </Typography>
-            <Typography sx={{ fontSize: 11, color: '#9CA3AF' }}>|</Typography>
-            <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#374151' }}>
+            <Typography sx={{ fontSize: 11, color: theme.palette.text.disabled }}>|</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 500, color: theme.palette.text.secondary }}>
               {data.practice ?? '—'}
             </Typography>
           </Box>
@@ -84,8 +92,8 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
               size="small"
               sx={{
                 height: 20, fontSize: '0.65rem', fontWeight: 700,
-                bgcolor: data.active ? '#DCFCE7' : '#FEE2E2',
-                color: data.active ? '#15803D' : '#B91C1C',
+                bgcolor: darkBg(data.active ? '#DCFCE7' : '#FEE2E2', data.active ? '#1A5C1A' : '#5C1A1A'),
+                color: darkBg(data.active ? '#15803D' : '#B91C1C', data.active ? '#4ADE80' : '#FCA5A5'),
                 borderRadius: '999px',
               }}
             />
@@ -93,13 +101,13 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
               label={`${data.totalExperience} yrs`}
               size="small"
               variant="outlined"
-              sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderColor: '#D1D5DB', color: '#374151', borderRadius: '999px' }}
+              sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderColor: theme.palette.divider, color: theme.palette.text.secondary, borderRadius: '999px' }}
             />
             <Chip
               label={data.experienceRange}
               size="small"
               variant="outlined"
-              sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderColor: '#D1D5DB', color: '#374151', borderRadius: '999px' }}
+              sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderColor: theme.palette.divider, color: theme.palette.text.secondary, borderRadius: '999px' }}
             />
           </Box>
         </Box>
@@ -114,7 +122,7 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
               height: 60,
               borderRadius: '10px',
               bgcolor: (kpi as any).bg,
-              border: '1px solid #EEF2F7',
+              border: `1px solid ${theme.palette.divider}`,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -124,10 +132,10 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-              <Box sx={{ color: (kpi as any).iconColor ?? '#6B7280', display: 'flex', lineHeight: 0 }}>{kpi.icon}</Box>
+              <Box sx={{ color: (kpi as any).iconColor ?? theme.palette.text.secondary, display: 'flex', lineHeight: 0 }}>{kpi.icon}</Box>
               <Typography
                 component="span"
-                sx={{ fontSize: 9, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1 }}
+                sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1 }}
               >
                 {kpi.label}
               </Typography>
@@ -136,7 +144,7 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
               sx={{
                 fontSize: 16,
                 fontWeight: 700,
-                color: 'color' in kpi ? (kpi as any).color : '#111827',
+                color: 'color' in kpi ? (kpi as any).color : theme.palette.text.primary,
                 lineHeight: 1.2,
                 textOverflow: 'ellipsis',
                 overflow: 'hidden',

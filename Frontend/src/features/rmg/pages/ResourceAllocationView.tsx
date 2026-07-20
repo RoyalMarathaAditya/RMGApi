@@ -10,6 +10,7 @@ import {
   FormLabel, IconButton, MenuItem, Radio, RadioGroup, Stack, Tab, Tabs,
   TextField, Tooltip, Typography, Alert, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, TablePagination, TableSortLabel,
+  useTheme,
 } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
@@ -86,42 +87,46 @@ const projectStatusColors: Record<string, 'success' | 'info' | 'warning' | 'erro
 type SortKey = 'project' | 'allocationPercentage' | 'startDate' | 'endDate' | 'client';
 type SortDir = 'asc' | 'desc';
 
-const sectionConfig = {
-  personal: {
-    icon: <PersonOutlineOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
-    title: 'Personal Information',
-    subtitle: 'Basic employee details and contact information',
-    headerBg: '#EFF6FF', accentColor: '#2563EB',
-  },
-  organization: {
-    icon: <BadgeOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
-    title: 'Organization Information',
-    subtitle: 'Role, department and reporting structure',
-    headerBg: '#F5F3FF', accentColor: '#7C3AED',
-  },
-  employment: {
-    icon: <AssignmentOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
-    title: 'Employment Information',
-    subtitle: 'Employment type, status and timeline',
-    headerBg: '#ECFDF5', accentColor: '#059669',
-  },
-  experience: {
-    icon: <WorkspacePremiumOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
-    title: 'Experience Information',
-    subtitle: 'Skills, experience breakdown and certifications',
-    headerBg: '#FFF7ED', accentColor: '#D97706',
-  },
-  allocation: {
-    icon: <TimelineOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
-    title: 'Allocation Information',
-    subtitle: 'Project allocations and capacity summary',
-    headerBg: '#ECFEFF', accentColor: '#0891B2',
-  },
-};
+function getSectionConfig(theme: ReturnType<typeof useTheme>) {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    personal: {
+      icon: <PersonOutlineOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
+      title: 'Personal Information',
+      subtitle: 'Basic employee details and contact information',
+      headerBg: isDark ? '#1E3A5F' : '#EFF6FF', accentColor: '#2563EB',
+    },
+    organization: {
+      icon: <BadgeOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
+      title: 'Organization Information',
+      subtitle: 'Role, department and reporting structure',
+      headerBg: isDark ? '#3B2E5F' : '#F5F3FF', accentColor: '#7C3AED',
+    },
+    employment: {
+      icon: <AssignmentOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
+      title: 'Employment Information',
+      subtitle: 'Employment type, status and timeline',
+      headerBg: isDark ? '#1B4D3B' : '#ECFDF5', accentColor: '#059669',
+    },
+    experience: {
+      icon: <WorkspacePremiumOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
+      title: 'Experience Information',
+      subtitle: 'Skills, experience breakdown and certifications',
+      headerBg: isDark ? '#5C3D1B' : '#FFF7ED', accentColor: '#D97706',
+    },
+    allocation: {
+      icon: <TimelineOutlinedIcon sx={{ fontSize: '1.25rem' }} />,
+      title: 'Allocation Information',
+      subtitle: 'Project allocations and capacity summary',
+      headerBg: isDark ? '#1B4D5C' : '#ECFEFF', accentColor: '#0891B2',
+    },
+  };
+}
 
 const tabs = ['Employee Information', 'Experience Details', 'Employment Details', 'Project Allocation'];
 
 export default function ResourceAllocationView() {
+  const theme = useTheme();
   const { employeeId } = useParams<{ employeeId: string }>();
   const navigate = useNavigate();
   const [data, setData] = useState<EmployeeResourceDetailsDto | null>(null);
@@ -580,18 +585,20 @@ export default function ResourceAllocationView() {
     return sortedAllocations.slice(allocationPage * allocationRowsPerPage, allocationPage * allocationRowsPerPage + allocationRowsPerPage);
   }, [sortedAllocations, allocationPage, allocationRowsPerPage]);
 
+  const sectionConfig = useMemo(() => getSectionConfig(theme), [theme]);
+
   if (loading) {
     return (
-      <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, flexDirection: 'column' }}>
-        <CircularProgress size={40} sx={{ color: '#2563EB' }} />
-        <Typography sx={{ fontSize: 14, color: '#6B7280' }}>Loading employee details...</Typography>
+      <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, flexDirection: 'column' }}>
+        <CircularProgress size={40} sx={{ color: theme.palette.primary.main }} />
+        <Typography sx={{ fontSize: 14, color: theme.palette.text.secondary }}>Loading employee details...</Typography>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', p: 3 }}>
+      <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh', p: 3 }}>
         <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>{error}</Alert>
         <Button startIcon={<ArrowBackOutlinedIcon />} onClick={() => navigate(-1)} sx={{ textTransform: 'none', fontWeight: 600 }}>Go Back</Button>
       </Box>
@@ -600,10 +607,10 @@ export default function ResourceAllocationView() {
 
   if (!data) {
     return (
-      <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', p: 3 }}>
+      <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh', p: 3 }}>
         <Box sx={{ maxWidth: 480, mx: 'auto', mt: 8, textAlign: 'center' }}>
-          <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#111827', mb: 1 }}>Employee Not Found</Typography>
-          <Typography sx={{ fontSize: 14, color: '#6B7280', mb: 3 }}>The requested employee does not exist or has been removed.</Typography>
+          <Typography sx={{ fontSize: 20, fontWeight: 700, color: theme.palette.text.primary, mb: 1 }}>Employee Not Found</Typography>
+          <Typography sx={{ fontSize: 14, color: theme.palette.text.secondary, mb: 3 }}>The requested employee does not exist or has been removed.</Typography>
           <Button startIcon={<ArrowBackOutlinedIcon />} onClick={() => navigate('/rmg')} sx={{ textTransform: 'none', fontWeight: 600 }}>Back to Dashboard</Button>
         </Box>
       </Box>
@@ -611,24 +618,24 @@ export default function ResourceAllocationView() {
   }
 
   return (
-    <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh' }}>
+    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh' }}>
       <Box sx={{ maxWidth: 1600, mx: 'auto', px: '24px', pt: '16px', pb: '24px' }}>
         <Button
           startIcon={<ArrowBackOutlinedIcon />}
           onClick={() => navigate('/rmg')}
           size="small"
-          sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, color: '#6B7280', p: 0, minWidth: 0, mb: 1.5, '&:hover': { color: '#2563EB', bgcolor: 'transparent' } }}
+          sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, color: theme.palette.text.secondary, p: 0, minWidth: 0, mb: 1.5, '&:hover': { color: theme.palette.primary.main, bgcolor: 'transparent' } }}
         >
           Back to Dashboard
         </Button>
 
-        <Typography sx={{ fontSize: 32, fontWeight: 700, color: '#111827', lineHeight: 1.15, mb: 2 }}>
+        <Typography sx={{ fontSize: 32, fontWeight: 700, color: theme.palette.text.primary, lineHeight: 1.15, mb: 2 }}>
           Resource Allocation Preview
         </Typography>
 
         <ProfileHeader data={data} totalAllocated={totalAllocated} />
 
-        <Box sx={{ mt: 2, borderBottom: '1px solid #E5E7EB', bgcolor: '#FFF', borderRadius: '12px 12px 0 0', border: '1px solid #E5E7EB', borderBottom: 'none' }}>
+        <Box sx={{ mt: 2, borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.paper, borderRadius: '12px 12px 0 0', border: `1px solid ${theme.palette.divider}`, borderBottom: 'none' }}>
           <Tabs
             value={tabValue}
             onChange={handleTabChange}
@@ -638,12 +645,12 @@ export default function ResourceAllocationView() {
               minHeight: 48, px: 1.5,
               '& .MuiTab-root': {
                 textTransform: 'none', fontWeight: 600, fontSize: '0.8125rem',
-                minHeight: 48, px: 2.5, py: 0, color: '#6B7280',
+                minHeight: 48, px: 2.5, py: 0, color: theme.palette.text.secondary,
                 borderRadius: '8px 8px 0 0', transition: 'all 200ms ease',
-                '&.Mui-selected': { color: '#2563EB', bgcolor: '#EFF6FF', fontWeight: 700 },
-                '&:hover:not(.Mui-selected)': { bgcolor: '#F8FAFC', color: '#374151' },
+                '&.Mui-selected': { color: theme.palette.primary.main, bgcolor: theme.palette.action.selected, fontWeight: 700 },
+                '&:hover:not(.Mui-selected)': { bgcolor: theme.palette.action.hover, color: theme.palette.text.primary },
               },
-              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0', bgcolor: '#2563EB' },
+              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0', bgcolor: theme.palette.primary.main },
             }}
           >
             {tabs.map((tab) => (<Tab key={tab} label={tab} />))}
@@ -700,7 +707,7 @@ export default function ResourceAllocationView() {
             </InfoSection>
             <IconButton
               onClick={() => setExperienceModalOpen(true)}
-              sx={{ position: 'absolute', top: 0, right: 4, color: '#6B7280', '&:hover': { color: '#2563EB', bgcolor: '#EFF6FF' } }}
+              sx={{ position: 'absolute', top: 0, right: 4, color: theme.palette.text.secondary, '&:hover': { color: theme.palette.primary.main, bgcolor: theme.palette.action.hover } }}
             >
               <EditOutlinedIcon fontSize="small" />
             </IconButton>
@@ -738,17 +745,17 @@ export default function ResourceAllocationView() {
             </InfoSection>
 
             {/* Allocations Table */}
-            <Box sx={{ borderRadius: '14px', border: '1px solid #E5E7EB', overflow: 'hidden', bgcolor: '#FFF', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
-              <Box sx={{ px: '20px', py: 1.5, bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ borderRadius: '14px', border: `1px solid ${theme.palette.divider}`, overflow: 'hidden', bgcolor: theme.palette.background.paper, boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
+              <Box sx={{ px: '20px', py: 1.5, bgcolor: theme.palette.action.hover, borderBottom: `1px solid ${theme.palette.divider}`, display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <TimelineOutlinedIcon sx={{ fontSize: '1rem', color: '#0891B2' }} />
-                <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>Project Allocations</Typography>
-                <Typography sx={{ fontSize: 11, fontWeight: 400, color: '#6B7280', ml: 'auto' }}>{safeArray(data.projectAllocations).length} record(s)</Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: theme.palette.text.primary }}>Project Allocations</Typography>
+                <Typography sx={{ fontSize: 11, fontWeight: 400, color: theme.palette.text.secondary, ml: 'auto' }}>{safeArray(data.projectAllocations).length} record(s)</Typography>
                 <Button
                   variant="contained"
                   size="small"
                   startIcon={<AddOutlinedIcon />}
                   onClick={openAddDialog}
-                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: '8px', bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' } }}
+                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: '8px' }}
                 >
                   Add Project Allocation
                 </Button>
@@ -756,7 +763,7 @@ export default function ResourceAllocationView() {
 
               {safeArray(data.projectAllocations).length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
-                  <Typography sx={{ fontSize: 14, color: '#6B7280' }}>No Active Allocations</Typography>
+                  <Typography sx={{ fontSize: 14, color: theme.palette.text.secondary }}>No Active Allocations</Typography>
                 </Box>
               ) : (
                 <>
@@ -784,9 +791,9 @@ export default function ResourceAllocationView() {
                             <TableCell
                               key={col.label}
                               sx={{
-                                fontWeight: 600, fontSize: '0.7rem', color: '#6B7280',
+                                fontWeight: 600, fontSize: '0.7rem', color: theme.palette.text.secondary,
                                 textTransform: 'uppercase', letterSpacing: '0.4px',
-                                bgcolor: '#F8FAFC', borderBottom: '1px solid #E5E7EB', py: 1.25,
+                                bgcolor: theme.palette.action.hover, borderBottom: `1px solid ${theme.palette.divider}`, py: 1.25,
                                 position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
                               }}
                             >
@@ -810,18 +817,18 @@ export default function ResourceAllocationView() {
                             <TableRow
                               key={i}
                               hover
-                              sx={{ '&:hover': { bgcolor: '#F8FBFF' }, '&:last-child td': { borderBottom: 'none' } }}
+                              sx={{ '&:hover': { bgcolor: theme.palette.action.hover }, '&:last-child td': { borderBottom: 'none' } }}
                             >
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{pa.project ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: theme.palette.text.primary }}>{pa.project ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#6B7280', fontFamily: 'monospace' }}>{pa.projectCode ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, fontWeight: 600, color: theme.palette.text.secondary, fontFamily: 'monospace' }}>{pa.projectCode ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.client ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.client ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
                                 <Chip
                                   label={pa.projectStatus ?? '—'}
                                   size="small"
@@ -830,55 +837,55 @@ export default function ResourceAllocationView() {
                                   sx={{ fontWeight: 600, fontSize: '0.65rem', height: 20, borderRadius: '999px' }}
                                 />
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
                                 <Typography sx={{ fontSize: 14, fontWeight: 700, color: isOver ? '#DC2626' : (pa.allocationPercentage ?? 0) >= 100 ? '#F59E0B' : '#16A34A' }}>
                                   {pa.allocationPercentage != null ? `${pa.allocationPercentage}%` : '—'}
                                 </Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.startDate)}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{formatDate(pa.startDate)}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{formatDate(pa.endDate)}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{formatDate(pa.endDate)}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                              <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.billableStatus ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                              <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.billableStatus ?? '—'}</Typography>
                             </TableCell>
-                            <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.allocationStatus ?? '—'}</Typography>
+                            <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.allocationStatus ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.status ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.status ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.engineering ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.engineering ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.billingBucket ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.billingBucket ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.ageingBucket ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.ageingBucket ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
-                                <Typography sx={{ fontSize: 13, color: '#374151' }}>{pa.durationInProject ?? '—'}</Typography>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
+                                <Typography sx={{ fontSize: 13, color: theme.palette.text.secondary }}>{pa.durationInProject ?? '—'}</Typography>
                               </TableCell>
-                              <TableCell sx={{ borderBottom: '1px solid #F3F4F6', py: 1, whiteSpace: 'nowrap' }}>
+                              <TableCell sx={{ borderBottom: `1px solid ${theme.palette.divider}`, py: 1, whiteSpace: 'nowrap' }}>
                                 <Stack direction="row" spacing={0.5}>
                                   <Tooltip title="View Details">
                                     <IconButton size="small" onClick={() => { setDrawerProject(pa); setDrawerOpen(true); }}
-                                      sx={{ color: '#2563EB', '&:hover': { bgcolor: '#EFF6FF' } }}>
+                                      sx={{ color: theme.palette.primary.main, '&:hover': { bgcolor: theme.palette.action.hover } }}>
                                       <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
                                   <Tooltip title="Edit">
                                     <IconButton size="small" onClick={() => openEditDialog(pa)}
-                                      sx={{ color: '#D97706', '&:hover': { bgcolor: '#FFFBEB' } }}>
+                                      sx={{ color: '#D97706', '&:hover': { bgcolor: theme.palette.action.hover } }}>
                                       <EditOutlinedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
                                   <Tooltip title="Delete">
                                     <IconButton size="small" onClick={() => openDeleteDialog(pa)}
-                                      sx={{ color: '#DC2626', '&:hover': { bgcolor: '#FEF2F2' } }}>
+                                      sx={{ color: '#DC2626', '&:hover': { bgcolor: theme.palette.action.hover } }}>
                                       <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                   </Tooltip>
@@ -898,7 +905,7 @@ export default function ResourceAllocationView() {
                     rowsPerPage={allocationRowsPerPage}
                     onRowsPerPageChange={(e) => { setAllocationRowsPerPage(Number(e.target.value)); setAllocationPage(0); }}
                     rowsPerPageOptions={[5, 10, 25]}
-                    sx={{ borderTop: '1px solid #E5E7EB', fontSize: '0.8125rem' }}
+                    sx={{ borderTop: `1px solid ${theme.palette.divider}`, fontSize: '0.8125rem' }}
                   />
                 </>
               )}
@@ -923,7 +930,7 @@ export default function ResourceAllocationView() {
           sx: { borderRadius: '14px', maxWidth: 1140, boxShadow: '0 20px 60px rgba(0,0,0,0.12)' },
         }}
       >
-        <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: '1px solid #E5E7EB', fontSize: 18, fontWeight: 700, color: '#111827' }}>
+        <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: 18, fontWeight: 700, color: theme.palette.text.primary }}>
           {editingAllocation ? 'Edit Project Allocation' : 'Add Project Allocation'}
         </DialogTitle>
         <DialogContent sx={{ px: 3, py: 2.5, overflowY: 'auto' }}>
@@ -1278,7 +1285,7 @@ export default function ResourceAllocationView() {
               sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
             />
             <FormControl sx={{ justifyContent: 'center' }}>
-              <FormLabel id="engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: '#374151', mb: 0.5, '&.Mui-focused': { color: '#374151' } }}>
+              <FormLabel id="engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: theme.palette.text.secondary, mb: 0.5, '&.Mui-focused': { color: theme.palette.text.secondary } }}>
                 Engineering *
               </FormLabel>
               <RadioGroup
@@ -1313,11 +1320,11 @@ export default function ResourceAllocationView() {
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', gap: 1 }}>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${theme.palette.divider}`, gap: 1 }}>
           <Button
             onClick={() => setDialogOpen(false)}
             disabled={saving}
-            sx={{ textTransform: 'none', fontWeight: 600, color: '#6B7280' }}
+            sx={{ textTransform: 'none', fontWeight: 600, color: theme.palette.text.secondary }}
           >
             Cancel
           </Button>
@@ -1326,7 +1333,7 @@ export default function ResourceAllocationView() {
             onClick={handleSave}
             disabled={saving}
             startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
-            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' } }}
+            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}
           >
             {saving ? 'Saving...' : 'Save'}
           </Button>
@@ -1341,24 +1348,24 @@ export default function ResourceAllocationView() {
         fullWidth
         PaperProps={{ sx: { borderRadius: '14px' } }}
       >
-        <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: '1px solid #E5E7EB', fontSize: 16, fontWeight: 700, color: '#111827' }}>
+        <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: `1px solid ${theme.palette.divider}`, fontSize: 16, fontWeight: 700, color: theme.palette.text.primary }}>
           Delete Project Allocation
         </DialogTitle>
         <DialogContent sx={{ px: 3, py: 2.5 }}>
-          <Typography sx={{ fontSize: 14, color: '#374151' }}>
+          <Typography sx={{ fontSize: 14, color: theme.palette.text.secondary }}>
             Are you sure you want to delete this project allocation?
           </Typography>
           {allocationToDelete && (
-            <Typography sx={{ fontSize: 14, color: '#6B7280', mt: 1 }}>
+            <Typography sx={{ fontSize: 14, color: theme.palette.text.secondary, mt: 1 }}>
               Project: <strong>{allocationToDelete.projectName}</strong>
             </Typography>
           )}
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', gap: 1 }}>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${theme.palette.divider}`, gap: 1 }}>
           <Button
             onClick={() => setDeleteDialogOpen(false)}
             disabled={deleting}
-            sx={{ textTransform: 'none', fontWeight: 600, color: '#6B7280' }}
+            sx={{ textTransform: 'none', fontWeight: 600, color: theme.palette.text.secondary }}
           >
             Cancel
           </Button>
