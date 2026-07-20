@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
 
 interface InfoFieldProps {
@@ -9,6 +9,7 @@ interface InfoFieldProps {
 }
 
 export default function InfoField({ icon, label, value, colSpan }: InfoFieldProps) {
+  const theme = useTheme();
   return (
     <Box
       sx={{
@@ -17,7 +18,7 @@ export default function InfoField({ icon, label, value, colSpan }: InfoFieldProp
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: '2px' }}>
-        <Box sx={{ color: '#6B7280', display: 'flex', fontSize: '0.85rem', lineHeight: 0 }}>
+        <Box sx={{ color: theme.palette.text.secondary, display: 'flex', fontSize: '0.85rem', lineHeight: 0 }}>
           {icon}
         </Box>
         <Typography
@@ -25,7 +26,7 @@ export default function InfoField({ icon, label, value, colSpan }: InfoFieldProp
           sx={{
             fontSize: 11,
             fontWeight: 500,
-            color: '#4B5563',
+            color: theme.palette.text.secondary,
             textTransform: 'uppercase',
             letterSpacing: '0.4px',
             lineHeight: 1,
@@ -38,7 +39,7 @@ export default function InfoField({ icon, label, value, colSpan }: InfoFieldProp
         sx={{
           fontSize: 14,
           fontWeight: 500,
-          color: '#111827',
+          color: theme.palette.text.primary,
           lineHeight: 1.4,
           wordBreak: 'break-word',
         }}

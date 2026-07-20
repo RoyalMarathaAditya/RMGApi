@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
 
 interface InfoSectionProps {
@@ -11,18 +11,18 @@ interface InfoSectionProps {
 }
 
 export default function InfoSection({ icon, title, subtitle, headerBg, accentColor, children }: InfoSectionProps) {
+  const theme = useTheme();
   return (
     <Box
       sx={{
         borderRadius: '14px',
-        border: '1px solid #E5E7EB',
+        border: `1px solid ${theme.palette.divider}`,
         overflow: 'hidden',
-        bgcolor: '#FFF',
+        bgcolor: theme.palette.background.paper,
         boxShadow: '0 1px 3px rgba(0,0,0,.04)',
         position: 'relative',
       }}
     >
-      {/* Left accent bar */}
       <Box
         sx={{
           position: 'absolute',
@@ -41,7 +41,7 @@ export default function InfoSection({ icon, title, subtitle, headerBg, accentCol
           px: '20px',
           pl: '32px',
           bgcolor: headerBg,
-          borderBottom: '1px solid #E5E7EB',
+          borderBottom: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           alignItems: 'center',
           gap: 1.25,
@@ -51,10 +51,10 @@ export default function InfoSection({ icon, title, subtitle, headerBg, accentCol
           {icon}
         </Box>
         <Box>
-          <Typography sx={{ fontSize: 18, fontWeight: 600, color: '#111827', lineHeight: 1.25 }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 600, color: theme.palette.text.primary, lineHeight: 1.25 }}>
             {title}
           </Typography>
-          <Typography sx={{ fontSize: 10, fontWeight: 400, color: '#6B7280', lineHeight: 1.3 }}>
+          <Typography sx={{ fontSize: 10, fontWeight: 400, color: theme.palette.text.secondary, lineHeight: 1.3 }}>
             {subtitle}
           </Typography>
         </Box>

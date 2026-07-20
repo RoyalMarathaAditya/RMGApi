@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import type { ReactNode } from 'react';
 
 interface InfoGridProps {
@@ -6,6 +6,7 @@ interface InfoGridProps {
 }
 
 export default function InfoGrid({ children }: InfoGridProps) {
+  const theme = useTheme();
   return (
     <Box
       sx={{
@@ -15,8 +16,8 @@ export default function InfoGrid({ children }: InfoGridProps) {
         '& > *': {
           px: '16px',
           py: 0,
-          borderBottom: '1px solid #F1F5F9',
-          borderRight: { xs: 'none', md: '1px solid #EEF2F7' },
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderRight: { xs: 'none', md: `1px solid ${theme.palette.divider}` },
           '&:nth-of-type(4n)': { borderRight: 'none' },
         },
         '& > :last-child': { borderBottom: 'none' },
