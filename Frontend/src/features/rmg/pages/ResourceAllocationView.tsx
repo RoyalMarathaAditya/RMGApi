@@ -125,6 +125,24 @@ function getSectionConfig(theme: ReturnType<typeof useTheme>) {
 
 const tabs = ['Employee Information', 'Experience Details', 'Employment Details', 'Project Allocation'];
 
+function getExperienceFromDoj(doj: string): { years: number; months: number } {
+  const from = new Date(doj);
+  const to = new Date();
+  let years = to.getFullYear() - from.getFullYear();
+  let months = to.getMonth() - from.getMonth();
+  if (months < 0) { years--; months += 12; }
+  return { years, months };
+}
+
+function getExperienceRange(totalYears: number): string {
+  if (totalYears < 2) return '0-2 Years';
+  if (totalYears < 5) return '2-5 Years';
+  if (totalYears < 8) return '5-8 Years';
+  if (totalYears < 12) return '8-12 Years';
+  if (totalYears < 15) return '12-15 Years';
+  return '15+ Years';
+}
+
 export default function ResourceAllocationView() {
   const theme = useTheme();
   const { employeeId } = useParams<{ employeeId: string }>();
@@ -318,6 +336,36 @@ export default function ResourceAllocationView() {
   }, [data]);
 
   const availableCapacity = Math.max(0, 100 - totalAllocated);
+
+  const nvExperience = useMemo(() => {
+    if (!data?.doj) return null;
+    return getExperienceFromDoj(data.doj);
+  }, [data?.doj]);
+
+  const nvDisplay = useMemo(() => {
+    if (!nvExperience) return '—';
+    return `${nvExperience.years}.${nvExperience.months} Years`;
+  }, [nvExperience]);
+
+  const totalDisplay = useMemo(() => {
+    if (!nvExperience) return '—';
+    const priorYears = Math.floor(data?.priorExperience ?? 0);
+    const priorMonths = Math.round(((data?.priorExperience ?? 0) - priorYears) * 12);
+    let totalMonths = nvExperience.months + priorMonths;
+    let totalYears = nvExperience.years + priorYears;
+    if (totalMonths >= 12) { totalYears++; totalMonths -= 12; }
+    return `${totalYears}.${totalMonths} Years`;
+  }, [nvExperience, data?.priorExperience]);
+
+  const experienceRange = useMemo(() => {
+    if (!nvExperience) return '—';
+    const priorYears = Math.floor(data?.priorExperience ?? 0);
+    const priorMonths = Math.round(((data?.priorExperience ?? 0) - priorYears) * 12);
+    let totalMonths = nvExperience.months + priorMonths;
+    let totalYears = nvExperience.years + priorYears;
+    if (totalMonths >= 12) { totalYears++; }
+    return getExperienceRange(totalYears);
+  }, [nvExperience, data?.priorExperience]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -697,10 +745,10 @@ export default function ResourceAllocationView() {
           <Box sx={{ mt: '16px', position: 'relative' }}>
             <InfoSection {...sectionConfig.experience}>
               <InfoGrid>
-                <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Experience" value={`${data.totalExperience} yrs`} />
-                <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="NV Experience" value={`${data.nvExperience} yrs`} />
+                <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Total Experience" value={totalDisplay} />
+                <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="NV Experience" value={nvDisplay} />
                 <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Prior Experience" value={`${data.priorExperience} yrs`} />
-                <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Experience Range" value={data.experienceRange} />
+                <InfoField icon={<WorkspacePremiumOutlinedIcon sx={{ fontSize: 16 }} />} label="Experience Range" value={experienceRange} />
                 <InfoField icon={<PsychologyOutlinedIcon sx={{ fontSize: 16 }} />} label="Primary Skill" value={data.primarySkill ?? '—'} />
                 <InfoField icon={<PsychologyOutlinedIcon sx={{ fontSize: 16 }} />} label="Key Skills" value={data.skill ?? '—'} colSpan={3} />
               </InfoGrid>
@@ -750,15 +798,17 @@ export default function ResourceAllocationView() {
                 <TimelineOutlinedIcon sx={{ fontSize: '1rem', color: '#0891B2' }} />
                 <Typography sx={{ fontSize: 14, fontWeight: 600, color: theme.palette.text.primary }}>Project Allocations</Typography>
                 <Typography sx={{ fontSize: 11, fontWeight: 400, color: theme.palette.text.secondary, ml: 'auto' }}>{safeArray(data.projectAllocations).length} record(s)</Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<AddOutlinedIcon />}
-                  onClick={openAddDialog}
-                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: '8px' }}
-                >
-                  Add Project Allocation
-                </Button>
+                {data.status !== 'Inactive' && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddOutlinedIcon />}
+                    onClick={openAddDialog}
+                    sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: '8px' }}
+                  >
+                    Add Project Allocation
+                  </Button>
+                )}
               </Box>
 
               {safeArray(data.projectAllocations).length === 0 ? (
