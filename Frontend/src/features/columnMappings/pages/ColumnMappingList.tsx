@@ -333,9 +333,13 @@ export default function ColumnMappingList() {
             <TextField
               fullWidth
               label="Display Order"
-              onChange={(e) => setFormValues({ ...formValues, displayOrder: Number(e.target.value) })}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (val >= 0) setFormValues({ ...formValues, displayOrder: val });
+              }}
               type="number"
               value={formValues.displayOrder}
+              slotProps={{ htmlInput: { min: 0 } }}
             />
             <Stack alignItems="center" direction="row" spacing={1}>
               <Typography variant="body2">Required:</Typography>

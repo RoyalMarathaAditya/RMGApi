@@ -544,6 +544,16 @@ export default function ResourceAllocationDashboard() {
               Resources
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+              {selectedEmployeeIds.length > 0 && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={openBulkDialog}
+                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' }, whiteSpace: 'nowrap' }}
+                >
+                  Bulk Allocate ({selectedEmployeeIds.length})
+                </Button>
+              )}
               <TextField
                 disabled={loading}
                 size="small"
@@ -561,16 +571,6 @@ export default function ResourceAllocationDashboard() {
                 }}
                 sx={{ minWidth: 250 }}
               />
-              {selectedEmployeeIds.length > 0 && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={openBulkDialog}
-                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' }, whiteSpace: 'nowrap' }}
-                >
-                  Bulk Allocate ({selectedEmployeeIds.length})
-                </Button>
-              )}
               <Select disabled={loading} size="small" value={practiceFilter} onChange={(e) => { setPracticeFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
                 <MenuItem value="">All Practices</MenuItem>
                 {practices.map((p) => (

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Avatar, Box, Chip, Typography, useTheme } from '@mui/material';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
@@ -17,11 +18,54 @@ function formatDate(dateStr: string | null | undefined): string {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function getExperienceFromDoj(doj: string): { years: number; months: number } {
+  const from = new Date(doj);
+  const to = new Date();
+  let years = to.getFullYear() - from.getFullYear();
+  let months = to.getMonth() - from.getMonth();
+  if (months < 0) { years--; months += 12; }
+  return { years, months };
+}
+
+function getExperienceRange(totalYears: number): string {
+  if (totalYears < 2) return '0-2 Years';
+  if (totalYears < 5) return '2-5 Years';
+  if (totalYears < 8) return '5-8 Years';
+  if (totalYears < 12) return '8-12 Years';
+  if (totalYears < 15) return '12-15 Years';
+  return '15+ Years';
+}
+
 export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderProps) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
   const darkBg = (light: string, dark: string) => isDark ? dark : light;
+
+  const nvExperience = useMemo(() => {
+    if (!data.doj) return null;
+    return getExperienceFromDoj(data.doj);
+  }, [data.doj]);
+
+  const totalExperienceDisplay = useMemo(() => {
+    if (!nvExperience) return '—';
+    const priorYears = Math.floor(data.priorExperience ?? 0);
+    const priorMonths = Math.round(((data.priorExperience ?? 0) - priorYears) * 12);
+    let totalMonths = nvExperience.months + priorMonths;
+    let totalYears = nvExperience.years + priorYears;
+    if (totalMonths >= 12) { totalYears++; totalMonths -= 12; }
+    return `${totalYears}.${totalMonths} Years`;
+  }, [nvExperience, data.priorExperience]);
+
+  const experienceRange = useMemo(() => {
+    if (!nvExperience) return '—';
+    const priorYears = Math.floor(data.priorExperience ?? 0);
+    const priorMonths = Math.round(((data.priorExperience ?? 0) - priorYears) * 12);
+    let totalMonths = nvExperience.months + priorMonths;
+    let totalYears = nvExperience.years + priorYears;
+    if (totalMonths >= 12) { totalYears++; }
+    return getExperienceRange(totalYears);
+  }, [nvExperience, data.priorExperience]);
 
   const kpiItems = [
     { icon: <LocationOnOutlinedIcon sx={{ fontSize: 14 }} />, label: 'Location', value: data.location ?? '—', bg: darkBg('#EFF6FF', '#1A3A5C'), iconColor: '#2563EB' },
@@ -88,23 +132,23 @@ export default function ProfileHeader({ data, totalAllocated }: ProfileHeaderPro
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
             <Chip
-              label={data.active ? 'Active' : 'Inactive'}
+              label={data.status ?? '—'}
               size="small"
               sx={{
                 height: 20, fontSize: '0.65rem', fontWeight: 700,
-                bgcolor: darkBg(data.active ? '#DCFCE7' : '#FEE2E2', data.active ? '#1A5C1A' : '#5C1A1A'),
-                color: darkBg(data.active ? '#15803D' : '#B91C1C', data.active ? '#4ADE80' : '#FCA5A5'),
+                bgcolor: darkBg('#EFF6FF', '#1A3A5C'),
+                color: darkBg('#2563EB', '#60A5FA'),
                 borderRadius: '999px',
               }}
             />
             <Chip
-              label={`${data.totalExperience} yrs`}
+              label={totalExperienceDisplay}
               size="small"
               variant="outlined"
               sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderColor: theme.palette.divider, color: theme.palette.text.secondary, borderRadius: '999px' }}
             />
             <Chip
-              label={data.experienceRange}
+              label={experienceRange}
               size="small"
               variant="outlined"
               sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderColor: theme.palette.divider, color: theme.palette.text.secondary, borderRadius: '999px' }}
