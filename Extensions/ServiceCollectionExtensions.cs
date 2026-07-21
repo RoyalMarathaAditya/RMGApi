@@ -15,6 +15,7 @@ using HRMS.Api.Services.Interfaces.UserManagement;
 using HRMS.Api.Services.RMG;
 using HRMS.Api.Services.UserManagement;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace HRMS.Api.Extensions
 {
@@ -94,6 +95,36 @@ namespace HRMS.Api.Extensions
             });
 
             services.AddHealthChecks();
+
+            services.AddDistributedMemoryCache();
+
+            var redisConnection = configuration.GetValue<string>("Redis:ConnectionString");
+            if (!string.IsNullOrEmpty(redisConnection))
+            {
+                try
+                {
+                    using var muxer = ConnectionMultiplexer.Connect(new ConfigurationOptions
+                    {
+                        EndPoints = { redisConnection },
+                        AbortOnConnectFail = true,
+                        ConnectTimeout = 3000,
+                        SyncTimeout = 2000
+                    });
+                    if (muxer.IsConnected)
+                    {
+                        muxer.GetDatabase().Ping();
+                        services.AddStackExchangeRedisCache(options =>
+                        {
+                            options.Configuration = redisConnection;
+                            options.InstanceName = configuration.GetValue<string>("Redis:InstanceName") ?? "HRMS:";
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _ = ex; // Redis unavailable - using in-memory cache fallback
+                }
+            }
 
             return services;
         }

@@ -212,7 +212,10 @@ appLifetime.ApplicationStopping.Register(() =>
 
 app.UseSerilogRequestLogging();
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseCors("DefaultCors");
 app.UseResponseCompression();

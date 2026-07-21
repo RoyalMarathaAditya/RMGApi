@@ -1,5 +1,5 @@
 import api from '../../../services/api';
-import type { DashboardSummaryDto, DashboardGridDto, DashboardFilterDto } from '../types/dashboard';
+import type { DashboardSummaryDto, DashboardGridDto, DashboardFilterDto, PaginatedResponse, GridQueryParams } from '../types/dashboard';
 import type { ResourceAvailabilityDto, ResourceSuggestionDto, PracticeUtilizationDto } from '../types/allocation';
 
 function unwrap<T>(response: { data: T }): T {
@@ -20,38 +20,46 @@ async function exportBlob(url: string, fallbackPrefix: string) {
   window.URL.revokeObjectURL(link.href);
 }
 
+function buildUrl(basePath: string, params: Record<string, string | number | undefined>): string {
+  const queryParts: string[] = [];
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+    }
+  });
+  return queryParts.length > 0 ? `${basePath}?${queryParts.join('&')}` : basePath;
+}
+
 export const dashboardService = {
   async getSummary(): Promise<DashboardSummaryDto> {
     const response = await api.get<DashboardSummaryDto>('/rmg-dashboard/summary');
     return unwrap(response);
   },
 
-  async getGridData(filter?: DashboardFilterDto): Promise<DashboardGridDto[]> {
-    const params = new URLSearchParams();
+  async getGridData(filter?: DashboardFilterDto, paging?: GridQueryParams): Promise<PaginatedResponse<DashboardGridDto>> {
+    const params: Record<string, string | number | undefined> = {};
+    if (paging?.page) params.page = paging.page;
+    if (paging?.pageSize) params.pageSize = paging.pageSize;
+    if (paging?.sortField) params.sortField = paging.sortField;
+    if (paging?.sortDirection) params.sortDirection = paging.sortDirection;
     if (filter) {
-      Object.entries(filter).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
+      if (filter.searchTerm) params.searchTerm = filter.searchTerm;
+      if (filter.practice) params.practice = filter.practice;
+      if (filter.resourceStatus) params.resourceStatus = filter.resourceStatus;
+      if (filter.designation) params.designation = filter.designation;
+      if (filter.department) params.department = filter.department;
     }
-    const query = params.toString();
-    const url = query ? `/rmg-dashboard/grid?${query}` : '/rmg-dashboard/grid';
-    const response = await api.get<DashboardGridDto[]>(url);
+    const url = buildUrl('/rmg-dashboard/grid', params);
+    const response = await api.get<PaginatedResponse<DashboardGridDto>>(url);
     return unwrap(response);
   },
 
   async exportGridData(filter?: DashboardFilterDto) {
-    const params = new URLSearchParams();
-    if (filter) {
-      Object.entries(filter).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
-    }
-    const query = params.toString();
-    const url = query ? `/rmg-dashboard/export?${query}` : '/rmg-dashboard/export';
+    const params: Record<string, string | undefined> = {};
+    if (filter?.searchTerm) params.searchTerm = filter.searchTerm;
+    if (filter?.practice) params.practice = filter.practice;
+    if (filter?.resourceStatus) params.resourceStatus = filter.resourceStatus;
+    const url = buildUrl('/rmg-dashboard/export', params);
     await exportBlob(url, 'ResourceAllocation');
   },
 

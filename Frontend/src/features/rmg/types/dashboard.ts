@@ -21,6 +21,9 @@ export interface DashboardGridDto {
   practiceHead: string | null;
   subPractice: string | null;
   totalExperience: number;
+  skills: string | null;
+  currentProject: string | null;
+  projects: string[];
   allocationPercentage: number;
   availableCapacity: number;
   resourceStatus: string;
@@ -42,4 +45,24 @@ export interface DashboardFilterDto {
   resourceStatus?: string;
   dateFrom?: string;
   dateTo?: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface GridQueryParams {
+  page?: number;
+  pageSize?: number;
+  sortField?: string;
+  sortDirection?: string;
+  searchTerm?: string;
+  practice?: string;
+  resourceStatus?: string;
+  designation?: string;
+  department?: string;
 }
