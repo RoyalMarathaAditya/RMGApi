@@ -58,7 +58,12 @@ const menuItems: MenuItem[] = [
     ],
   },
   { icon: HubOutlinedIcon, label: 'Resource Allocation', path: '/rmg' },
-  { icon: AssessmentOutlinedIcon, label: 'Reports', path: '/reports' },
+  {
+    icon: AssessmentOutlinedIcon, label: 'Reports',
+    children: [
+      { icon: AssessmentOutlinedIcon, label: 'Practice Wise Report', path: '/reports/practice-wise' },
+    ],
+  },
   {
     icon: BusinessOutlinedIcon, label: 'Masters Management',
     children: [
@@ -85,7 +90,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
 
   const isActive = (path?: string) => {
     if (!path) return false;
-    if (path === '/projects' || path === '/skills' || path === '/rmg' || path === '/users' || path === '/roles' || path === '/permissions') {
+      if (path === '/projects' || path === '/skills' || path === '/rmg' || path === '/reports' || path === '/users' || path === '/roles' || path === '/permissions') {
       return location.pathname.startsWith(path);
     }
     return location.pathname === path;

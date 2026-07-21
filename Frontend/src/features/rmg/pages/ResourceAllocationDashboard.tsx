@@ -686,11 +686,11 @@ export default function ResourceAllocationDashboard() {
             sx: { borderRadius: '14px', maxWidth: 1140, boxShadow: '0 20px 60px rgba(0,0,0,0.12)' },
           }}
         >
-          <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: '1px solid #E5E7EB', fontSize: 18, fontWeight: 700, color: '#111827' }}>
+          <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: 1, borderColor: 'divider', fontSize: 18, fontWeight: 700, color: 'text.primary' }}>
             Bulk Allocate
           </DialogTitle>
           <DialogContent sx={{ px: 3, py: 2.5, overflowY: 'auto' }}>
-            <Typography sx={{ mb: 2, fontSize: 14, color: '#6B7280' }}>
+            <Typography sx={{ mb: 2, fontSize: 14, color: 'text.secondary' }}>
               Selected Employees: <strong>{selectedEmployeeIds.length}</strong> employee(s)
             </Typography>
             {bulkFormError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{bulkFormError}</Alert>}
@@ -978,7 +978,7 @@ export default function ResourceAllocationDashboard() {
                 sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }}
               />
               <FormControl sx={{ justifyContent: 'center' }}>
-                <FormLabel id="bulk-engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: '#374151', mb: 0.5, '&.Mui-focused': { color: '#374151' } }}>
+                <FormLabel id="bulk-engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: 'text.secondary', mb: 0.5, '&.Mui-focused': { color: 'text.secondary' } }}>
                   Engineering *
                 </FormLabel>
                 <RadioGroup
@@ -994,11 +994,11 @@ export default function ResourceAllocationDashboard() {
 
             </Box>
           </DialogContent>
-          <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid #E5E7EB', gap: 1 }}>
+          <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider', gap: 1 }}>
             <Button
               onClick={() => setBulkDialogOpen(false)}
               disabled={bulkSaving}
-              sx={{ textTransform: 'none', fontWeight: 600, color: '#6B7280' }}
+              sx={{ textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}
             >
               Cancel
             </Button>
