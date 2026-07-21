@@ -14,6 +14,8 @@ namespace HRMS.Api.DTOs
         public string? CSM { get; set; }
         public Guid? CSMRevenueTypeId { get; set; }
         public string? CSMRevenueTypeName { get; set; }
+        public DateTime ProjectStartDate { get; set; }
+        public DateTime ProjectEndDate { get; set; }
         public bool IsActive { get; set; }
         public string? Description { get; set; }
     }
@@ -39,6 +41,10 @@ namespace HRMS.Api.DTOs
         public string? CSM { get; set; }
 
         public Guid? CSMRevenueTypeId { get; set; }
+
+        public DateTime ProjectStartDate { get; set; }
+
+        public DateTime ProjectEndDate { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -67,6 +73,10 @@ namespace HRMS.Api.DTOs
         public string? CSM { get; set; }
 
         public Guid? CSMRevenueTypeId { get; set; }
+
+        public DateTime ProjectStartDate { get; set; }
+
+        public DateTime ProjectEndDate { get; set; }
 
         public bool IsActive { get; set; }
 

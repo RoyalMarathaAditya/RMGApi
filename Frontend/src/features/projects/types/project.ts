@@ -9,6 +9,8 @@ export interface Project {
   csm?: string | null;
   csmRevenueTypeId?: string | null;
   csmRevenueTypeName?: string | null;
+  projectStartDate: string;
+  projectEndDate: string;
   isActive: boolean;
   description?: string | null;
 }
@@ -21,6 +23,8 @@ export interface CreateProjectRequest {
   deliveryHead?: string | null;
   csm?: string | null;
   csmRevenueTypeId?: string | null;
+  projectStartDate: string;
+  projectEndDate: string;
   isActive: boolean;
   description?: string | null;
 }

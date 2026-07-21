@@ -58,6 +58,8 @@ namespace HRMS.Api.Controllers
         public async Task<IActionResult> Create([FromBody] CreateProjectDto dto, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating project...");
+            if (dto.ProjectEndDate < dto.ProjectStartDate)
+                return BadRequest(new { message = "Project End Date cannot be earlier than Project Start Date." });
             var project = _mapper.Map<Project>(dto);
             var created = await _projectRepo.CreateAsync(project, cancellationToken);
             var resultDto = _mapper.Map<ProjectDto>(created);
@@ -68,6 +70,8 @@ namespace HRMS.Api.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProjectDto dto, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating project {Id}...", id);
+            if (dto.ProjectEndDate < dto.ProjectStartDate)
+                return BadRequest(new { message = "Project End Date cannot be earlier than Project Start Date." });
             var existing = await _projectRepo.GetByIdAsync(id, cancellationToken);
             if (existing is null)
             {

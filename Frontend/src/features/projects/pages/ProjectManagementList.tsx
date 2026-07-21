@@ -3,6 +3,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
   Alert,
   Box,
@@ -32,6 +34,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { format, isValid, parseISO } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import PageContainer from '../../../components/common/PageContainer';
@@ -46,7 +49,7 @@ import {
 import type { Project, CreateProjectRequest } from '../types/project';
 import { toastService } from '../../../services/toastService';
 
-type SortField = 'projectName' | 'projectCode' | 'clientName' | 'csmRevenueTypeName' | 'deliveryHead' | 'projectManager' | 'csm' | 'isActive';
+type SortField = 'projectName' | 'projectCode' | 'clientName' | 'csmRevenueTypeName' | 'deliveryHead' | 'projectManager' | 'csm' | 'projectStartDate' | 'projectEndDate' | 'isActive';
 type SortDir = 'asc' | 'desc';
 
 const defaultFormValues: CreateProjectRequest = {
@@ -57,8 +60,16 @@ const defaultFormValues: CreateProjectRequest = {
   deliveryHead: '',
   csm: '',
   csmRevenueTypeId: null,
+  projectStartDate: '',
+  projectEndDate: '',
   isActive: true,
   description: '',
+};
+
+const formatDisplayDate = (dateStr: string): string => {
+  if (!dateStr) return '-';
+  const d = parseISO(dateStr);
+  return isValid(d) ? format(d, 'dd-MMM-yyyy') : dateStr;
 };
 
 export default function ProjectManagementList() {
@@ -104,7 +115,7 @@ export default function ProjectManagementList() {
     let list = projects;
     if (q) {
       list = list.filter((p) =>
-        [p.projectName, p.projectCode, p.clientName, p.deliveryHead, p.projectManager, p.csm]
+        [p.projectName, p.projectCode, p.clientName, p.deliveryHead, p.projectManager, p.csm, p.projectStartDate, p.projectEndDate]
           .some((field) => (field ?? '').toLowerCase().includes(q)),
       );
     }
@@ -152,6 +163,8 @@ export default function ProjectManagementList() {
       deliveryHead: project.deliveryHead ?? '',
       csm: project.csm ?? '',
       csmRevenueTypeId: project.csmRevenueTypeId ?? null,
+      projectStartDate: project.projectStartDate ?? '',
+      projectEndDate: project.projectEndDate ?? '',
       isActive: project.isActive,
       description: project.description ?? '',
     });
@@ -178,6 +191,22 @@ export default function ProjectManagementList() {
       setFormError('Client is required');
       return false;
     }
+    if (!formValues.projectStartDate) {
+      setFormError('Project Start Date is required');
+      return false;
+    }
+    if (!formValues.projectEndDate) {
+      setFormError('Project End Date is required');
+      return false;
+    }
+    if (formValues.projectStartDate && formValues.projectEndDate) {
+      const start = new Date(formValues.projectStartDate);
+      const end = new Date(formValues.projectEndDate);
+      if (end < start) {
+        setFormError('Project End Date cannot be earlier than Project Start Date.');
+        return false;
+      }
+    }
     return true;
   };
 
@@ -194,6 +223,8 @@ export default function ProjectManagementList() {
         deliveryHead: formValues.deliveryHead?.trim() || null,
         csm: formValues.csm?.trim() || null,
         csmRevenueTypeId: formValues.csmRevenueTypeId || null,
+        projectStartDate: formValues.projectStartDate,
+        projectEndDate: formValues.projectEndDate,
         isActive: formValues.isActive,
         description: formValues.description?.trim() || null,
       };
@@ -285,6 +316,8 @@ export default function ProjectManagementList() {
                   <SortableHeader field="projectCode" label="Project Code" />
                   <SortableHeader field="clientName" label="Client Name" />
                   <SortableHeader field="csmRevenueTypeName" label="Revenue Type" />
+                  <SortableHeader field="projectStartDate" label="Start Date" />
+                  <SortableHeader field="projectEndDate" label="End Date" />
                   <SortableHeader field="deliveryHead" label="Delivery Head" />
                   <SortableHeader field="projectManager" label="Project Manager" />
                   <SortableHeader field="csm" label="CSM" />
@@ -295,7 +328,7 @@ export default function ProjectManagementList() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell align="center" colSpan={9}>
+                    <TableCell align="center" colSpan={11}>
                       <Typography color="text.secondary" py={3}>
                         Loading...
                       </Typography>
@@ -303,7 +336,7 @@ export default function ProjectManagementList() {
                   </TableRow>
                 ) : paginated.length === 0 ? (
                   <TableRow>
-                    <TableCell align="center" colSpan={9}>
+                    <TableCell align="center" colSpan={11}>
                       <Typography color="text.secondary" py={3}>
                         No projects found
                       </Typography>
@@ -316,6 +349,8 @@ export default function ProjectManagementList() {
                       <TableCell>{project.projectCode || '-'}</TableCell>
                       <TableCell>{project.clientName}</TableCell>
                       <TableCell>{project.csmRevenueTypeName || '-'}</TableCell>
+                      <TableCell>{formatDisplayDate(project.projectStartDate)}</TableCell>
+                      <TableCell>{formatDisplayDate(project.projectEndDate)}</TableCell>
                       <TableCell>{project.deliveryHead || '-'}</TableCell>
                       <TableCell>{project.projectManager || '-'}</TableCell>
                       <TableCell>{project.csm || '-'}</TableCell>
@@ -409,6 +444,40 @@ export default function ProjectManagementList() {
                 </MenuItem>
               ))}
             </TextField>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Project Start Date *"
+                  onChange={(date) => {
+                    const val = date ? format(date, 'yyyy-MM-dd') : '';
+                    setFormValues({ ...formValues, projectStartDate: val });
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                    },
+                  }}
+                  value={formValues.projectStartDate ? parseISO(formValues.projectStartDate) : null}
+                />
+              </LocalizationProvider>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Project End Date *"
+                  onChange={(date) => {
+                    const val = date ? format(date, 'yyyy-MM-dd') : '';
+                    setFormValues({ ...formValues, projectEndDate: val });
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                    },
+                  }}
+                  value={formValues.projectEndDate ? parseISO(formValues.projectEndDate) : null}
+                />
+              </LocalizationProvider>
+            </Stack>
             <TextField
               fullWidth
               label="Delivery Head"

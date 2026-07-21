@@ -29,6 +29,10 @@ namespace HRMS.Api.Models
         public Guid? CSMRevenueTypeId { get; set; }
         public CSMRevenueType? CSMRevenueType { get; set; }
 
+        public DateTime ProjectStartDate { get; set; }
+
+        public DateTime ProjectEndDate { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         [MaxLength(1000)]
