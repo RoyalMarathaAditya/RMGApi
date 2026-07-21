@@ -32,6 +32,7 @@ namespace HRMS.Api.DTOs.RmgDashboardDtos
         public decimal AvailableCapacity { get; set; }
         public string ResourceStatus { get; set; } = string.Empty;
         public string? AllocationStatus { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public class DashboardFilterDto

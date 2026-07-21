@@ -67,6 +67,7 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
   Overallocated: 'error',
   Bench: 'default',
   'On Leave': 'error',
+  Inactive: 'default',
 };
 
 interface ColumnDef {
@@ -253,7 +254,7 @@ export default function ResourceAllocationDashboard() {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const selectable = filteredData
-        .filter((r) => r.allocationPercentage < 100)
+        .filter((r) => r.isActive && r.allocationPercentage < 100)
         .map((r) => r.employeeId);
       setSelectedEmployeeIds(selectable);
     } else {
@@ -584,6 +585,7 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="Fully Allocated">Fully Allocated</MenuItem>
                 <MenuItem value="Overallocated">Overallocated</MenuItem>
                 <MenuItem value="On Leave">On Leave</MenuItem>
+                <MenuItem value="Inactive">Inactive</MenuItem>
               </Select>
               <Button
                 variant="contained"
@@ -607,8 +609,8 @@ export default function ResourceAllocationDashboard() {
                   <TableCell sx={{ fontWeight: 700, width: 48, px: 1 }}>
                     <Checkbox
                       size="small"
-                      indeterminate={selectedEmployeeIds.length > 0 && selectedEmployeeIds.length < filteredData.filter((r) => r.allocationPercentage < 100).length}
-                      checked={filteredData.length > 0 && selectedEmployeeIds.length === filteredData.filter((r) => r.allocationPercentage < 100).length}
+                      indeterminate={selectedEmployeeIds.length > 0 && selectedEmployeeIds.length < filteredData.filter((r) => r.isActive && r.allocationPercentage < 100).length}
+                      checked={filteredData.length > 0 && selectedEmployeeIds.length === filteredData.filter((r) => r.isActive && r.allocationPercentage < 100).length}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                     />
                   </TableCell>
@@ -621,20 +623,22 @@ export default function ResourceAllocationDashboard() {
               <TableBody>
                 {paginatedData.map((row) => {
                   const isFullyAllocated = row.allocationPercentage >= 100;
+                  const isInactive = !row.isActive;
+                  const isDisabled = isFullyAllocated || isInactive;
                   return (
                   <TableRow
                     key={row.employeeId}
                     hover
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ cursor: 'pointer', opacity: isInactive ? 0.6 : undefined }}
                     onClick={() => navigate(`/rmg/view/${row.employeeId}`)}
                   >
                     <TableCell sx={{ width: 48, px: 1 }} onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         size="small"
-                        disabled={isFullyAllocated}
+                        disabled={isDisabled}
                         checked={selectedEmployeeIds.includes(row.employeeId)}
                         onChange={(e) => handleSelectOne(row.employeeId, e.target.checked)}
-                        sx={isFullyAllocated ? { opacity: 0.4 } : undefined}
+                        sx={isDisabled ? { opacity: 0.4 } : undefined}
                       />
                     </TableCell>
                     {columns.map((col) => (

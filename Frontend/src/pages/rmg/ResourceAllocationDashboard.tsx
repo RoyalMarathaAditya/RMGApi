@@ -45,6 +45,7 @@ const statusColors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'd
   Overallocated: 'error',
   Bench: 'default',
   'On Leave': 'error',
+  Inactive: 'default',
 };
 
 export default function ResourceAllocationDashboard() {
@@ -192,6 +193,7 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="Fully Allocated">Fully Allocated</MenuItem>
                 <MenuItem value="Overallocated">Overallocated</MenuItem>
                 <MenuItem value="On Leave">On Leave</MenuItem>
+                <MenuItem value="Inactive">Inactive</MenuItem>
               </Select>
               <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={() => navigate('/rmg/create')}>
                 Allocate

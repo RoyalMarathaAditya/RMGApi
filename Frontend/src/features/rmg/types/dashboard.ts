@@ -25,6 +25,7 @@ export interface DashboardGridDto {
   availableCapacity: number;
   resourceStatus: string;
   allocationStatus: string | null;
+  isActive: boolean;
 }
 
 export interface DashboardFilterDto {

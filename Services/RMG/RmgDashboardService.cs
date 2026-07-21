@@ -79,6 +79,7 @@ namespace HRMS.Api.Services.RMG
                 .Include(e => e.SubPractice)
                 .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill)
                 .Include(e => e.EmployeeLeaves)
+                .Include(e => e.EmployeeStatus)
                 .Where(e => !e.IsDeleted);
 
             if (!string.IsNullOrEmpty(filter?.SearchTerm))
@@ -122,9 +123,11 @@ namespace HRMS.Api.Services.RMG
                 var currentProject = projectNames.Count > 1 ? $"{projectNames[0]} (+{projectNames.Count - 1})" : projectNames.FirstOrDefault();
                 var allocationStatus = activeAllocations.FirstOrDefault()?.AllocationStatus;
 
+                var isActive = emp.EmployeeStatus?.Name != "Inactive";
                 var onLeave = emp.EmployeeLeaves?.Any(el => el.FromDate <= DateTime.UtcNow && el.ToDate >= DateTime.UtcNow) ?? false;
 
-                var resourceStatus = onLeave ? "On Leave"
+                var resourceStatus = !isActive ? "Inactive"
+                    : onLeave ? "On Leave"
                     : totalAllocated > 100 ? "Overallocated"
                     : totalAllocated >= 100 ? "Fully Allocated"
                     : totalAllocated > 0 ? "Partially Allocated"
@@ -157,7 +160,8 @@ namespace HRMS.Api.Services.RMG
                     AllocationPercentage = totalAllocated,
                     AvailableCapacity = Math.Max(0, 100 - totalAllocated),
                     ResourceStatus = resourceStatus,
-                    AllocationStatus = allocationStatus
+                    AllocationStatus = allocationStatus,
+                    IsActive = isActive
                 });
             }
 
