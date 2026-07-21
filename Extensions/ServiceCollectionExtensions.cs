@@ -86,6 +86,7 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IResourceAllocationService, ResourceAllocationService>();
             services.AddScoped<IResourceRequestService, ResourceRequestService>();
             services.AddScoped<IRmgDashboardService, RmgDashboardService>();
+            services.AddScoped<IReportService, ReportService>();
 
             services.AddResponseCompression(options =>
             {

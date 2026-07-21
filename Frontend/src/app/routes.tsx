@@ -29,6 +29,7 @@ import ResourceRequestPage from '../features/rmg/pages/ResourceRequestPage';
 import AllocationHistory from '../features/rmg/pages/AllocationHistory';
 import CalendarViewPage from '../features/rmg/pages/CalendarViewPage';
 import TimelineViewPage from '../features/rmg/pages/TimelineViewPage';
+import PracticeWiseReport from '../features/reports/pages/PracticeWiseReport';
 import Login from '../pages/auth/Login';
 import Dashboard from '../pages/dashboard/Dashboard';
 import Home from '../pages/home/Home';
@@ -92,7 +93,8 @@ export function AppRoutes() {
           <Route path="/rmg/history/:allocationId" element={<AllocationHistory />} />
           <Route path="/rmg/calendar" element={<CalendarViewPage />} />
           <Route path="/rmg/timeline" element={<TimelineViewPage />} />
-          <Route path="/reports" element={<ModulePlaceholder title={modulePages.reports} />} />
+          <Route path="/reports" element={<PracticeWiseReport />} />
+          <Route path="/reports/practice-wise" element={<PracticeWiseReport />} />
           <Route path="/settings" element={<ModulePlaceholder title={modulePages.settings} />} />
         </Route>
       </Route>
