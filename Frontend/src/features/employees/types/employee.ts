@@ -30,6 +30,7 @@ export interface Employee {
   subPracticeId?: string | null;
   subPractice?: string | null;
   skills: Array<{ id: string; name: string }>;
+  additionalData?: Record<string, string> | null;
 }
 
 export interface EmployeeFormValues {

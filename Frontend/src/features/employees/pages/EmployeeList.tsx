@@ -15,6 +15,8 @@ import EmployeeDialog from '../components/EmployeeDialog';
 import DeleteEmployeeDialog from '../components/DeleteEmployeeDialog';
 import { employeeService } from '../services/employeeService';
 import type { UploadColumnInfo } from '../services/employeeService';
+import { columnValueMappingService } from '../../columnMappings/services/columnMappingService';
+import type { ColumnValueMapping } from '../../columnMappings/types/columnMapping';
 import { getEmployeeColumns } from '../config/employeeColumns';
 import {
   createEmployee,
@@ -31,12 +33,36 @@ interface MasterItem {
   name: string;
 }
 
-function buildColumns(columnInfo: UploadColumnInfo[]): GridColDef<Employee>[] {
+const standardFields = new Set([
+  'employeeCode', 'fullName', 'email', 'doj', 'lwd',
+  'employmentType', 'designation', 'practice', 'subPractice',
+  'location', 'reportingManagerName', 'practiceHeadName',
+  'employeeStatus', 'mobileNumber',
+]);
+
+function buildColumns(columnInfo: UploadColumnInfo[], valueMap: Record<string, Record<string, string>> = {}): GridColDef<Employee>[] {
   return columnInfo.map((col) => {
+    const isStandard = standardFields.has(col.field);
     const base: GridColDef<Employee> = {
       field: col.field,
       headerName: col.header,
       width: col.field === 'email' ? 220 : col.field === 'fullName' ? 180 : col.field === 'employeeCode' ? 100 : 150,
+      ...(isStandard ? {} : {
+        valueGetter: (_value: unknown, row: Employee) => {
+          let raw: any = (row as any)[col.field];
+          if (raw === undefined || raw === null || raw === '') {
+            const pascalKey = col.field.charAt(0).toUpperCase() + col.field.slice(1);
+            raw = row.additionalData?.[col.field] ?? row.additionalData?.[pascalKey] ?? '';
+          }
+          const rawStr = String(raw);
+          const mapping = valueMap[col.field.charAt(0).toUpperCase() + col.field.slice(1)];
+          if (mapping) {
+            const found = Object.entries(mapping).find(([src]) => src.toLowerCase() === rawStr.toLowerCase());
+            if (found) return found[1];
+          }
+          return rawStr;
+        },
+      }),
     };
     if (col.field === 'employeeStatus') {
       base.renderCell = ({ row }) => (
@@ -70,6 +96,7 @@ export default function EmployeeList() {
   const [practices, setPractices] = useState<MasterItem[]>([]);
   const [statuses, setStatuses] = useState<MasterItem[]>([]);
   const [fullNameInput, setFullNameInput] = useState(filters.search);
+  const [valueMappings, setValueMappings] = useState<Record<string, Record<string, string>>>({});
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -80,6 +107,14 @@ export default function EmployeeList() {
       setStatuses(all.filter((s) => /^active$/i.test(s.name) || /^inactive$/i.test(s.name)));
     }).catch(() => {});
     employeeService.getLastUploadColumns().then(setUploadColumns).catch(() => {});
+    columnValueMappingService.getAll().then((list) => {
+      const map: Record<string, Record<string, string>> = {};
+      for (const vm of list) {
+        if (!map[vm.targetProperty]) map[vm.targetProperty] = {};
+        map[vm.targetProperty][vm.sourceValue] = vm.targetValue;
+      }
+      setValueMappings(map);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -127,7 +162,7 @@ export default function EmployeeList() {
 
   const hasActiveFilters = filters.search || filters.practiceId || filters.doj || filters.statusId;
 
-  const columns = useMemo(() => uploadColumns.length > 0 ? buildColumns(uploadColumns) : getEmployeeColumns(), [uploadColumns]);
+  const columns = useMemo(() => uploadColumns.length > 0 ? buildColumns(uploadColumns, valueMappings) : getEmployeeColumns(), [uploadColumns, valueMappings]);
 
   const handleAdd = () => {
     setSelectedEmployee(null);

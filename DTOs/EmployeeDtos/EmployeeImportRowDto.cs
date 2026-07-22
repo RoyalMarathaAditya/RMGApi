@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace HRMS.Api.DTOs.EmployeeDtos
 {
     public class EmployeeImportRowDto
@@ -16,5 +18,6 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public string? ActiveStatus { get; set; }
         public DateTime? DOJ { get; set; }
         public DateTime? LWD { get; set; }
+        public Dictionary<string, string> AdditionalFields { get; set; } = new();
     }
 }

@@ -64,8 +64,8 @@ function ChangesAccordion({ change }: { change: EmployeeChange }) {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                      {fc.newValue ?? '-'}
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: fc.newValue === null && fc.oldValue ? 'error.main' : 'success.main' }}>
+                      {fc.newValue ?? (fc.oldValue ? '(removed)' : '-')}
                     </Typography>
                   </TableCell>
                 </TableRow>

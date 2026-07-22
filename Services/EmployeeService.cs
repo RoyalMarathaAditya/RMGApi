@@ -1,4 +1,5 @@
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.Common;
 using HRMS.Api.DTOs.EmployeeDtos;
@@ -21,45 +22,44 @@ namespace HRMS.Api.Services.Interfaces
             _mapper = mapper;
         }
 
+        private IQueryable<Employee> GetBaseQuery()
+        {
+            return _dbContext.Employees.AsNoTracking().Where(e => !e.IsDeleted);
+        }
+
         public async Task<ApiResponse<IEnumerable<EmployeeDto>>> GetAllAsync(string? fullName = null, Guid? practiceId = null, DateTime? doj = null, Guid? statusId = null, CancellationToken cancellationToken = default)
         {
-            var query = GetEmployeeQuery();
+            var query = GetBaseQuery();
 
             if (!string.IsNullOrWhiteSpace(fullName))
-            {
                 query = query.Where(x => x.FullName.Contains(fullName));
-            }
 
             if (practiceId.HasValue)
-            {
                 query = query.Where(x => x.PracticeId == practiceId.Value);
-            }
 
             if (doj.HasValue)
-            {
                 query = query.Where(x => x.DOJ.Year == doj.Value.Year && x.DOJ.Month == doj.Value.Month);
-            }
 
             if (statusId.HasValue)
-            {
                 query = query.Where(x => x.StatusId == statusId.Value);
-            }
 
-            var employees = await query.ToListAsync(cancellationToken);
+            var result = await query
+                .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(cancellationToken);
 
-            var result = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
             return ApiResponse<IEnumerable<EmployeeDto>>.Ok(result);
         }
 
         public async Task<ApiResponse<EmployeeDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var employee = await GetEmployeeQuery()
-                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            var result = await GetBaseQuery()
+                .Where(e => e.Id == id)
+                .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (employee is null)
+            if (result is null)
                 return ApiResponse<EmployeeDto>.Fail("Employee not found");
 
-            var result = _mapper.Map<EmployeeDto>(employee);
             return ApiResponse<EmployeeDto>.Ok(result);
         }
 
@@ -70,18 +70,15 @@ namespace HRMS.Api.Services.Interfaces
             if (request.SkillIds.Any())
             {
                 foreach (var skillId in request.SkillIds)
-                {
-                    employee.EmployeeSkills.Add(new EmployeeSkill
-                    {
-                        SkillId = skillId
-                    });
-                }
+                    employee.EmployeeSkills.Add(new EmployeeSkill { SkillId = skillId });
             }
 
             var created = await _employeeRepository.CreateAsync(employee, cancellationToken);
-            var saved = await GetEmployeeQuery().FirstOrDefaultAsync(e => e.Id == created.Id, cancellationToken);
-            var result = _mapper.Map<EmployeeDto>(saved);
-            return ApiResponse<EmployeeDto>.Ok(result, "Employee created successfully");
+            var result = await GetBaseQuery()
+                .Where(e => e.Id == created.Id)
+                .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(cancellationToken);
+            return ApiResponse<EmployeeDto>.Ok(result!, "Employee created successfully");
         }
 
         public async Task<ApiResponse<EmployeeDto>> UpdateAsync(int id, UpdateEmployeeDto request, CancellationToken cancellationToken = default)
@@ -100,19 +97,15 @@ namespace HRMS.Api.Services.Interfaces
             if (request.SkillIds.Any())
             {
                 foreach (var skillId in request.SkillIds)
-                {
-                    existing.EmployeeSkills.Add(new EmployeeSkill
-                    {
-                        EmployeeId = id,
-                        SkillId = skillId
-                    });
-                }
+                    existing.EmployeeSkills.Add(new EmployeeSkill { EmployeeId = id, SkillId = skillId });
             }
 
             await _employeeRepository.UpdateAsync(existing, cancellationToken);
-            var saved = await GetEmployeeQuery().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-            var result = _mapper.Map<EmployeeDto>(saved);
-            return ApiResponse<EmployeeDto>.Ok(result, "Employee updated successfully");
+            var result = await GetBaseQuery()
+                .Where(e => e.Id == id)
+                .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(cancellationToken);
+            return ApiResponse<EmployeeDto>.Ok(result!, "Employee updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -128,7 +121,7 @@ namespace HRMS.Api.Services.Interfaces
 
         public async Task<ApiResponse<PagedResponse<EmployeeDto>>> GetPagedAsync(PaginationParams parameters, CancellationToken cancellationToken = default)
         {
-            var query = GetEmployeeQuery();
+            var query = GetBaseQuery();
 
             if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
             {
@@ -154,15 +147,14 @@ namespace HRMS.Api.Services.Interfaces
             }
 
             var items = await query
+                .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
                 .Skip((parameters.PageNumber - 1) * parameters.PageSize)
                 .Take(parameters.PageSize)
                 .ToListAsync(cancellationToken);
 
-            var result = _mapper.Map<IEnumerable<EmployeeDto>>(items);
-
             return ApiResponse<PagedResponse<EmployeeDto>>.Ok(new PagedResponse<EmployeeDto>
             {
-                Items = result,
+                Items = items,
                 TotalCount = totalCount,
                 PageNumber = parameters.PageNumber,
                 PageSize = parameters.PageSize
@@ -173,8 +165,7 @@ namespace HRMS.Api.Services.Interfaces
         {
             return await _dbContext.Employees
                 .AsNoTracking()
-                .Include(e => e.EmployeeStatus)
-                .Where(e => !e.IsDeleted && e.EmployeeStatus.Name == "Active")
+                .Where(e => !e.IsDeleted && e.EmployeeStatus!.Name == "Active")
                 .OrderBy(e => e.FullName)
                 .Select(e => new EmployeeDropdownDto
                 {
@@ -193,33 +184,16 @@ namespace HRMS.Api.Services.Interfaces
                 return ApiResponse<IEnumerable<EmployeeDto>>.Ok(Enumerable.Empty<EmployeeDto>());
 
             var search = searchTerm.ToLower();
-            var employees = await GetEmployeeQuery()
+            var result = await GetBaseQuery()
                 .Where(e =>
                     e.FullName.ToLower().Contains(search) ||
                     e.Email.ToLower().Contains(search) ||
                     e.EmployeeCode.ToLower().Contains(search))
+                .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
                 .Take(20)
                 .ToListAsync(cancellationToken);
 
-            var result = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
             return ApiResponse<IEnumerable<EmployeeDto>>.Ok(result);
-        }
-
-        private IQueryable<Employee> GetEmployeeQuery()
-        {
-            return _dbContext.Employees
-                .AsNoTracking()
-                .Include(e => e.EmploymentType)
-                .Include(e => e.Location)
-                .Include(e => e.WorkModel)
-                .Include(e => e.Practice)
-                .Include(e => e.SubPractice)
-                .Include(e => e.DepartmentType)
-                .Include(e => e.EmployeeStatus)
-                .Include(e => e.ReportingManager)
-                .Include(e => e.PracticeHead)
-                .Include(e => e.Designation)
-                .Include(e => e.EmployeeSkills).ThenInclude(es => es.Skill);
         }
     }
 }

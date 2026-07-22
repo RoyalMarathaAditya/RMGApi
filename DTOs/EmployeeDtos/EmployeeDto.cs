@@ -36,5 +36,6 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public Guid? DesignationId { get; set; }
         public string? Designation { get; set; }
         public List<MasterDto> Skills { get; set; } = new();
+        public string? AdditionalData { get; set; }
     }
 }
