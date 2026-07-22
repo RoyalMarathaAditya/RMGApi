@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics;
 using System.Globalization;
@@ -19,6 +20,24 @@ namespace HRMS.Api.Services
         private readonly DynamicExcelMapper _dynamicMapper;
         private readonly IUserSynchronizationService _userSyncService;
         private List<UploadColumnInfo>? _lastUploadedColumns;
+
+        private static readonly ConcurrentDictionary<string, System.Reflection.PropertyInfo?> EmployeePropertyCache = new();
+        private static readonly Type EmployeeEntityType = typeof(Employee);
+        private static readonly HashSet<Type> SupportedTypes = new()
+        {
+            typeof(string), typeof(int), typeof(long), typeof(decimal), typeof(double), typeof(float),
+            typeof(bool), typeof(DateTime), typeof(Guid),
+            typeof(int?), typeof(long?), typeof(decimal?), typeof(double?), typeof(float?),
+            typeof(bool?), typeof(DateTime?), typeof(Guid?)
+        };
+
+        private static readonly HashSet<string> FixedColumnProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "EmployeeCode", "FullName", "Email", "DOJ", "LWD",
+            "DesignationId", "EmploymentTypeId", "LocationId", "PracticeId", "SubPracticeId",
+            "StatusId", "ReportingManagerName", "PracticeHeadName", "AdditionalData",
+            "EmployeeTypeId", "ReportingManagerId", "PracticeHeadId"
+        };
 
         static BulkImportService()
         {
@@ -121,6 +140,7 @@ namespace HRMS.Api.Services
                 bulkCopy.ColumnMappings.Add("ActiveStatus", "ActiveStatus");
                 bulkCopy.ColumnMappings.Add("DOJ", "DOJ");
                 bulkCopy.ColumnMappings.Add("LWD", "LWD");
+                bulkCopy.ColumnMappings.Add("AdditionalData", "AdditionalData");
                 bulkCopy.ColumnMappings.Add("ImportedOn", "ImportedOn");
                 bulkCopy.ColumnMappings.Add("ImportedBy", "ImportedBy");
 
@@ -187,10 +207,23 @@ namespace HRMS.Api.Services
                     _logger.LogError(syncEx, "User synchronization failed after bulk import for batch {BatchId}, but employee import was successful", batchId);
                 }
 
+                try
+                {
+                    await DistributeAdditionalDataAsync(cancellationToken);
+                }
+                catch (Exception distEx)
+                {
+                    _logger.LogError(distEx, "AdditionalData distribution failed for batch {BatchId}. Values remain in AdditionalData column.", batchId);
+                }
+
                 result.Columns = _lastUploadedColumns;
 
                 result.Success = true;
                 result.ImportedRows = rows;
+
+                sw.Stop();
+                _logger.LogInformation("Bulk import completed successfully. File: {FileName}, Elapsed: {ElapsedMs}ms, TotalRows: {TotalRows}, ImportedRows: {ImportedRows}, DeletedRows: {DeletedRows}",
+                    file.FileName, sw.ElapsedMilliseconds, result.TotalRows, result.SuccessRows, result.DeletedRows);
             }
             catch (Exception ex)
             {
@@ -337,7 +370,7 @@ namespace HRMS.Api.Services
             return result;
         }
 
-        private static List<FieldChangeDto> ComputeFieldChanges(Employee existing, EmployeeImportRowDto row, Dictionary<string, string> displayNameMap)
+        private List<FieldChangeDto> ComputeFieldChanges(Employee existing, EmployeeImportRowDto row, Dictionary<string, string> displayNameMap)
         {
             var changes = new List<FieldChangeDto>();
 
@@ -469,12 +502,106 @@ namespace HRMS.Api.Services
                     NewValue = row.LWD.Value.ToString("yyyy-MM-dd")
                 });
 
+            var existingAdditionalData = DeserializeAdditionalData(existing.AdditionalData);
+            _logger.LogDebug("DIAG ComputeFieldChanges: row.AdditionalFields keys=[{Keys}], existingAdditionalData keys=[{ExistKeys}], existing.AdditionalData=[{Ad}]",
+                string.Join(",", row.AdditionalFields.Keys), string.Join(",", existingAdditionalData.Keys), existing.AdditionalData);
+            foreach (var kvp in row.AdditionalFields)
+            {
+                string? oldVal;
+                var employeeProp = EmployeePropertyCache.GetOrAdd(kvp.Key, _ =>
+                    EmployeeEntityType.GetProperty(kvp.Key,
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase));
+                if (employeeProp != null && employeeProp.CanRead)
+                {
+                    var rawValue = employeeProp.GetValue(existing);
+                    oldVal = rawValue?.ToString() ?? "";
+                    var normalizedNew = ConvertImportValue(kvp.Value, employeeProp.PropertyType);
+                    var newValStr = normalizedNew?.ToString() ?? "";
+                    _logger.LogDebug("DIAG ComputeFieldChanges key='{Key}': employeeProp found, rawValue={Raw}, oldVal={Old}, convertedNew={Conv}, newValStr={New}, equal={Eq}",
+                        kvp.Key, rawValue, oldVal, normalizedNew, newValStr,
+                        string.Equals(oldVal, newValStr, StringComparison.OrdinalIgnoreCase));
+                    if (!string.Equals(oldVal, newValStr, StringComparison.OrdinalIgnoreCase))
+                    {
+                        changes.Add(new FieldChangeDto
+                        {
+                            FieldName = displayNameMap.TryGetValue(kvp.Key, out var dn) ? dn : kvp.Key,
+                            OldValue = oldVal,
+                            NewValue = kvp.Value
+                        });
+                        _logger.LogDebug("DIAG ComputeFieldChanges: ADDED change for '{Key}': '{Old}' -> '{New}'", kvp.Key, oldVal, kvp.Value);
+                    }
+                }
+                else
+                {
+                    oldVal = existingAdditionalData.TryGetValue(kvp.Key, out var existingVal) ? existingVal : null;
+                    _logger.LogDebug("DIAG ComputeFieldChanges key='{Key}': employeeProp null/!CanRead, oldVal={Old}, kvp.Value={New}, equal={Eq}",
+                        kvp.Key, oldVal, kvp.Value,
+                        string.Equals(oldVal ?? "", kvp.Value ?? "", StringComparison.OrdinalIgnoreCase));
+                    if (!string.Equals(oldVal ?? "", kvp.Value ?? "", StringComparison.OrdinalIgnoreCase))
+                    {
+                        changes.Add(new FieldChangeDto
+                        {
+                            FieldName = displayNameMap.TryGetValue(kvp.Key, out var dn) ? dn : kvp.Key,
+                            OldValue = oldVal,
+                            NewValue = kvp.Value
+                        });
+                        _logger.LogDebug("DIAG ComputeFieldChanges: ADDED change (else) for '{Key}': '{Old}' -> '{New}'", kvp.Key, oldVal, kvp.Value);
+                    }
+                }
+            }
+
+            foreach (var kvp in existingAdditionalData)
+            {
+                if (row.AdditionalFields.ContainsKey(kvp.Key)) continue;
+
+                string? currentVal;
+                var employeeProp = EmployeePropertyCache.GetOrAdd(kvp.Key, _ =>
+                    EmployeeEntityType.GetProperty(kvp.Key,
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase));
+                if (employeeProp != null && employeeProp.CanRead)
+                {
+                    var rawValue = employeeProp.GetValue(existing);
+                    currentVal = rawValue?.ToString() ?? "";
+                }
+                else
+                {
+                    currentVal = kvp.Value;
+                }
+
+                if (!string.IsNullOrEmpty(currentVal))
+                {
+                    changes.Add(new FieldChangeDto
+                    {
+                        FieldName = displayNameMap.TryGetValue(kvp.Key, out var dn) ? dn : kvp.Key,
+                        OldValue = currentVal,
+                        NewValue = null
+                    });
+                }
+            }
+
             return changes;
         }
 
         private static string GetDisplayName(Dictionary<string, string> displayNameMap, string propertyName, string fallback)
         {
             return displayNameMap.TryGetValue(propertyName, out var name) ? name : fallback;
+        }
+
+        private static Dictionary<string, string> DeserializeAdditionalData(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var deserialized = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                return deserialized != null
+                    ? new Dictionary<string, string>(deserialized, StringComparer.OrdinalIgnoreCase)
+                    : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
         }
 
         public byte[] GenerateTemplate()
@@ -669,6 +796,7 @@ namespace HRMS.Api.Services
             table.Columns.Add("ActiveStatus", typeof(string));
             table.Columns.Add("DOJ", typeof(DateTime));
             table.Columns.Add("LWD", typeof(DateTime));
+            table.Columns.Add("AdditionalData", typeof(string));
             table.Columns.Add("ImportedOn", typeof(DateTime));
             table.Columns.Add("ImportedBy", typeof(string));
 
@@ -691,12 +819,150 @@ namespace HRMS.Api.Services
                 dr["ActiveStatus"] = (object?)row.ActiveStatus ?? DBNull.Value;
                 dr["DOJ"] = (object?)row.DOJ ?? DBNull.Value;
                 dr["LWD"] = (object?)row.LWD ?? DBNull.Value;
+                dr["AdditionalData"] = row.AdditionalFields.Count > 0
+                    ? (object?)System.Text.Json.JsonSerializer.Serialize(row.AdditionalFields) ?? DBNull.Value
+                    : DBNull.Value;
                 dr["ImportedOn"] = now;
                 dr["ImportedBy"] = (object?)uploadedBy ?? DBNull.Value;
                 table.Rows.Add(dr);
             }
 
             return table;
+        }
+
+        private async Task DistributeAdditionalDataAsync(CancellationToken ct)
+        {
+            var mappedEntityProps = await GetMappedEntityPropertiesAsync(ct);
+
+            // Step 1: Distribute fields from AdditionalData to Employee entity columns
+            var employees = await _dbContext.Employees
+                .Where(e => !e.IsDeleted && e.AdditionalData != null && e.AdditionalData != "")
+                .ToListAsync(ct);
+
+            var anyChanges = false;
+
+            foreach (var emp in employees)
+            {
+                Dictionary<string, string>? fields;
+                try
+                {
+                    fields = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(emp.AdditionalData);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (fields == null || fields.Count == 0) continue;
+
+                foreach (var kvp in fields)
+                {
+                    var prop = EmployeePropertyCache.GetOrAdd(kvp.Key, _ =>
+                        EmployeeEntityType.GetProperty(kvp.Key,
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase));
+                    if (prop == null || !prop.CanWrite) continue;
+                    if (!SupportedTypes.Contains(prop.PropertyType)) continue;
+
+                    var converted = ConvertImportValue(kvp.Value, prop.PropertyType);
+                    if (converted != null)
+                    {
+                        prop.SetValue(emp, converted);
+                        anyChanges = true;
+                    }
+                }
+            }
+
+            if (anyChanges)
+            {
+                await _dbContext.SaveChangesAsync(ct);
+                _logger.LogInformation("Distributed AdditionalData to actual Employee columns for {Count} employees", employees.Count);
+            }
+
+            // Step 2: Clear mapped columns for employees without those fields in AdditionalData (single UPDATE per property)
+            foreach (var (name, _) in mappedEntityProps)
+            {
+                var sql = $"UPDATE Employees SET [{name}] = NULL WHERE IsDeleted = 0 AND [{name}] IS NOT NULL AND (AdditionalData IS NULL OR JSON_VALUE(AdditionalData, N'$.{name}') IS NULL)";
+                await _dbContext.Database.ExecuteSqlRawAsync(sql, ct);
+            }
+        }
+
+        private async Task<List<(string Name, System.Reflection.PropertyInfo Prop)>> GetMappedEntityPropertiesAsync(CancellationToken ct)
+        {
+            var targetProperties = await _dbContext.ColumnMappings
+                .Where(cm => cm.IsActive && cm.EntityType == "employee-import")
+                .Select(cm => cm.TargetProperty)
+                .Distinct()
+                .ToListAsync(ct);
+
+            var result = new List<(string, System.Reflection.PropertyInfo)>();
+            foreach (var propName in targetProperties)
+            {
+                if (FixedColumnProperties.Contains(propName)) continue;
+
+                var prop = EmployeePropertyCache.GetOrAdd(propName, _ =>
+                    EmployeeEntityType.GetProperty(propName,
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase));
+                if (prop != null && prop.CanWrite && SupportedTypes.Contains(prop.PropertyType))
+                    result.Add((propName, prop));
+            }
+            return result;
+        }
+
+        private static object? ConvertImportValue(string value, Type targetType)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            var nonNullableType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            try
+            {
+                if (nonNullableType == typeof(string))
+                    return value;
+
+                if (nonNullableType == typeof(int))
+                    return int.TryParse(value, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var i) ? i : null;
+
+                if (nonNullableType == typeof(long))
+                    return long.TryParse(value, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var l) ? l : null;
+
+                if (nonNullableType == typeof(decimal))
+                    return decimal.TryParse(value, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : null;
+
+                if (nonNullableType == typeof(double))
+                    return double.TryParse(value, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var dbl) ? dbl : null;
+
+                if (nonNullableType == typeof(float))
+                    return float.TryParse(value, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var f) ? f : null;
+
+                if (nonNullableType == typeof(bool))
+                {
+                    if (bool.TryParse(value, out var b)) return b;
+                    if (value.Equals("1") || value.Equals("yes", StringComparison.OrdinalIgnoreCase) ||
+                        value.Equals("y", StringComparison.OrdinalIgnoreCase)) return true;
+                    if (value.Equals("0") || value.Equals("no", StringComparison.OrdinalIgnoreCase) ||
+                        value.Equals("n", StringComparison.OrdinalIgnoreCase)) return false;
+                    return null;
+                }
+
+                if (nonNullableType == typeof(DateTime))
+                    return DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out var dt) ? dt : null;
+
+                if (nonNullableType == typeof(Guid))
+                    return Guid.TryParse(value, out var g) ? g : null;
+
+                return value;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

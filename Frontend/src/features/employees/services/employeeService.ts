@@ -62,6 +62,14 @@ function unwrap<T>(response: { data: { success: boolean; data: T } }): T {
 }
 
 function normalizeEmployee(data: any): Employee {
+  let additionalData: Record<string, string> | null = null;
+  if (data.additionalData) {
+    try {
+      additionalData = typeof data.additionalData === 'string'
+        ? JSON.parse(data.additionalData)
+        : data.additionalData;
+    } catch { additionalData = null; }
+  }
   return {
     id: data.id,
     employeeCode: data.employeeCode ?? '',
@@ -93,6 +101,7 @@ function normalizeEmployee(data: any): Employee {
     subPracticeId: data.subPracticeId ?? null,
     subPractice: data.subPractice ?? null,
     skills: data.skills ?? [],
+    additionalData,
   };
 }
 

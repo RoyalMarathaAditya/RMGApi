@@ -16,9 +16,11 @@ namespace HRMS.Api.Services
         private readonly IColumnValueMappingRepository _valueMappingRepository;
         private readonly ILogger<DynamicExcelMapper> _logger;
 
-        private static readonly ConcurrentDictionary<string, PropertyInfo?> PropertyCache = new();
+    private static readonly ConcurrentDictionary<string, PropertyInfo?> PropertyCache = new();
+    private static readonly ConcurrentDictionary<string, PropertyInfo?> EmployeePropertyCache = new();
+    private static readonly Type EmployeeType = typeof(Employee);
 
-        public DynamicExcelMapper(
+    public DynamicExcelMapper(
             IColumnMappingRepository mappingRepository,
             IColumnValueMappingRepository valueMappingRepository,
             ILogger<DynamicExcelMapper> logger)
@@ -107,7 +109,25 @@ namespace HRMS.Api.Services
                     var prop = GetProperty(dtoType, mapping.TargetProperty);
                     if (prop == null)
                     {
-                        warnings.Add($"Target property '{mapping.TargetProperty}' not found on DTO. Skipping.");
+                        var stringVal = rawValue.ToString();
+                        _logger.LogDebug("DIAG DynamicMapper: TargetProperty='{TP}' prop=null, rawValue='{Raw}', stringVal='{Str}', empty={Empty}",
+                            mapping.TargetProperty, rawValue, stringVal, string.IsNullOrEmpty(stringVal));
+                        if (!string.IsNullOrEmpty(stringVal))
+                        {
+                            var employeeProp = GetEmployeeProperty(mapping.TargetProperty);
+                            dto.AdditionalFields[mapping.TargetProperty] = stringVal;
+                            _logger.LogDebug("DIAG DynamicMapper: Stored in AdditionalFields[{Key}] = '{Val}'", mapping.TargetProperty, stringVal);
+                            if (employeeProp != null)
+                            {
+                                _logger.LogDebug("Stored Employee field '{Prop}' = '{Value}' in AdditionalFields (will be distributed to actual column)",
+                                    mapping.TargetProperty, stringVal);
+                            }
+                            else
+                            {
+                                _logger.LogDebug("Stored custom field '{Prop}' = '{Value}' in AdditionalFields",
+                                    mapping.TargetProperty, stringVal);
+                            }
+                        }
                         continue;
                     }
 
@@ -262,6 +282,12 @@ namespace HRMS.Api.Services
                 type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
         }
 
+        private static PropertyInfo? GetEmployeeProperty(string propertyName)
+        {
+            return EmployeePropertyCache.GetOrAdd(propertyName, _ =>
+                EmployeeType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
+        }
+
         private static string GetFrontendField(string targetProperty)
         {
             return targetProperty switch
@@ -292,7 +318,8 @@ namespace HRMS.Api.Services
                    string.IsNullOrWhiteSpace(dto.Email) &&
                    string.IsNullOrWhiteSpace(dto.Practice) &&
                    string.IsNullOrWhiteSpace(dto.Designation) &&
-                   string.IsNullOrWhiteSpace(dto.EmployeeType);
+                   string.IsNullOrWhiteSpace(dto.EmployeeType) &&
+                   dto.AdditionalFields.Count == 0;
         }
     }
 }

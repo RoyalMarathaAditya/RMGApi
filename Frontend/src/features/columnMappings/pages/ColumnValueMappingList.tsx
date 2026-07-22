@@ -3,6 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -25,8 +26,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import PageContainer from '../../../components/common/PageContainer';
 import { toastService } from '../../../services/toastService';
-import { columnValueMappingService } from '../services/columnMappingService';
-import type { ColumnValueMapping, ColumnValueMappingFormValues } from '../types/columnMapping';
+import { columnMappingService, columnValueMappingService } from '../services/columnMappingService';
+import type { ColumnMapping, ColumnValueMapping, ColumnValueMappingFormValues } from '../types/columnMapping';
 
 const defaultFormValues: ColumnValueMappingFormValues = {
   targetProperty: '',
@@ -37,6 +38,7 @@ const defaultFormValues: ColumnValueMappingFormValues = {
 
 export default function ColumnValueMappingList() {
   const [mappings, setMappings] = useState<ColumnValueMapping[]>([]);
+  const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
@@ -49,8 +51,12 @@ export default function ColumnValueMappingList() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await columnValueMappingService.getAll();
-      setMappings(data);
+      const [vm, cm] = await Promise.all([
+        columnValueMappingService.getAll(),
+        columnMappingService.getAll(),
+      ]);
+      setMappings(vm);
+      setColumnMappings(cm);
     } catch {
       setError('Failed to load value mappings');
     } finally {
@@ -61,6 +67,13 @@ export default function ColumnValueMappingList() {
   useEffect(() => {
     void fetchData();
   }, [fetchData]);
+
+  const targetPropertyOptions = [
+    ...new Set([
+      ...columnMappings.filter(m => m.entityType === 'employee-import').map(m => m.targetProperty),
+      ...mappings.map(m => m.targetProperty),
+    ]),
+  ];
 
   const filtered = mappings.filter((m) => {
     const q = searchText.toLowerCase();
@@ -205,11 +218,19 @@ export default function ColumnValueMappingList() {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {formError && <Alert severity="error">{formError}</Alert>}
-            <TextField
+            <Autocomplete
+              freeSolo
               fullWidth
-              label="Target Property"
-              onChange={(e) => setFormValues({ ...formValues, targetProperty: e.target.value })}
-              required
+              onChange={(_, value) => {
+                setFormValues(prev => ({ ...prev, targetProperty: value ?? '' }));
+              }}
+              onInputChange={(_, value) => {
+                setFormValues(prev => ({ ...prev, targetProperty: value }));
+              }}
+              options={targetPropertyOptions}
+              renderInput={(params) => (
+                <TextField {...params} label="Target Property" required />
+              )}
               value={formValues.targetProperty}
             />
             <TextField

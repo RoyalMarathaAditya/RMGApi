@@ -91,6 +91,9 @@ namespace HRMS.Api.Models
         public string? ModifiedBy { get; set; }
         public bool IsDeleted { get; set; }
 
+        [MaxLength(4000)]
+        public string? AdditionalData { get; set; }
+
         [Timestamp]
         public byte[] RowVersion { get; set; } = default!;
 
