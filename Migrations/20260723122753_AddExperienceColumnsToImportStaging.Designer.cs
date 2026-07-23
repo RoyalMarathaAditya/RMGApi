@@ -4,6 +4,7 @@ using HRMS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723122753_AddExperienceColumnsToImportStaging")]
+    partial class AddExperienceColumnsToImportStaging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -900,45 +903,6 @@ namespace HRMS.Api.Migrations
                             SourceColumn = "LWD",
                             TargetDisplayName = "LWD",
                             TargetProperty = "LWD"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000015"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 15,
-                            EntityType = "employee-import",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Experience prior to NV",
-                            TargetDisplayName = "Experience prior to NV",
-                            TargetProperty = "PriorExperience"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000016"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "decimal",
-                            DisplayOrder = 16,
-                            EntityType = "employee-import",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Exp in NV",
-                            TargetDisplayName = "Exp in NV",
-                            TargetProperty = "RelevantExperience"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1000000-0000-0000-0000-000000000017"),
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DataType = "bool",
-                            DisplayOrder = 17,
-                            EntityType = "employee-import",
-                            IsActive = true,
-                            IsRequired = false,
-                            SourceColumn = "Engineering",
-                            TargetDisplayName = "Engineering",
-                            TargetProperty = "Engineering"
                         },
                         new
                         {

@@ -18,6 +18,9 @@ namespace HRMS.Api.DTOs.EmployeeDtos
         public string? ActiveStatus { get; set; }
         public DateTime? DOJ { get; set; }
         public DateTime? LWD { get; set; }
+        public decimal? PriorExperience { get; set; }
+        public decimal? RelevantExperience { get; set; }
+        public bool? Engineering { get; set; }
         public Dictionary<string, string> AdditionalFields { get; set; } = new();
     }
 }

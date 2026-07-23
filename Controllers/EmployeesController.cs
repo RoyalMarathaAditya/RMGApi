@@ -93,20 +93,18 @@ namespace HRMS.Api.Controllers
         [HttpGet("last-upload-columns")]
         public async Task<IActionResult> GetLastUploadColumns(CancellationToken cancellationToken)
         {
-            var uploadedBy = User.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(uploadedBy))
-                return Ok(new List<UploadColumnInfo>());
+            var mappings = await _db.Set<ColumnMapping>()
+                .Where(m => m.EntityType == "employee-import" && m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync(cancellationToken);
 
-            var lastHistory = await _db.Set<EmployeeImportHistory>()
-                .Where(h => h.ImportedBy == uploadedBy && !string.IsNullOrEmpty(h.UploadedColumns))
-                .OrderByDescending(h => h.ImportedOn)
-                .FirstOrDefaultAsync(cancellationToken);
+            var columns = mappings.Select(m => new UploadColumnInfo
+            {
+                Field = DynamicExcelMapper.GetFrontendField(m.TargetProperty),
+                Header = m.TargetDisplayName
+            }).ToList();
 
-            if (lastHistory?.UploadedColumns == null)
-                return Ok(new List<UploadColumnInfo>());
-
-            var columns = System.Text.Json.JsonSerializer.Deserialize<List<UploadColumnInfo>>(lastHistory.UploadedColumns);
-            return Ok(columns ?? new List<UploadColumnInfo>());
+            return Ok(columns);
         }
 
         [HttpGet("dropdown")]
