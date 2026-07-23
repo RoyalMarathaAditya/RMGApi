@@ -143,7 +143,13 @@ namespace HRMS.Api.Services
                                 string.Equals(vm.SourceValue, stringVal, StringComparison.OrdinalIgnoreCase));
                             if (match != null)
                             {
-                                prop.SetValue(dto, match.TargetValue);
+                                var mappedValue = match.TargetValue is string str
+                                    ? ConvertValue(str, mapping.DataType)
+                                    : match.TargetValue;
+                                if (mappedValue != null)
+                                {
+                                    prop.SetValue(dto, mappedValue);
+                                }
                                 _logger.LogDebug("Value mapped: {Prop} '{Source}' -> '{Target}'",
                                     mapping.TargetProperty, stringVal, match.TargetValue);
                             }
@@ -245,7 +251,9 @@ namespace HRMS.Api.Services
                     "bool" or "boolean" => rawValue switch
                     {
                         bool b => b,
-                        string s => bool.TryParse(s, out var b) ? b : null,
+                        string s => bool.TryParse(s, out var b) ? b :
+                            s.Equals("1", StringComparison.OrdinalIgnoreCase) || s.Equals("yes", StringComparison.OrdinalIgnoreCase) || s.Equals("y", StringComparison.OrdinalIgnoreCase) ? true :
+                            s.Equals("0", StringComparison.OrdinalIgnoreCase) || s.Equals("no", StringComparison.OrdinalIgnoreCase) || s.Equals("n", StringComparison.OrdinalIgnoreCase) ? false : null,
                         _ => null
                     },
                     _ => rawValue?.ToString()
@@ -288,7 +296,7 @@ namespace HRMS.Api.Services
                 EmployeeType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
         }
 
-        private static string GetFrontendField(string targetProperty)
+        public static string GetFrontendField(string targetProperty)
         {
             return targetProperty switch
             {
