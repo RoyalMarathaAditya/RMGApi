@@ -798,17 +798,33 @@ export default function ResourceAllocationView() {
                 <TimelineOutlinedIcon sx={{ fontSize: '1rem', color: '#0891B2' }} />
                 <Typography sx={{ fontSize: 14, fontWeight: 600, color: theme.palette.text.primary }}>Project Allocations</Typography>
                 <Typography sx={{ fontSize: 11, fontWeight: 400, color: theme.palette.text.secondary, ml: 'auto' }}>{safeArray(data.projectAllocations).length} record(s)</Typography>
-                {data.status !== 'Inactive' && (
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AddOutlinedIcon />}
-                    onClick={openAddDialog}
-                    sx={{ textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: '8px' }}
-                  >
-                    Add Project Allocation
-                  </Button>
-                )}
+                <Tooltip
+                  title={data.status === 'Inactive' ? 'Activate the employee to manage project allocations.' : ''}
+                  disableHoverListener={data.status !== 'Inactive'}
+                >
+                  <span>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<AddOutlinedIcon />}
+                      onClick={data.status !== 'Inactive' ? openAddDialog : undefined}
+                      disabled={data.status === 'Inactive'}
+                      sx={{
+                        textTransform: 'none', fontWeight: 600, fontSize: 12, borderRadius: '8px',
+                        ...(data.status === 'Inactive' && {
+                          bgcolor: 'grey.300',
+                          borderColor: 'grey.400',
+                          color: 'grey.600',
+                          opacity: 0.65,
+                          cursor: 'not-allowed',
+                          '&:hover': { bgcolor: 'grey.300' },
+                        }),
+                      }}
+                    >
+                      Add Project Allocation
+                    </Button>
+                  </span>
+                </Tooltip>
               </Box>
 
               {safeArray(data.projectAllocations).length === 0 ? (
