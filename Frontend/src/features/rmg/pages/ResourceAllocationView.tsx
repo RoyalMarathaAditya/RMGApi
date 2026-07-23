@@ -125,9 +125,10 @@ function getSectionConfig(theme: ReturnType<typeof useTheme>) {
 
 const tabs = ['Employee Information', 'Experience Details', 'Employment Details', 'Project Allocation'];
 
-function getExperienceFromDoj(doj: string): { years: number; months: number } {
+function getExperienceFromDoj(doj: string, lwd?: string | null): { years: number; months: number } {
   const from = new Date(doj);
-  const to = new Date();
+  const to = lwd ? new Date(lwd) : new Date();
+  if (to < from) return { years: 0, months: 0 };
   let years = to.getFullYear() - from.getFullYear();
   let months = to.getMonth() - from.getMonth();
   if (months < 0) { years--; months += 12; }
@@ -339,8 +340,8 @@ export default function ResourceAllocationView() {
 
   const nvExperience = useMemo(() => {
     if (!data?.doj) return null;
-    return getExperienceFromDoj(data.doj);
-  }, [data?.doj]);
+    return getExperienceFromDoj(data.doj, data.lwd);
+  }, [data?.doj, data?.lwd]);
 
   const nvDisplay = useMemo(() => {
     if (!nvExperience) return '—';

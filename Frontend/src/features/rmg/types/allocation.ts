@@ -238,6 +238,7 @@ export interface EmployeeResourceDetailsDto {
   l1Manager: string | null;
   practiceHead: string | null;
   doj: string | null;
+  lwd: string | null;
 
   priorExperience: number;
   nvExperience: number;

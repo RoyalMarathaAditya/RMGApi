@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using AutoMapper;
+using HRMS.Api.Common;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.AllocationDtos;
 using HRMS.Api.Models;
@@ -567,10 +568,9 @@ namespace HRMS.Api.Services.RMG
             var isUtilised = activeAllocations.Any();
             var isBillable = activeAllocations.Any(a => a.BillableStatus == "Billable");
 
-            var priorExp = employee.PriorExperience ?? 0;
-            var totalExperience = priorExp + (employee.RelevantExperience ?? 0);
-            var nvExperience = totalExperience - priorExp;
-            if (nvExperience < 0) nvExperience = 0;
+            var isActive = !employee.IsDeleted && employee.EmployeeStatus?.Name != "Inactive";
+            var nvExperience = ExperienceHelper.CalculateNVExperience(employee.DOJ, isActive, employee.LWD);
+            var totalExperience = ExperienceHelper.CalculateTotalExperience(employee.DOJ, employee.PriorExperience, isActive, employee.LWD);
 
             var primarySkill = !string.IsNullOrEmpty(employee.PrimarySkillName) ? employee.PrimarySkillName :
                 employee.EmployeeSkills?.Where(es => es.Skill != null).Select(es => es.Skill!.Name).FirstOrDefault();
@@ -597,6 +597,7 @@ namespace HRMS.Api.Services.RMG
                 L1Manager = employee.ReportingManager?.FullName,
                 PracticeHead = employee.Practice?.PracticeHead?.FullName,
                 DOJ = employee.DOJ,
+                LWD = employee.LWD,
 
                 PriorExperience = employee.PriorExperience ?? 0,
                 NVExperience = Math.Round(nvExperience, 1),
@@ -766,10 +767,8 @@ namespace HRMS.Api.Services.RMG
 
         private static decimal CalculateTotalExperience(Employee employee)
         {
-            var doj = employee.DOJ;
-            var priorExperience = employee.PriorExperience ?? 0;
-            var yearsSinceDoj = (decimal)(DateTime.UtcNow - doj).TotalDays / 365.25m;
-            return Math.Round(yearsSinceDoj + priorExperience, 1);
+            var isActive = !employee.IsDeleted;
+            return ExperienceHelper.CalculateTotalExperience(employee.DOJ, employee.PriorExperience, isActive, employee.LWD);
         }
 
         private async Task<Guid?> DetermineAgeingBucketIdAsync(int? ageingDays, CancellationToken cancellationToken = default)

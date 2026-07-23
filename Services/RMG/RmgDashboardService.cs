@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using HRMS.Api.Common;
 using HRMS.Api.Data;
 using HRMS.Api.DTOs.AllocationDtos;
 using HRMS.Api.DTOs.Common;
@@ -165,6 +166,7 @@ namespace HRMS.Api.Services.RMG
                     FullName = e.FullName,
                     EmployeeCode = e.EmployeeCode,
                     DOJ = e.DOJ,
+                    LWD = e.LWD,
                     PriorExperience = e.PriorExperience,
                     DesignationName = e.Designation != null ? e.Designation.Name : null,
                     DepartmentName = e.DepartmentType != null ? e.DepartmentType.Name : null,
@@ -226,8 +228,7 @@ namespace HRMS.Api.Services.RMG
                 if (!string.IsNullOrEmpty(filter.ResourceStatus) && resourceStatus != filter.ResourceStatus)
                     continue;
 
-                var totalExperience = Math.Round(
-                    ((decimal)(now - emp.DOJ).TotalDays / 365.25m) + (emp.PriorExperience ?? 0), 1);
+                var totalExperience = ExperienceHelper.CalculateTotalExperience(emp.DOJ, emp.PriorExperience, emp.IsActive, emp.LWD);
 
                 result.Add(new DashboardGridDto
                 {
@@ -566,6 +567,7 @@ namespace HRMS.Api.Services.RMG
             public string FullName { get; set; } = string.Empty;
             public string EmployeeCode { get; set; } = string.Empty;
             public DateTime DOJ { get; set; }
+            public DateTime? LWD { get; set; }
             public decimal? PriorExperience { get; set; }
             public string? DesignationName { get; set; }
             public string? DepartmentName { get; set; }

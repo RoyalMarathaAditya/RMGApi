@@ -16,6 +16,7 @@ namespace HRMS.Api.DTOs.AllocationDtos
         public string? L1Manager { get; set; }
         public string? PracticeHead { get; set; }
         public DateTime? DOJ { get; set; }
+        public DateTime? LWD { get; set; }
 
         public decimal PriorExperience { get; set; }
         public decimal NVExperience { get; set; }

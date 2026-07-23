@@ -1,3 +1,4 @@
+using HRMS.Api.Common;
 using HRMS.Api.Data;
 using HRMS.Api.Models.RMG;
 using Microsoft.EntityFrameworkCore;
@@ -202,8 +203,9 @@ namespace HRMS.Api.Services
                         (emp.EmployeeSkills?.Any(es => es.Skill != null) == true
                             ? string.Join(", ", emp.EmployeeSkills.Where(es => es.Skill != null).Select(es => es.Skill!.Name))
                             : null);
-                    var totalExperience = Math.Round((emp.PriorExperience ?? 0) + (emp.RelevantExperience ?? 0), 1);
-                    var nvExperience = Math.Round(Math.Max(0, totalExperience - (emp.PriorExperience ?? 0)), 1);
+                    var isActive = !emp.IsDeleted && emp.EmployeeStatus?.Name != "Inactive";
+                    var nvExperience = ExperienceHelper.CalculateNVExperience(emp.DOJ, isActive, emp.LWD);
+                    var totalExperience = ExperienceHelper.CalculateTotalExperience(emp.DOJ, emp.PriorExperience, isActive, emp.LWD);
                     var experienceRange = GetExperienceRange(totalExperience);
                     var isBillable = allocations.Any(a => a.BillableStatus == "Billable");
 
