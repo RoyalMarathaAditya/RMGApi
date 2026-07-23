@@ -36,7 +36,8 @@ namespace HRMS.Api.Services
             "EmployeeCode", "FullName", "Email", "DOJ", "LWD",
             "DesignationId", "EmploymentTypeId", "LocationId", "PracticeId", "SubPracticeId",
             "StatusId", "ReportingManagerName", "PracticeHeadName", "AdditionalData",
-            "EmployeeTypeId", "ReportingManagerId", "PracticeHeadId"
+            "EmployeeTypeId", "ReportingManagerId", "PracticeHeadId",
+            "PriorExperience", "RelevantExperience", "Engineering"
         };
 
         static BulkImportService()
@@ -141,6 +142,9 @@ namespace HRMS.Api.Services
                 bulkCopy.ColumnMappings.Add("DOJ", "DOJ");
                 bulkCopy.ColumnMappings.Add("LWD", "LWD");
                 bulkCopy.ColumnMappings.Add("AdditionalData", "AdditionalData");
+                bulkCopy.ColumnMappings.Add("PriorExperience", "PriorExperience");
+                bulkCopy.ColumnMappings.Add("RelevantExperience", "RelevantExperience");
+                bulkCopy.ColumnMappings.Add("Engineering", "Engineering");
                 bulkCopy.ColumnMappings.Add("ImportedOn", "ImportedOn");
                 bulkCopy.ColumnMappings.Add("ImportedBy", "ImportedBy");
 
@@ -502,6 +506,69 @@ namespace HRMS.Api.Services
                     NewValue = row.LWD.Value.ToString("yyyy-MM-dd")
                 });
 
+            var oldPriorExp = existing.PriorExperience;
+            if (row.PriorExperience.HasValue)
+            {
+                if (oldPriorExp != row.PriorExperience.Value)
+                    changes.Add(new FieldChangeDto
+                    {
+                        FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.PriorExperience), "Experience prior to NV"),
+                        OldValue = oldPriorExp?.ToString(),
+                        NewValue = row.PriorExperience.Value.ToString()
+                    });
+            }
+            else if (oldPriorExp.HasValue)
+            {
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.PriorExperience), "Experience prior to NV"),
+                    OldValue = oldPriorExp.Value.ToString(),
+                    NewValue = null
+                });
+            }
+
+            var oldRelExp = existing.RelevantExperience;
+            if (row.RelevantExperience.HasValue)
+            {
+                if (oldRelExp != row.RelevantExperience.Value)
+                    changes.Add(new FieldChangeDto
+                    {
+                        FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.RelevantExperience), "Exp in NV"),
+                        OldValue = oldRelExp?.ToString(),
+                        NewValue = row.RelevantExperience.Value.ToString()
+                    });
+            }
+            else if (oldRelExp.HasValue)
+            {
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = GetDisplayName(displayNameMap, nameof(EmployeeImportRowDto.RelevantExperience), "Exp in NV"),
+                    OldValue = oldRelExp.Value.ToString(),
+                    NewValue = null
+                });
+            }
+
+            var oldEngineering = existing.Engineering;
+            if (row.Engineering.HasValue)
+            {
+                if (oldEngineering != row.Engineering.Value)
+                    changes.Add(new FieldChangeDto
+                    {
+                        FieldName = "Engineering",
+                        OldValue = oldEngineering?.ToString(),
+                        NewValue = row.Engineering.Value.ToString()
+                    });
+            }
+            else if (oldEngineering.HasValue)
+            {
+                changes.Add(new FieldChangeDto
+                {
+                    FieldName = "Engineering",
+                    OldValue = oldEngineering.Value.ToString(),
+                    NewValue = null
+                });
+            }
+
             var existingAdditionalData = DeserializeAdditionalData(existing.AdditionalData);
             _logger.LogDebug("DIAG ComputeFieldChanges: row.AdditionalFields keys=[{Keys}], existingAdditionalData keys=[{ExistKeys}], existing.AdditionalData=[{Ad}]",
                 string.Join(",", row.AdditionalFields.Keys), string.Join(",", existingAdditionalData.Keys), existing.AdditionalData);
@@ -797,6 +864,9 @@ namespace HRMS.Api.Services
             table.Columns.Add("DOJ", typeof(DateTime));
             table.Columns.Add("LWD", typeof(DateTime));
             table.Columns.Add("AdditionalData", typeof(string));
+            table.Columns.Add("PriorExperience", typeof(decimal));
+            table.Columns.Add("RelevantExperience", typeof(decimal));
+            table.Columns.Add("Engineering", typeof(bool));
             table.Columns.Add("ImportedOn", typeof(DateTime));
             table.Columns.Add("ImportedBy", typeof(string));
 
@@ -819,6 +889,9 @@ namespace HRMS.Api.Services
                 dr["ActiveStatus"] = (object?)row.ActiveStatus ?? DBNull.Value;
                 dr["DOJ"] = (object?)row.DOJ ?? DBNull.Value;
                 dr["LWD"] = (object?)row.LWD ?? DBNull.Value;
+                dr["PriorExperience"] = (object?)row.PriorExperience ?? DBNull.Value;
+                dr["RelevantExperience"] = (object?)row.RelevantExperience ?? DBNull.Value;
+                dr["Engineering"] = (object?)row.Engineering ?? DBNull.Value;
                 dr["AdditionalData"] = row.AdditionalFields.Count > 0
                     ? (object?)System.Text.Json.JsonSerializer.Serialize(row.AdditionalFields) ?? DBNull.Value
                     : DBNull.Value;
