@@ -12,6 +12,7 @@ namespace HRMS.Api.Migrations
         {
             migrationBuilder.Sql(@"
 CREATE OR ALTER PROCEDURE usp_GetPracticeWiseReport
+    @EngineeringOnly BIT = 0
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -23,6 +24,7 @@ BEGIN
         COUNT(DISTINCT CASE WHEN ra.Id IS NOT NULL AND ra.BillableStatus = 'Billable' 
                         THEN e.Id END) AS BillableCount,
         COUNT(DISTINCT CASE WHEN ra.Id IS NOT NULL THEN e.Id END) AS UtilizedCount,
+        COUNT(DISTINCT CASE WHEN e.Engineering = 1 THEN e.Id END) AS EngineeringHeadcount,
         COUNT(CASE WHEN exp.TotalExp < 1 THEN 1 END) AS RangeLessThan1,
         COUNT(CASE WHEN exp.TotalExp >= 1 AND exp.TotalExp < 3 THEN 1 END) AS Range1to3,
         COUNT(CASE WHEN exp.TotalExp >= 3 AND exp.TotalExp < 6 THEN 1 END) AS Range3to6,
@@ -38,6 +40,7 @@ BEGIN
                + ISNULL(e.PriorExperience, 0) AS TotalExp
     ) exp
     WHERE p.IsDeleted = 0 AND p.IsActive = 1
+        AND (@EngineeringOnly = 0 OR e.Engineering = 1)
     GROUP BY p.Id, p.Name
     ORDER BY p.Name;
 END;

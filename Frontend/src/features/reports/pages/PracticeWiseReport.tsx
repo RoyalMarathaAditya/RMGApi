@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
+import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
+import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
 import {
+  Box,
   Button,
-  Card,
-  CardContent,
-  Grid,
+  FormControlLabel,
   Paper,
   Stack,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -20,6 +25,7 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import PageContainer from '../../../components/common/PageContainer';
+import KpiCard from '../components/KpiCard';
 import { reportService } from '../services/reportService';
 import type { PracticeWiseReportDto } from '../types/report';
 
@@ -40,15 +46,12 @@ function getRangeCount(practice: PracticeWiseReportDto, label: string): number {
 export default function PracticeWiseReport() {
   const [data, setData] = useState<PracticeWiseReportDto[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadData();
-  }, []);
+  const [engineeringOnly, setEngineeringOnly] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const result = await reportService.getPracticeWiseReport();
+      const result = await reportService.getPracticeWiseReport(engineeringOnly);
       setData(result);
     } catch {
       console.error('Failed to load practice wise report');
@@ -56,6 +59,10 @@ export default function PracticeWiseReport() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, [engineeringOnly]);
 
   const totals = {
     headcount: data.reduce((s, r) => s + r.totalHeadcount, 0),
@@ -72,6 +79,7 @@ export default function PracticeWiseReport() {
     practiceName: p.practiceName,
     Billability: p.billabilityPercentage,
     Utilization: p.utilizationPercentage,
+    EngineeringHeadcount: p.engineeringHeadcount,
   }));
 
   const colSpan = 8 + EXPERIENCE_RANGE_LABELS.length;
@@ -79,11 +87,15 @@ export default function PracticeWiseReport() {
   return (
     <PageContainer title="Practice Wise Report">
       <Stack spacing={3}>
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
+        <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center">
+          <FormControlLabel
+            control={<Switch checked={engineeringOnly} onChange={(e) => setEngineeringOnly(e.target.checked)} />}
+            label="Engineering Only"
+          />
           <Button
             variant="outlined"
             startIcon={<FileDownloadOutlinedIcon />}
-            onClick={() => reportService.exportPracticeWiseReport()}
+            onClick={() => reportService.exportPracticeWiseReport(engineeringOnly)}
           >
             Export
           </Button>
@@ -92,43 +104,48 @@ export default function PracticeWiseReport() {
           </Button>
         </Stack>
 
-        <Grid container spacing={3}>
-          {[
-            { label: 'Total Headcount', value: totals.headcount, color: 'primary' as const },
-            { label: 'Billable', value: totals.billable, color: 'success' as const },
-            { label: 'Utilized', value: totals.utilized, color: 'info' as const },
-            { label: 'Billability %', value: `${overallBillability}%`, color: overallBillability >= 70 ? 'success' as const : overallBillability >= 40 ? 'warning' as const : 'error' as const },
-            { label: 'Utilization %', value: `${overallUtilization}%`, color: overallUtilization >= 70 ? 'success' as const : overallUtilization >= 40 ? 'warning' as const : 'error' as const },
-          ].map((card) => (
-            <Grid key={card.label} item xs={12} sm={6} md={12 / 5}>
-              <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600} gutterBottom>
-                    {card.label}
-                  </Typography>
-                  <Typography variant="h4" fontWeight={800} color={`${card.color}.main`}>
-                    {card.value}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 3,
+          }}
+        >
+          <KpiCard icon={GroupOutlinedIcon} label="Total Headcount" value={totals.headcount} color="primary.main" />
+          <KpiCard icon={PeopleOutlinedIcon} label="Billable" value={totals.billable} color="success.main" />
+          <KpiCard icon={WorkOutlineOutlinedIcon} label="Utilized" value={totals.utilized} color="info.main" />
+          <KpiCard
+            icon={TrendingUpOutlinedIcon}
+            label="Billability %"
+            value={`${overallBillability}%`}
+            color={overallBillability >= 70 ? 'success.main' : overallBillability >= 40 ? 'warning.main' : 'error.main'}
+          />
+          <KpiCard
+            icon={ShowChartOutlinedIcon}
+            label="Utilization %"
+            value={`${overallUtilization}%`}
+            color={overallUtilization >= 70 ? 'success.main' : overallUtilization >= 40 ? 'warning.main' : 'error.main'}
+          />
+        </Box>
 
         {chartData.length > 0 && (
           <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2 }}>
             <Typography variant="subtitle1" fontWeight={700} mb={2}>
-              Billability & Utilization Overview
+              Billability, Utilization & Headcount Overview
             </Typography>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="practiceName" />
-                <YAxis domain={[0, 100]} unit="%" />
-                <Tooltip formatter={(value: number) => `${value}%`} />
+                <YAxis yAxisId="left" domain={[0, 100]} unit="%" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip formatter={(value: number, name: string) =>
+                  name === 'Engineering Headcount' ? value : `${value}%`
+                } />
                 <Legend />
-                <Bar dataKey="Billability" fill="#1976d2" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Utilization" fill="#2e7d32" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="Billability" name="Billability" fill="#1976d2" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="Utilization" name="Utilization" fill="#2e7d32" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="EngineeringHeadcount" name="Engineering Headcount" fill="#ed6c02" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Paper>

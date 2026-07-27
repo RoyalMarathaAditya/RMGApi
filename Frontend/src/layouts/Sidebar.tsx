@@ -2,6 +2,7 @@ import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettin
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -62,6 +63,8 @@ const menuItems: MenuItem[] = [
     icon: AssessmentOutlinedIcon, label: 'Reports',
     children: [
       { icon: AssessmentOutlinedIcon, label: 'Practice Wise Report', path: '/reports/practice-wise' },
+      { icon: BusinessOutlinedIcon, label: 'Client Wise Report', path: '/reports/client-wise' },
+      { icon: AssignmentOutlinedIcon, label: 'Project Wise Report', path: '/reports/project-wise' },
     ],
   },
   {

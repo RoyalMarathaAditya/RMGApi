@@ -1,5 +1,10 @@
 import api from '../../../services/api';
-import type { PracticeWiseReportDto } from '../types/report';
+import type {
+  PracticeWiseReportDto,
+  ClientWiseReportDto,
+  ProjectWiseReportDto,
+  ReportChartDataDto,
+} from '../types/report';
 
 function unwrap<T>(response: { data: T }): T {
   return response.data;
@@ -20,12 +25,45 @@ async function exportBlob(url: string, fallbackPrefix: string) {
 }
 
 export const reportService = {
-  async getPracticeWiseReport(): Promise<PracticeWiseReportDto[]> {
-    const response = await api.get<PracticeWiseReportDto[]>('/reports/practice-wise');
+  async getPracticeWiseReport(engineeringOnly?: boolean): Promise<PracticeWiseReportDto[]> {
+    const response = await api.get<PracticeWiseReportDto[]>('/reports/practice-wise', {
+      params: engineeringOnly ? { engineeringOnly: true } : undefined,
+    });
     return unwrap(response);
   },
 
-  async exportPracticeWiseReport() {
-    await exportBlob('/reports/practice-wise/export', 'PracticeWiseReport');
+  async exportPracticeWiseReport(engineeringOnly?: boolean) {
+    const url = engineeringOnly
+      ? '/reports/practice-wise/export?engineeringOnly=true'
+      : '/reports/practice-wise/export';
+    await exportBlob(url, 'PracticeWiseReport');
+  },
+
+  async getClientWiseReport(params?: {
+    client?: string;
+    practice?: string;
+    status?: string;
+  }): Promise<ClientWiseReportDto[]> {
+    const response = await api.get<ClientWiseReportDto[]>('/reports/client-wise', { params });
+    return unwrap(response);
+  },
+
+  async getClientWiseChartData(): Promise<ReportChartDataDto> {
+    const response = await api.get<ReportChartDataDto>('/reports/client-wise/charts');
+    return unwrap(response);
+  },
+
+  async getProjectWiseReport(params?: {
+    client?: string;
+    practice?: string;
+    status?: string;
+  }): Promise<ProjectWiseReportDto[]> {
+    const response = await api.get<ProjectWiseReportDto[]>('/reports/project-wise', { params });
+    return unwrap(response);
+  },
+
+  async getProjectWiseChartData(): Promise<ReportChartDataDto> {
+    const response = await api.get<ReportChartDataDto>('/reports/project-wise/charts');
+    return unwrap(response);
   },
 };

@@ -7,6 +7,7 @@ namespace HRMS.Api.DTOs.ReportDtos
         public int TotalHeadcount { get; set; }
         public int BillableCount { get; set; }
         public int UtilizedCount { get; set; }
+        public int EngineeringHeadcount { get; set; }
         public int RangeLessThan1 { get; set; }
         public int Range1to3 { get; set; }
         public int Range3to6 { get; set; }

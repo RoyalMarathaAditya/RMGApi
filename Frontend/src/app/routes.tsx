@@ -30,6 +30,8 @@ import AllocationHistory from '../features/rmg/pages/AllocationHistory';
 import CalendarViewPage from '../features/rmg/pages/CalendarViewPage';
 import TimelineViewPage from '../features/rmg/pages/TimelineViewPage';
 import PracticeWiseReport from '../features/reports/pages/PracticeWiseReport';
+import ClientWiseReport from '../features/reports/pages/ClientWiseReport';
+import ProjectWiseReport from '../features/reports/pages/ProjectWiseReport';
 import Login from '../pages/auth/Login';
 import Dashboard from '../pages/dashboard/Dashboard';
 import Home from '../pages/home/Home';
@@ -95,6 +97,8 @@ export function AppRoutes() {
           <Route path="/rmg/timeline" element={<TimelineViewPage />} />
           <Route path="/reports" element={<PracticeWiseReport />} />
           <Route path="/reports/practice-wise" element={<PracticeWiseReport />} />
+          <Route path="/reports/client-wise" element={<ClientWiseReport />} />
+          <Route path="/reports/project-wise" element={<ProjectWiseReport />} />
           <Route path="/settings" element={<ModulePlaceholder title={modulePages.settings} />} />
         </Route>
       </Route>

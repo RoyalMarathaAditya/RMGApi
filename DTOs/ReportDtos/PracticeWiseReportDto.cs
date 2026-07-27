@@ -11,6 +11,7 @@ namespace HRMS.Api.DTOs.ReportDtos
         public int NonUtilizedCount => TotalHeadcount - UtilizedCount;
         public decimal BillabilityPercentage => TotalHeadcount > 0 ? Math.Round((decimal)BillableCount / TotalHeadcount * 100, 2) : 0;
         public decimal UtilizationPercentage => TotalHeadcount > 0 ? Math.Round((decimal)UtilizedCount / TotalHeadcount * 100, 2) : 0;
+        public int EngineeringHeadcount { get; set; }
         public List<ExperienceRangeDto> ExperienceRanges { get; set; } = new();
     }
 
