@@ -107,5 +107,29 @@ namespace HRMS.Api.Controllers
                 return Problem(detail: "An unexpected error occurred.", statusCode: 500);
             }
         }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+                    return Unauthorized(new { message = "Invalid token claims." });
+
+                var response = await _authService.ChangePasswordAsync(userId, request);
+                if (response is null)
+                    return BadRequest(new { message = "Password change failed. Check your current password and try again." });
+
+                return Ok(new { success = true, message = response.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password");
+                return Problem(detail: "An unexpected error occurred.", statusCode: 500);
+            }
+        }
     }
 }

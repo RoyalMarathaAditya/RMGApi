@@ -30,5 +30,12 @@ namespace HRMS.Api.Repositories
             _dbContext.RefreshTokens.Remove(token);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task DeleteAllForUserAsync(int userId, CancellationToken cancellationToken = default)
+        {
+            var tokens = await _dbContext.RefreshTokens.Where(t => t.UserId == userId).ToListAsync(cancellationToken);
+            _dbContext.RefreshTokens.RemoveRange(tokens);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

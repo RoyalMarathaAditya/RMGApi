@@ -12,12 +12,13 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
+  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { AxiosError } from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
@@ -41,7 +42,16 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [passwordChangedSnackbar, setPasswordChangedSnackbar] = useState(false);
   const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard';
+
+  useEffect(() => {
+    const state = location.state as { passwordChanged?: boolean } | null;
+    if (state?.passwordChanged) {
+      setPasswordChangedSnackbar(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const {
     control,
@@ -69,7 +79,11 @@ export default function Login() {
     try {
       const response = await authenticate(values);
       dispatch(login(response));
-      navigate(from, { replace: true });
+      if (response.forcePasswordChange) {
+        navigate('/change-password', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (error) {
       const message =
         error instanceof AxiosError
@@ -91,6 +105,22 @@ export default function Login() {
       py={4}
       sx={{ backgroundColor: 'background.default' }}
     >
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        autoHideDuration={5000}
+        onClose={() => setPasswordChangedSnackbar(false)}
+        open={passwordChangedSnackbar}
+      >
+        <Alert
+          onClose={() => setPasswordChangedSnackbar(false)}
+          severity="success"
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          Password changed successfully. Please login using your new password.
+        </Alert>
+      </Snackbar>
+
       <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', maxWidth: 440, width: '100%' }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack alignItems="center" spacing={2.5}>

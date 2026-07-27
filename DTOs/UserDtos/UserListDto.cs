@@ -25,5 +25,9 @@ namespace HRMS.Api.DTOs.UserDtos
         public int FailedLoginCount { get; set; }
         public DateTime? LockedDate { get; set; }
         public string? LockedBy { get; set; }
+        public bool IsFirstLogin { get; set; }
+        public bool IsDefaultPassword { get; set; }
+        public DateTime? PasswordChangedOn { get; set; }
+        public bool PasswordResetRequired { get; set; }
     }
 }

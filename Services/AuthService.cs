@@ -25,6 +25,8 @@ namespace HRMS.Api.Services
             _logger = logger;
         }
 
+        public const string DefaultPassword = "NV@12345#";
+
         public async Task<LoginResponse?> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
         {
             try
@@ -35,7 +37,8 @@ namespace HRMS.Api.Services
                     return null;
                 }
 
-                var token = BuildJwtToken(user);
+                var forcePasswordChange = user.PasswordResetRequired;
+                var token = BuildJwtToken(user, forcePasswordChange);
                 var refreshToken = GenerateRefreshTokenString();
 
                 var rtEntity = new RefreshToken
@@ -46,14 +49,14 @@ namespace HRMS.Api.Services
                     UserId = user.Id
                 };
 
-// persist refresh token using unit of work
-await _unitOfWork.RefreshTokens.AddAsync(rtEntity, cancellationToken);
-await _unitOfWork.SaveAsync(cancellationToken);
+                await _unitOfWork.RefreshTokens.AddAsync(rtEntity, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 return new LoginResponse
                 {
                     Token = token,
                     RefreshToken = refreshToken,
+                    ForcePasswordChange = forcePasswordChange,
                     User = new UserDto
                     {
                         Id = user.Id,
@@ -85,7 +88,8 @@ await _unitOfWork.SaveAsync(cancellationToken);
 
                 await _unitOfWork.RefreshTokens.DeleteAsync(storedToken, cancellationToken);
 
-                var newAccessToken = BuildJwtToken(user);
+                var forcePasswordChange = user.PasswordResetRequired;
+                var newAccessToken = BuildJwtToken(user, forcePasswordChange);
                 var newRefreshToken = GenerateRefreshTokenString();
 
                 var rtEntity = new RefreshToken
@@ -102,6 +106,7 @@ await _unitOfWork.SaveAsync(cancellationToken);
                 {
                     Token = newAccessToken,
                     RefreshToken = newRefreshToken,
+                    ForcePasswordChange = forcePasswordChange,
                     User = new UserDto
                     {
                         Id = user.Id,
@@ -161,7 +166,60 @@ await _unitOfWork.SaveAsync(cancellationToken);
             }
         }
 
-        private string BuildJwtToken(Models.User user)
+        public async Task<ChangePasswordResponse?> ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var user = await _authRepository.GetByIdAsync(userId, cancellationToken);
+                if (user is null)
+                    return null;
+
+                if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                    return null;
+
+                if (request.NewPassword != request.ConfirmPassword)
+                    return null;
+
+                if (request.NewPassword.Length < 8 ||
+                    !request.NewPassword.Any(char.IsUpper) ||
+                    !request.NewPassword.Any(char.IsLower) ||
+                    !request.NewPassword.Any(char.IsDigit) ||
+                    !request.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
+                    return null;
+
+                if (request.NewPassword == DefaultPassword)
+                    return null;
+
+                if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+                    return null;
+
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                user.IsFirstLogin = false;
+                user.IsDefaultPassword = false;
+                user.PasswordResetRequired = false;
+                user.PasswordChangedOn = DateTime.UtcNow;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _authRepository.UpdateAsync(user, cancellationToken);
+
+                await _unitOfWork.RefreshTokens.DeleteAllForUserAsync(userId, cancellationToken);
+
+                _logger.LogInformation("Password changed successfully for user {UserId}. All sessions invalidated.", userId);
+
+                return new ChangePasswordResponse
+                {
+                    Success = true,
+                    Message = "Password changed successfully. Please login again."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception while changing password for user {UserId}", userId);
+                return null;
+            }
+        }
+
+        private string BuildJwtToken(Models.User user, bool forcePasswordChange = false)
         {
             var claims = new List<Claim>
             {
@@ -169,6 +227,7 @@ await _unitOfWork.SaveAsync(cancellationToken);
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
+                new Claim("passwordResetRequired", forcePasswordChange ? "true" : "false"),
             };
 
             var keyBytes = Convert.FromBase64String(_jwtSettings.Key);

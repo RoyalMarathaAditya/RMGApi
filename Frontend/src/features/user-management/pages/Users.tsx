@@ -6,8 +6,6 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
 import ReplayIcon from '@mui/icons-material/Replay';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {
   Alert,
   Autocomplete,
@@ -62,8 +60,6 @@ const defaultCreateForm: CreateUserDto = {
   name: '',
   email: '',
   phone: '',
-  password: '',
-  confirmPassword: '',
   roleId: '',
   isActive: true,
 };
@@ -76,8 +72,6 @@ const defaultEditForm = {
   phone: '',
   roleId: '',
   isActive: true,
-  password: '',
-  confirmPassword: '',
 };
 
 interface ConfirmState {
@@ -112,12 +106,8 @@ export default function Users() {
   const [resetPwdTarget, setResetPwdTarget] = useState<UserListDto | null>(null);
   const [createForm, setCreateForm] = useState<CreateUserDto>(defaultCreateForm);
   const [editForm, setEditForm] = useState(defaultEditForm);
-  const [showEditPassword, setShowEditPassword] = useState(false);
-  const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
   const [resetPwdForm, setResetPwdForm] = useState<ResetPasswordDto>({ userId: 0, newPassword: '', confirmPassword: '' });
   const [formError, setFormError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, title: '', message: '', confirmLabel: '', onConfirm: () => {} });
   const abortRef = useRef<AbortController | null>(null);
@@ -207,8 +197,6 @@ export default function Users() {
       userName: employee?.email ?? '',
       email: employee?.email ?? '',
       phone: employee?.mobileNumber ?? '',
-      password: 'NV@123',
-      confirmPassword: 'NV@123',
     });
     setEmployeeDetail(null);
   };
@@ -223,8 +211,6 @@ export default function Users() {
       phone: user.phone ?? '',
       roleId: user.roleId,
       isActive: user.isActive,
-      password: '********',
-      confirmPassword: '********',
     });
     setFormError('');
   };
@@ -234,9 +220,7 @@ export default function Users() {
     if (!createForm.roleId) { setFormError('Please select a role'); return; }
     if (!createForm.email.trim()) { setFormError('Email is required'); return; }
     if (!createForm.name.trim()) { setFormError('Name is required'); return; }
-    if (!createForm.userName.trim()) { setFormError('Username is required'); return; }
-    if (!createForm.password) { setFormError('Password is required'); return; }
-    if (createForm.password !== createForm.confirmPassword) { setFormError('Passwords do not match'); return; }
+    if (!createForm.userName.trim()) { setFormError('Employee Code is required'); return; }
     setFormError(''); setSaving(true);
     try {
       await userService.createUser(createForm);
@@ -252,7 +236,6 @@ export default function Users() {
     if (!editTarget) return;
     if (!editForm.roleId) { setFormError('Please select a role'); return; }
     if (!editForm.email.trim()) { setFormError('Email is required'); return; }
-    if (editForm.password !== editForm.confirmPassword) { setFormError('Passwords do not match'); return; }
 
     const dto: UpdateUserDto = {
       roleId: editForm.roleId,
@@ -261,11 +244,6 @@ export default function Users() {
 
     if (editForm.phone !== editTarget.phone) {
       dto.phone = editForm.phone || '';
-    }
-
-    if (editForm.password && editForm.password !== '********') {
-      dto.password = editForm.password;
-      dto.confirmPassword = editForm.confirmPassword;
     }
 
     setFormError(''); setSaving(true);
@@ -321,6 +299,16 @@ export default function Users() {
     } catch { toastService.error('Failed to delete user'); }
   };
 
+  const handleResetPwdDefault = async (id: number) => {
+    try {
+      const result = await userService.resetPasswordToDefault(id);
+      toastService.success(result.message || 'Password reset to default');
+      loadData();
+    } catch (err: any) {
+      toastService.error(err?.response?.data?.message || 'Failed to reset password');
+    }
+  };
+
   const handleResetPwd = async () => {
     if (!resetPwdForm.newPassword || resetPwdForm.newPassword !== resetPwdForm.confirmPassword) {
       setFormError('Passwords do not match');
@@ -361,7 +349,7 @@ export default function Users() {
           <TextField
             disabled={loading}
             fullWidth
-            placeholder="Search by name, username, email..."
+            placeholder="Search by name, email..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
             slotProps={{ input: { startAdornment: <InputAdornment position="start"><Typography color="text.secondary">🔍</Typography></InputAdornment> } }}
@@ -393,12 +381,12 @@ export default function Users() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  {['Employee', 'Username', 'Email', 'Role', 'Status', 'Last Login', 'Created Date', 'Actions'].map((h) => (
+                  {['Employee', 'Email', 'Role', 'Password Status', 'Status', 'Last Login', 'Created Date', 'Actions'].map((h) => (
                     <TableCell
                       key={h}
-                      sx={{ fontWeight: 700, cursor: ['Name', 'Username', 'Role', 'Created Date', 'Last Login'].includes(h) ? 'pointer' : 'default' }}
+                      sx={{ fontWeight: 700, cursor: ['Name', 'Role', 'Created Date', 'Last Login'].includes(h) ? 'pointer' : 'default' }}
                       onClick={() => {
-                        const sortMap: Record<string, string> = { 'Name': 'name', 'Username': 'username', 'Role': 'role', 'Created Date': 'createdat', 'Last Login': 'lastlogindate' };
+                        const sortMap: Record<string, string> = { 'Name': 'name', 'Role': 'role', 'Created Date': 'createdat', 'Last Login': 'lastlogindate' };
                         const field = sortMap[h];
                         if (field) {
                           if (sortBy === field) setSortDesc(!sortDesc);
@@ -415,15 +403,27 @@ export default function Users() {
                 <TableLoader columns={8} rows={8} />
               ) : (
                 <TableBody>
-                  {data?.items.map((u) => (
+                    {data?.items.map((u) => (
                     <TableRow key={u.id} hover>
-                      <TableCell>
-                        <Typography fontWeight={600} variant="body2">{u.name}</Typography>
-                        <Typography color="text.secondary" variant="caption">{u.employeeCode ? `${u.employeeCode}` : ''}</Typography>
+                      <TableCell sx={{ maxWidth: 260, minWidth: 180 }}>
+                        <Typography
+                          fontWeight={600}
+                          variant="body2"
+                          sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        >
+                          {u.name}
+                        </Typography>
                       </TableCell>
-                      <TableCell>{u.userName ?? '-'}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell><Chip label={u.roleName} size="small" variant="outlined" /></TableCell>
+                      <TableCell>
+                        <Chip
+                          label={u.isDefaultPassword && u.isFirstLogin ? 'Default Password' : 'Password Changed'}
+                          size="small"
+                          color={u.isDefaultPassword && u.isFirstLogin ? 'warning' : 'success'}
+                          variant="filled"
+                        />
+                      </TableCell>
                       <TableCell><UserStatusChip isActive={u.isActive} isLocked={u.isLocked} /></TableCell>
                       <TableCell>{u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleDateString() : '-'}</TableCell>
                       <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
@@ -459,12 +459,23 @@ export default function Users() {
                             </Tooltip>
                           )}
                           <Tooltip title="Reset Password"><IconButton size="small" onClick={() => { setResetPwdTarget(u); setResetPwdForm({ userId: u.id, newPassword: '', confirmPassword: '' }); setFormError(''); }}><LockOpenIcon fontSize="small" /></IconButton></Tooltip>
+                          <Tooltip title="Reset to Default">
+                            <IconButton size="small" color="warning" onClick={() => showConfirm(
+                              'Reset Password to Default',
+                              `Reset ${u.name}'s password to the default password (NV@12345#)? The user will be forced to change it on next login.`,
+                              'Reset to Default',
+                              () => handleResetPwdDefault(u.id),
+                              'warning'
+                            )}>
+                              <ReplayIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                           <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
                         </Stack>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {data?.items.length === 0 && (
+                    {data?.items.length === 0 && (
                     <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><Typography color="text.secondary">No users found.</Typography></TableCell></TableRow>
                   )}
                 </TableBody>
@@ -514,7 +525,6 @@ export default function Users() {
             <TextField label="Employee Name" disabled value={createForm.name} />
             <TextField label="Email" required type="email" disabled value={createForm.email} />
             <TextField label="Contact No" value={createForm.phone} onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })} />
-            <TextField label="Username" disabled value={createForm.userName} />
             <TextField label="Department" disabled value={employeeDetail?.departmentType ?? '-'} />
             <TextField label="Designation" disabled value={employeeDetail?.designation ?? '-'} />
             {rolesLoading ? (
@@ -530,10 +540,9 @@ export default function Users() {
                 {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </Select>
             )}
-            <TextField label="Password" required type={showPassword ? 'text' : 'password'} value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end">{showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
-            <TextField label="Confirm Password" required type={showConfirmPassword ? 'text' : 'password'} value={createForm.confirmPassword} onChange={(e) => setCreateForm({ ...createForm, confirmPassword: e.target.value })}
-              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">{showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
+            <Alert severity="info" sx={{ borderRadius: 2 }}>
+              User will be created with the default password <strong>NV@12345#</strong>. They will be required to change it on first login.
+            </Alert>
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Is Active:</Typography>
               <input type="checkbox" checked={createForm.isActive} onChange={(e) => setCreateForm({ ...createForm, isActive: e.target.checked })} />
@@ -555,7 +564,6 @@ export default function Users() {
             <TextField label="Employee Name" disabled value={editForm.name} />
             <TextField label="Email" required type="email" disabled value={editForm.email} />
             <TextField label="Contact No" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
-            <TextField label="Username" disabled value={editForm.userName} />
             {rolesLoading ? (
               <Stack direction="row" alignItems="center" spacing={1}>
                 <CircularProgress size={20} />
@@ -569,10 +577,15 @@ export default function Users() {
                 {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </Select>
             )}
-            <TextField label="Password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowEditPassword(!showEditPassword)} edge="end">{showEditPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
-            <TextField label="Confirm Password" type={showEditConfirmPassword ? 'text' : 'password'} value={editForm.confirmPassword} onChange={(e) => setEditForm({ ...editForm, confirmPassword: e.target.value })}
-              slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)} edge="end">{showEditConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}</IconButton></InputAdornment> } }} />
+            {editTarget?.isDefaultPassword && editTarget?.isFirstLogin ? (
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                Default Password: <strong>NV@12345#</strong> (User has not logged in yet)
+              </Alert>
+            ) : (
+              <Alert severity="success" sx={{ borderRadius: 2 }}>
+                Password already changed by user.
+              </Alert>
+            )}
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Is Active:</Typography>
               <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} />
@@ -621,8 +634,7 @@ export default function Users() {
             <Typography color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontSize: 11, mb: 1 }}>Basic Information</Typography>
             <Stack spacing={1}>
               <Row label="Employee Name" value={viewUser?.employeeName} />
-              <Row label="Employee Code" value={viewUser?.employeeCode} />
-              <Row label="Username" value={viewUser?.userName} />
+              <Row label="Employee Code" value={viewUser?.employeeCode ?? viewUser?.userName} />
               <Row label="Email" value={viewUser?.email} />
               <Row label="Phone" value={viewUser?.phone} />
             </Stack>
@@ -640,6 +652,7 @@ export default function Users() {
             <Stack spacing={1}>
               <Row label="Role" value={viewUser?.roleName} />
               <Row label="Status" value={viewUser?.isLocked ? 'Locked' : viewUser?.isActive ? 'Active' : 'Inactive'} />
+              <Row label="Password Status" value={viewUser?.isDefaultPassword && viewUser?.isFirstLogin ? 'Default Password' : 'Password Changed'} />
               <Row label="Last Login" value={viewUser?.lastLoginDate ? new Date(viewUser.lastLoginDate).toLocaleString() : '-'} />
               <Row label="Failed Login Count" value={String(viewUser?.failedLoginCount ?? 0)} />
             </Stack>

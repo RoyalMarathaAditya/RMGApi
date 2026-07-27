@@ -87,4 +87,9 @@ export const userService = {
     const response = await api.get<any>(`/employees/${employeeId}`);
     return response.data.data as EmployeeDetail;
   },
+
+  async resetPasswordToDefault(id: number): Promise<{ success: boolean; message: string }> {
+    const response = await api.post(`/users/${id}/reset-password-default`);
+    return unwrap(response);
+  },
 };

@@ -54,6 +54,7 @@ namespace HRMS.Api.Repositories.UserManagement
             {
                 "name" => pagination.SortDescending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
                 "username" => pagination.SortDescending ? query.OrderByDescending(u => u.UserName ?? "") : query.OrderBy(u => u.UserName ?? ""),
+                "employeecode" => pagination.SortDescending ? query.OrderByDescending(u => u.Employee != null ? u.Employee.EmployeeCode : "") : query.OrderBy(u => u.Employee != null ? u.Employee.EmployeeCode : ""),
                 "role" => pagination.SortDescending ? query.OrderByDescending(u => u.Role != null ? u.Role.Name : "") : query.OrderBy(u => u.Role != null ? u.Role.Name : ""),
                 "createdat" => pagination.SortDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
                 "lastlogindate" => pagination.SortDescending ? query.OrderByDescending(u => u.LastLoginDate) : query.OrderBy(u => u.LastLoginDate),
@@ -82,7 +83,11 @@ namespace HRMS.Api.Repositories.UserManagement
                     ModifiedOn = u.ModifiedOn,
                     FailedLoginCount = u.FailedLoginCount,
                     LockedDate = u.LockedDate,
-                    LockedBy = u.LockedBy
+                    LockedBy = u.LockedBy,
+                    IsFirstLogin = u.IsFirstLogin,
+                    IsDefaultPassword = u.IsDefaultPassword,
+                    PasswordChangedOn = u.PasswordChangedOn,
+                    PasswordResetRequired = u.PasswordResetRequired
                 })
                 .ToListAsync(cancellationToken);
 

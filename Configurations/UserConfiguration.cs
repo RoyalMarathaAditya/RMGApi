@@ -18,6 +18,9 @@ namespace HRMS.Api.Configurations
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
             builder.HasIndex(u => u.RoleId);
+            builder.Property(u => u.IsFirstLogin).HasDefaultValue(true);
+            builder.Property(u => u.IsDefaultPassword).HasDefaultValue(true);
+            builder.Property(u => u.PasswordResetRequired).HasDefaultValue(true);
         }
     }
 }

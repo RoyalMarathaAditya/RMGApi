@@ -5,16 +5,19 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace HRMS.Api.Middleware
 {
     public class AuthenticationMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<AuthenticationMiddleware> _logger;
 
-        public AuthenticationMiddleware(RequestDelegate next)
+        public AuthenticationMiddleware(RequestDelegate next, ILogger<AuthenticationMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
@@ -34,6 +37,7 @@ namespace HRMS.Api.Middleware
                     path.EndsWith(".css", StringComparison.OrdinalIgnoreCase) ||
                     path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
                 {
+                    _logger.LogInformation("Middleware bypass: {Path}", path);
                     await _next(httpContext);
                     return;
                 }
@@ -110,7 +114,15 @@ namespace HRMS.Api.Middleware
                         return;
                     }
 
-                    // 7. Normalize standard claim shortcuts to official .NET schemas
+                    // 7. Extract user info and password reset required claim for logging
+                    var userIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value ?? "unknown";
+                    var userNameClaim = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value
+                        ?? jwt.Claims.FirstOrDefault(c => c.Type == "unique_name" || c.Type == "name")?.Value ?? "unknown";
+                    var emailClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value ?? "unknown";
+                    var passwordResetRequired = jwt.Claims
+                        .FirstOrDefault(c => c.Type == "passwordResetRequired")?.Value == "true";
+
+                    // 8. Normalize standard claim shortcuts to official .NET schemas
                     var claims = jwt.Claims.Select(c =>
                     {
                         if (c.Type == "role" || c.Type == "roles" || c.Type == ClaimTypes.Role)
@@ -131,11 +143,37 @@ namespace HRMS.Api.Middleware
                         return new Claim(c.Type, c.Value);
                     }).ToList();
 
-                    // 8. Construct user principal and flag request as Authenticated
+                    // 9. Construct user principal and flag request as Authenticated
                     var identity = new ClaimsIdentity(claims, "Bearer", ClaimTypes.Name, ClaimTypes.Role);
                     var principal = new ClaimsPrincipal(identity);
 
                     httpContext.User = principal;
+
+                    // 10. Enforce password change requirement - block all except exempt endpoints
+                    var isExempt = path.StartsWith("/api/auth/change-password", StringComparison.OrdinalIgnoreCase) ||
+                                   path.StartsWith("/api/auth/logout", StringComparison.OrdinalIgnoreCase) ||
+                                   path.StartsWith("/api/auth/me", StringComparison.OrdinalIgnoreCase);
+
+                    if (passwordResetRequired)
+                    {
+                        _logger.LogInformation(
+                            "PasswordResetRequired: UserId={UserId}, Email={Email}, Name={UserName}, Path={Path}, IsExempt={IsExempt}, Decision={Decision}",
+                            userIdClaim, emailClaim, userNameClaim, path, isExempt, isExempt ? "Allowed" : "Blocked (403)");
+
+                        if (!isExempt)
+                        {
+                            httpContext.Response.ContentType = "application/json";
+                            httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            await httpContext.Response.WriteAsJsonAsync(new { message = "Password change required." });
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation(
+                            "PasswordResetRequired: UserId={UserId}, Email={Email}, Name={UserName}, Path={Path}, Decision=Allowed (no restriction)",
+                            userIdClaim, emailClaim, userNameClaim, path);
+                    }
                 }
                 catch (Exception tokenEx)
                 {

@@ -185,7 +185,10 @@ namespace HRMS.Api.Data.Seeders
                     Name = "Admin User",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                     RoleId = adminRoleId,
-                    IsActive = true
+                    IsActive = true,
+                    PasswordResetRequired = false,
+                    IsDefaultPassword = false,
+                    IsFirstLogin = false
                 });
             }
 

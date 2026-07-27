@@ -22,6 +22,10 @@ export interface UserListDto {
   failedLoginCount: number;
   lockedDate: string | null;
   lockedBy: string | null;
+  isFirstLogin: boolean;
+  isDefaultPassword: boolean;
+  passwordChangedOn: string | null;
+  passwordResetRequired: boolean;
 }
 
 export interface CreateUserDto {
@@ -30,8 +34,6 @@ export interface CreateUserDto {
   name: string;
   email: string;
   phone: string;
-  password: string;
-  confirmPassword: string;
   roleId: string;
   isActive: boolean;
 }
@@ -41,8 +43,6 @@ export interface UpdateUserDto {
   email?: string;
   roleId?: string;
   isActive?: boolean;
-  password?: string;
-  confirmPassword?: string;
 }
 
 export interface ResetPasswordDto {

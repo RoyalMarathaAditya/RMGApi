@@ -17,6 +17,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
         Task<ApiResponse<bool>> ActivateUserAsync(int id, string? modifiedBy, CancellationToken cancellationToken = default);
         Task<ApiResponse<bool>> DeactivateUserAsync(int id, string? modifiedBy, CancellationToken cancellationToken = default);
         Task<List<Employee>> GetAvailableEmployeesAsync(CancellationToken cancellationToken = default);
+        Task<ApiResponse<bool>> ResetPasswordToDefaultAsync(int id, string? resetBy, CancellationToken cancellationToken = default);
     }
 }
 

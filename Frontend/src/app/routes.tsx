@@ -33,6 +33,7 @@ import PracticeWiseReport from '../features/reports/pages/PracticeWiseReport';
 import ClientWiseReport from '../features/reports/pages/ClientWiseReport';
 import ProjectWiseReport from '../features/reports/pages/ProjectWiseReport';
 import Login from '../pages/auth/Login';
+import ChangePassword from '../pages/auth/ChangePassword';
 import Dashboard from '../pages/dashboard/Dashboard';
 import Home from '../pages/home/Home';
 import Users from '../features/user-management/pages/Users';
@@ -60,6 +61,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/change-password" element={<ChangePassword />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
           {/*<Route index element={<Navigate to="/home" replace />} />

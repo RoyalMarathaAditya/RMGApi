@@ -11,6 +11,7 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
+  forcePasswordChange: boolean;
 }
 
 export interface LoginCredentials {
@@ -23,4 +24,5 @@ export interface LoginResponse {
   token: string;
   refreshToken: string;
   user: AuthUser;
+  forcePasswordChange: boolean;
 }

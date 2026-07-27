@@ -8,5 +8,6 @@ namespace HRMS.Api.Services
         Task<LoginResponse?> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
         Task<UserDto?> GetCurrentUserAsync(int userId, CancellationToken cancellationToken = default);
         Task<bool> RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+        Task<ChangePasswordResponse?> ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
     }
 }

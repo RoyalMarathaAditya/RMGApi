@@ -123,5 +123,14 @@ namespace HRMS.Api.Controllers
                 return BadRequest(result);
             return Ok(result);
         }
+
+        [HttpPost("{id}/reset-password-default")]
+        public async Task<IActionResult> ResetPasswordToDefault(int id, CancellationToken cancellationToken)
+        {
+            var result = await _userService.ResetPasswordToDefaultAsync(id, GetCurrentUser(), cancellationToken);
+            if (!result.Success)
+                return BadRequest(result);
+            return Ok(result);
+        }
     }
 }

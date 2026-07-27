@@ -7,5 +7,6 @@ namespace HRMS.Api.Repositories.Interfaces
         Task AddAsync(RefreshToken token, CancellationToken cancellationToken = default);
         Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default);
         Task DeleteAsync(RefreshToken token, CancellationToken cancellationToken = default);
+        Task DeleteAllForUserAsync(int userId, CancellationToken cancellationToken = default);
     }
 }

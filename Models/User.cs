@@ -59,5 +59,13 @@ namespace HRMS.Api.Models
         public string? ModifiedBy { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public bool IsFirstLogin { get; set; } = true;
+
+        public bool IsDefaultPassword { get; set; } = true;
+
+        public DateTime? PasswordChangedOn { get; set; }
+
+        public bool PasswordResetRequired { get; set; } = true;
     }
 }

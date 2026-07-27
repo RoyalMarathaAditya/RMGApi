@@ -9,6 +9,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
     {
         private readonly AppDbContext _dbContext;
         private readonly ILogger<UserSynchronizationService> _logger;
+        private const string DefaultPassword = "NV@12345#";
 
         public UserSynchronizationService(AppDbContext dbContext, ILogger<UserSynchronizationService> logger)
         {
@@ -176,8 +177,7 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
                 suffix++;
             }
 
-            var password = GenerateRandomPassword();
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(DefaultPassword);
 
             return new User
             {
@@ -189,6 +189,9 @@ namespace HRMS.Api.Services.Interfaces.UserManagement
                 EmployeeId = employee.Id,
                 IsActive = IsEmployeeActive(employee),
                 IsDeleted = false,
+                IsFirstLogin = true,
+                IsDefaultPassword = true,
+                PasswordResetRequired = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 CreatedBy = "System"

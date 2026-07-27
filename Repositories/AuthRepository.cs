@@ -16,12 +16,18 @@ namespace HRMS.Api.Repositories
 
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Users.AsNoTracking().Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+            return await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         }
 
         public async Task<User?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Users.AsNoTracking().Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+            return await _dbContext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        }
+
+        public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
+        {
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }
