@@ -20,7 +20,6 @@ namespace HRMS.Api.Repositories.UserManagement
         {
             var query = _dbContext.Users
                 .AsNoTracking()
-                .Include(u => u.Role)
                 .Where(u => !u.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(pagination.SearchTerm))
@@ -54,8 +53,8 @@ namespace HRMS.Api.Repositories.UserManagement
             {
                 "name" => pagination.SortDescending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
                 "username" => pagination.SortDescending ? query.OrderByDescending(u => u.UserName ?? "") : query.OrderBy(u => u.UserName ?? ""),
-                "employeecode" => pagination.SortDescending ? query.OrderByDescending(u => u.Employee != null ? u.Employee.EmployeeCode : "") : query.OrderBy(u => u.Employee != null ? u.Employee.EmployeeCode : ""),
-                "role" => pagination.SortDescending ? query.OrderByDescending(u => u.Role != null ? u.Role.Name : "") : query.OrderBy(u => u.Role != null ? u.Role.Name : ""),
+                "employeecode" => pagination.SortDescending ? query.OrderByDescending(u => u.Employee!.EmployeeCode) : query.OrderBy(u => u.Employee!.EmployeeCode),
+                "role" => pagination.SortDescending ? query.OrderByDescending(u => u.Role!.Name) : query.OrderBy(u => u.Role!.Name),
                 "createdat" => pagination.SortDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
                 "lastlogindate" => pagination.SortDescending ? query.OrderByDescending(u => u.LastLoginDate) : query.OrderBy(u => u.LastLoginDate),
                 _ => query.OrderBy(u => u.Name)
@@ -113,6 +112,44 @@ namespace HRMS.Api.Repositories.UserManagement
                 .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted, cancellationToken);
         }
 
+        public async Task<UserListDto?> GetByIdProjectedAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Users
+                .AsNoTracking()
+                .Where(u => u.Id == id && !u.IsDeleted)
+                .Select(u => new UserListDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    Phone = u.Phone,
+                    RoleId = u.RoleId,
+                    RoleName = u.Role != null ? u.Role.Name : string.Empty,
+                    EmployeeId = u.EmployeeId,
+                    EmployeeCode = u.Employee != null ? u.Employee.EmployeeCode : null,
+                    EmployeeName = u.Employee != null ? u.Employee.FullName : null,
+                    Designation = u.Employee != null && u.Employee.Designation != null ? u.Employee.Designation.Name : null,
+                    Practice = u.Employee != null && u.Employee.Practice != null ? u.Employee.Practice.Name : null,
+                    Department = u.Employee != null && u.Employee.DepartmentType != null ? u.Employee.DepartmentType.Name : null,
+                    IsActive = u.IsActive,
+                    IsLocked = u.IsLocked,
+                    LastLoginDate = u.LastLoginDate,
+                    CreatedAt = u.CreatedAt,
+                    CreatedBy = u.CreatedBy,
+                    ModifiedBy = u.ModifiedBy,
+                    ModifiedOn = u.ModifiedOn,
+                    FailedLoginCount = u.FailedLoginCount,
+                    LockedDate = u.LockedDate,
+                    LockedBy = u.LockedBy,
+                    IsFirstLogin = u.IsFirstLogin,
+                    IsDefaultPassword = u.IsDefaultPassword,
+                    PasswordChangedOn = u.PasswordChangedOn,
+                    PasswordResetRequired = u.PasswordResetRequired
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<User?> GetByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default)
         {
             return await _dbContext.Users
@@ -149,15 +186,23 @@ namespace HRMS.Api.Repositories.UserManagement
 
         public async Task<List<Employee>> GetEmployeesWithoutUserAsync(CancellationToken cancellationToken = default)
         {
-            var usedIds = await _dbContext.Users
+            var usedIdsQuery = _dbContext.Users
+                .AsNoTracking()
                 .Where(u => u.EmployeeId != null && !u.IsDeleted)
-                .Select(u => u.EmployeeId!.Value)
-                .ToListAsync(cancellationToken);
+                .Select(u => u.EmployeeId!.Value);
 
             return await _dbContext.Employees
                 .AsNoTracking()
-                .Where(e => !e.IsDeleted && !usedIds.Contains(e.Id))
+                .Where(e => !e.IsDeleted && !usedIdsQuery.Contains(e.Id))
                 .OrderBy(e => e.FullName)
+                .Select(e => new Employee
+                {
+                    Id = e.Id,
+                    EmployeeCode = e.EmployeeCode,
+                    FullName = e.FullName,
+                    Email = e.Email,
+                    MobileNumber = e.MobileNumber
+                })
                 .ToListAsync(cancellationToken);
         }
 

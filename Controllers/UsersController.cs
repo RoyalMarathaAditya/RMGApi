@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using HRMS.Api.DTOs.Common;
@@ -10,6 +11,7 @@ namespace HRMS.Api.Controllers
     [ApiController]
     [Route("api/users")]
     [CustomAuthorize]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class UsersController : ControllerBase
     {
         private readonly IUserManagementService _userService;
@@ -28,32 +30,60 @@ namespace HRMS.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsers([FromQuery] PaginationParams pagination, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching users...");
+            var sw = Stopwatch.StartNew();
             var result = await _userService.GetUsersAsync(pagination, cancellationToken);
+            sw.Stop();
+
+            _logger.LogInformation("GET /api/users [{ElapsedMs}ms] page={Page} size={Size} total={Total}",
+                sw.ElapsedMilliseconds, pagination.PageNumber, pagination.PageSize, result.TotalCount);
+
+            if (sw.ElapsedMilliseconds > 300)
+                _logger.LogWarning("Slow GET /api/users [{ElapsedMs}ms] page={Page}", sw.ElapsedMilliseconds, pagination.PageNumber);
+
+            Response.Headers["X-Response-Time-Ms"] = sw.ElapsedMilliseconds.ToString();
+            Response.Headers["X-Total-Count"] = result.TotalCount.ToString();
+
             return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(int id, CancellationToken cancellationToken)
         {
+            var sw = Stopwatch.StartNew();
             var user = await _userService.GetUserByIdAsync(id, cancellationToken);
+            sw.Stop();
+
+            _logger.LogInformation("GET /api/users/{Id} [{ElapsedMs}ms]", id, sw.ElapsedMilliseconds);
+
             if (user is null)
                 return NotFound(new { success = false, message = "User not found." });
+
+            Response.Headers["X-Response-Time-Ms"] = sw.ElapsedMilliseconds.ToString();
             return Ok(user);
         }
 
         [HttpGet("available-employees")]
         public async Task<IActionResult> GetAvailableEmployees(CancellationToken cancellationToken)
         {
+            var sw = Stopwatch.StartNew();
             var employees = await _userService.GetAvailableEmployeesAsync(cancellationToken);
+            sw.Stop();
+
+            _logger.LogInformation("GET /api/users/available-employees [{ElapsedMs}ms] count={Count}",
+                sw.ElapsedMilliseconds, employees.Count);
+
             return Ok(employees.Select(e => new { e.Id, e.FullName, e.EmployeeCode, e.Email }));
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Creating user...");
+            var sw = Stopwatch.StartNew();
             var result = await _userService.CreateUserAsync(dto, GetCurrentUser(), cancellationToken);
+            sw.Stop();
+
+            _logger.LogInformation("POST /api/users [{ElapsedMs}ms] success={Success}", sw.ElapsedMilliseconds, result.Success);
+
             if (!result.Success)
                 return BadRequest(result);
             return CreatedAtAction(nameof(GetUser), new { id = result.Data?.Id }, result);
@@ -62,8 +92,12 @@ namespace HRMS.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Updating user {Id}...", id);
+            var sw = Stopwatch.StartNew();
             var result = await _userService.UpdateUserAsync(id, dto, GetCurrentUser(), cancellationToken);
+            sw.Stop();
+
+            _logger.LogInformation("PUT /api/users/{Id} [{ElapsedMs}ms] success={Success}", id, sw.ElapsedMilliseconds, result.Success);
+
             if (!result.Success)
                 return BadRequest(result);
             return Ok(result);
@@ -72,8 +106,12 @@ namespace HRMS.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Deleting user {Id}...", id);
+            var sw = Stopwatch.StartNew();
             var result = await _userService.DeleteUserAsync(id, cancellationToken);
+            sw.Stop();
+
+            _logger.LogInformation("DELETE /api/users/{Id} [{ElapsedMs}ms] success={Success}", id, sw.ElapsedMilliseconds, result.Success);
+
             if (!result.Success)
                 return NotFound(result);
             return Ok(result);

@@ -6,6 +6,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
 import ReplayIcon from '@mui/icons-material/Replay';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Alert,
   Autocomplete,
@@ -35,9 +36,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PageContainer from '../../../components/common/PageContainer';
 import TableLoader from '../../../components/common/TableLoader';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { toastService } from '../../../services/toastService';
 import UserStatusChip from '../components/UserStatusChip';
 import type {
@@ -74,6 +76,9 @@ const defaultEditForm = {
   isActive: true,
 };
 
+const sortableHeaders = ['Employee', 'Role', 'Created Date', 'Last Login'] as const;
+const sortMap: Record<string, string> = { 'Employee': 'name', 'Role': 'role', 'Created Date': 'createdat', 'Last Login': 'lastlogindate' };
+
 interface ConfirmState {
   open: boolean;
   title: string;
@@ -83,13 +88,130 @@ interface ConfirmState {
   onConfirm: () => void;
 }
 
+const ActionsCell = React.memo(function ActionsCell({
+  user,
+  onView,
+  onEdit,
+  onLock,
+  onUnlock,
+  onActivate,
+  onDeactivate,
+  onDelete,
+  onResetPwd,
+  onResetDefault,
+}: {
+  user: UserListDto;
+  onView: (u: UserListDto) => void;
+  onEdit: (u: UserListDto) => void;
+  onLock: (id: number) => void;
+  onUnlock: (id: number) => void;
+  onActivate: (id: number) => void;
+  onDeactivate: (id: number) => void;
+  onDelete: (u: UserListDto) => void;
+  onResetPwd: (u: UserListDto) => void;
+  onResetDefault: (id: number) => void;
+}) {
+  return (
+    <Stack direction="row" spacing={0.5}>
+      <Tooltip title="View"><IconButton size="small" onClick={() => onView(user)}><RemoveRedEyeOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+      <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(user)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+      {user.isActive && !user.isLocked && (
+        <Tooltip title="Lock">
+          <IconButton size="small" onClick={() => onLock(user.id)}><LockIcon fontSize="small" /></IconButton>
+        </Tooltip>
+      )}
+      {user.isLocked && (
+        <Tooltip title="Unlock">
+          <IconButton size="small" onClick={() => onUnlock(user.id)}><LockOpenIcon fontSize="small" /></IconButton>
+        </Tooltip>
+      )}
+      {user.isActive ? (
+        <Tooltip title="Deactivate">
+          <IconButton size="small" color="warning" onClick={() => onDeactivate(user.id)}><LockOpenIcon fontSize="small" /></IconButton>
+        </Tooltip>
+      ) : !user.isLocked && (
+        <Tooltip title="Activate">
+          <IconButton size="small" color="success" onClick={() => onActivate(user.id)}><LockOpenIcon fontSize="small" /></IconButton>
+        </Tooltip>
+      )}
+      <Tooltip title="Reset Password"><IconButton size="small" onClick={() => onResetPwd(user)}><LockOpenIcon fontSize="small" /></IconButton></Tooltip>
+      <Tooltip title="Reset to Default">
+        <IconButton size="small" color="warning" onClick={() => onResetDefault(user.id)}><ReplayIcon fontSize="small" /></IconButton>
+      </Tooltip>
+      <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => onDelete(user)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+    </Stack>
+  );
+});
+
+const UserRow = React.memo(function UserRow({
+  user,
+  onView,
+  onEdit,
+  onLock,
+  onUnlock,
+  onActivate,
+  onDeactivate,
+  onDelete,
+  onResetPwd,
+  onResetDefault,
+}: {
+  user: UserListDto;
+  onView: (u: UserListDto) => void;
+  onEdit: (u: UserListDto) => void;
+  onLock: (id: number) => void;
+  onUnlock: (id: number) => void;
+  onActivate: (id: number) => void;
+  onDeactivate: (id: number) => void;
+  onDelete: (u: UserListDto) => void;
+  onResetPwd: (u: UserListDto) => void;
+  onResetDefault: (id: number) => void;
+}) {
+  return (
+    <TableRow hover>
+      <TableCell sx={{ maxWidth: 260, minWidth: 180 }}>
+        <Typography fontWeight={600} variant="body2" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {user.name}
+        </Typography>
+      </TableCell>
+      <TableCell>{user.email}</TableCell>
+      <TableCell><Chip label={user.roleName} size="small" variant="outlined" /></TableCell>
+      <TableCell>
+        <Chip
+          label={user.isDefaultPassword && user.isFirstLogin ? 'Default Password' : 'Password Changed'}
+          size="small"
+          color={user.isDefaultPassword && user.isFirstLogin ? 'warning' : 'success'}
+          variant="filled"
+        />
+      </TableCell>
+      <TableCell><UserStatusChip isActive={user.isActive} isLocked={user.isLocked} /></TableCell>
+      <TableCell>{user.lastLoginDate ? new Date(user.lastLoginDate).toLocaleDateString() : '-'}</TableCell>
+      <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+      <TableCell>
+        <ActionsCell
+          user={user}
+          onView={onView}
+          onEdit={onEdit}
+          onLock={onLock}
+          onUnlock={onUnlock}
+          onActivate={onActivate}
+          onDeactivate={onDeactivate}
+          onDelete={onDelete}
+          onResetPwd={onResetPwd}
+          onResetDefault={onResetDefault}
+        />
+      </TableCell>
+    </TableRow>
+  );
+});
+
 export default function Users() {
   const [data, setData] = useState<PagedResponse<UserListDto> | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [rawSearchTerm, setRawSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(rawSearchTerm, 400);
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -110,56 +232,60 @@ export default function Users() {
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, title: '', message: '', confirmLabel: '', onConfirm: () => {} });
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+  const initialLoadDone = useRef(false);
 
-  const loadData = useCallback(async () => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const refresh = useCallback(() => setRefreshCounter(c => c + 1), []);
 
+  const loadDataAsync = useCallback(async (signal: AbortSignal) => {
     setLoading(true);
     setLoadError('');
     try {
       const params: PaginationParams = {
         pageNumber: page + 1,
         pageSize: rowsPerPage,
-        searchTerm: searchTerm || undefined,
+        searchTerm: debouncedSearch || undefined,
         sortBy,
         sortDescending: sortDesc,
         roleIdFilter: roleFilter || undefined,
         statusFilter: statusFilter || undefined,
       };
       const result = await userService.getUsers(params);
-      if (!controller.signal.aborted) {
+      if (!signal.aborted) {
         setData(result);
       }
     } catch (err: any) {
-      if (!controller.signal.aborted) {
+      if (!signal.aborted) {
         const message = err?.response?.data?.message || err?.message || 'Failed to load users';
         setLoadError(message);
         toastService.error(message);
       }
     } finally {
-      if (!controller.signal.aborted) {
+      if (!signal.aborted) {
         setLoading(false);
       }
     }
-  }, [page, rowsPerPage, searchTerm, sortBy, sortDesc, roleFilter, statusFilter]);
+  }, [page, rowsPerPage, debouncedSearch, sortBy, sortDesc, roleFilter, statusFilter, refreshCounter]);
 
   useEffect(() => {
-    loadData();
-    return () => {
-      abortRef.current?.abort();
-    };
-  }, [loadData]);
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    loadDataAsync(controller.signal);
+    return () => { controller.abort(); };
+  }, [loadDataAsync]);
 
   useEffect(() => {
-    const loadRoles = async () => {
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
+
+    const loadInitial = async () => {
       setRolesLoading(true);
       setRolesError('');
       try {
-        const res = await roleService.getRoles();
-        setRoles(res);
+        const rolesRes = await roleService.getRoles();
+        setRoles(rolesRes);
       } catch {
         setRolesError('Unable to load roles');
         setRoles([]);
@@ -167,14 +293,14 @@ export default function Users() {
         setRolesLoading(false);
       }
     };
-    loadRoles();
+    loadInitial();
   }, []);
 
-  const showConfirm = (title: string, message: string, confirmLabel: string, onConfirm: () => void, confirmColor?: 'error' | 'warning' | 'primary' | 'success') => {
+  const showConfirm = useCallback((title: string, message: string, confirmLabel: string, onConfirm: () => void, confirmColor?: 'error' | 'warning' | 'primary' | 'success') => {
     setConfirm({ open: true, title, message, confirmLabel, confirmColor, onConfirm });
-  };
+  }, []);
 
-  const handleOpenAdd = async () => {
+  const handleOpenAdd = useCallback(async () => {
     const employeeRole = roles.find(r => r.name === 'Employee');
     setCreateForm({ ...defaultCreateForm, roleId: employeeRole?.id ?? '' });
     setEmployeeDetail(null);
@@ -187,9 +313,9 @@ export default function Users() {
       setAvailableEmployees([]);
       toastService.error('Failed to load employees');
     }
-  };
+  }, [roles]);
 
-  const handleEmployeeChange = async (employee: AvailableEmployee | null) => {
+  const handleEmployeeChange = useCallback((employee: AvailableEmployee | null) => {
     setCreateForm({
       ...createForm,
       employeeId: employee?.employeeId ?? null,
@@ -199,9 +325,9 @@ export default function Users() {
       phone: employee?.mobileNumber ?? '',
     });
     setEmployeeDetail(null);
-  };
+  }, [createForm]);
 
-  const handleEdit = async (user: UserListDto) => {
+  const handleEdit = useCallback((user: UserListDto) => {
     setEditTarget(user);
     setEditForm({
       employeeId: user.employeeId ?? null,
@@ -213,9 +339,9 @@ export default function Users() {
       isActive: user.isActive,
     });
     setFormError('');
-  };
+  }, []);
 
-  const handleSaveAdd = async () => {
+  const handleSaveAdd = useCallback(async () => {
     if (!createForm.employeeId) { setFormError('Please select an employee'); return; }
     if (!createForm.roleId) { setFormError('Please select a role'); return; }
     if (!createForm.email.trim()) { setFormError('Email is required'); return; }
@@ -226,22 +352,17 @@ export default function Users() {
       await userService.createUser(createForm);
       toastService.success('User created successfully');
       setAddDialogOpen(false);
-      loadData();
+      refresh();
     } catch (err: any) {
       setFormError(err?.response?.data?.message || 'Failed to create user');
     } finally { setSaving(false); }
-  };
+  }, [createForm, refresh]);
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = useCallback(async () => {
     if (!editTarget) return;
     if (!editForm.roleId) { setFormError('Please select a role'); return; }
-    if (!editForm.email.trim()) { setFormError('Email is required'); return; }
 
-    const dto: UpdateUserDto = {
-      roleId: editForm.roleId,
-      isActive: editForm.isActive,
-    };
-
+    const dto: UpdateUserDto = { roleId: editForm.roleId, isActive: editForm.isActive };
     if (editForm.phone !== editTarget.phone) {
       dto.phone = editForm.phone || '';
     }
@@ -251,65 +372,57 @@ export default function Users() {
       await userService.updateUser(editTarget.id, dto);
       toastService.success('User updated successfully');
       setEditTarget(null);
-      loadData();
+      refresh();
     } catch (err: any) {
       setFormError(err?.response?.data?.message || 'Failed to update user');
     } finally { setSaving(false); }
-  };
+  }, [editTarget, editForm, refresh]);
 
-  const handleLock = async (id: number) => {
-    try {
-      await userService.lockUser(id);
-      toastService.success('User locked successfully');
-      loadData();
-    } catch { toastService.error('Failed to lock user'); }
-  };
-
-  const handleUnlock = async (id: number) => {
-    try {
-      await userService.unlockUser(id);
-      toastService.success('User unlocked successfully');
-      loadData();
-    } catch { toastService.error('Failed to unlock user'); }
-  };
-
-  const handleActivate = async (id: number) => {
-    try {
-      await userService.activateUser(id);
-      toastService.success('User activated successfully');
-      loadData();
-    } catch { toastService.error('Failed to activate user'); }
-  };
-
-  const handleDeactivate = async (id: number) => {
-    try {
-      await userService.deactivateUser(id);
-      toastService.success('User deactivated successfully');
-      loadData();
-    } catch { toastService.error('Failed to deactivate user'); }
-  };
-
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     try {
       await userService.deleteUser(deleteTarget.id);
       toastService.success('User deleted successfully');
       setDeleteTarget(null);
-      loadData();
+      refresh();
     } catch { toastService.error('Failed to delete user'); }
-  };
+  }, [deleteTarget, refresh]);
 
-  const handleResetPwdDefault = async (id: number) => {
+  const execWithRefresh = useCallback(async (promise: Promise<unknown>, successMsg: string) => {
     try {
-      const result = await userService.resetPasswordToDefault(id);
-      toastService.success(result.message || 'Password reset to default');
-      loadData();
-    } catch (err: any) {
-      toastService.error(err?.response?.data?.message || 'Failed to reset password');
+      await promise;
+      toastService.success(successMsg);
+    } catch {
+      toastService.error('Operation failed');
+    } finally {
+      refresh();
     }
-  };
+  }, [refresh]);
 
-  const handleResetPwd = async () => {
+  const handleLockUser = useCallback((id: number) => {
+    showConfirm('Lock User', 'Are you sure you want to lock this user?', 'Lock', () => execWithRefresh(userService.lockUser(id), 'User locked successfully'), 'warning');
+  }, [showConfirm, execWithRefresh]);
+  const handleUnlockUser = useCallback((id: number) => {
+    showConfirm('Unlock User', 'Are you sure you want to unlock this user?', 'Unlock', () => execWithRefresh(userService.unlockUser(id), 'User unlocked successfully'), 'warning');
+  }, [showConfirm, execWithRefresh]);
+  const handleActivateUser = useCallback((id: number) => {
+    showConfirm('Activate User', 'Are you sure you want to activate this user?', 'Activate', () => execWithRefresh(userService.activateUser(id), 'User activated successfully'), 'success');
+  }, [showConfirm, execWithRefresh]);
+  const handleDeactivateUser = useCallback((id: number) => {
+    showConfirm('Deactivate User', 'Are you sure you want to deactivate this user?', 'Deactivate', () => execWithRefresh(userService.deactivateUser(id), 'User deactivated successfully'), 'error');
+  }, [showConfirm, execWithRefresh]);
+
+  const handleResetPwdDefault = useCallback((id: number) => {
+    showConfirm(
+      'Reset Password to Default',
+      'Reset this user\'s password to the default password (NV@12345#)? The user will be forced to change it on next login.',
+      'Reset to Default',
+      () => execWithRefresh(userService.resetPasswordToDefault(id), 'Password reset to default'),
+      'warning'
+    );
+  }, [showConfirm, execWithRefresh]);
+
+  const handleResetPwd = useCallback(async () => {
     if (!resetPwdForm.newPassword || resetPwdForm.newPassword !== resetPwdForm.confirmPassword) {
       setFormError('Passwords do not match');
       return;
@@ -319,21 +432,58 @@ export default function Users() {
       await userService.resetPassword(resetPwdForm);
       toastService.success('Password reset successfully');
       setResetPwdTarget(null);
+      refresh();
     } catch (err: any) {
       setFormError(err?.response?.data?.message || 'Failed to reset password');
     } finally { setSaving(false); }
-  };
+  }, [resetPwdForm, refresh]);
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     toastService.info('Export feature coming soon');
-  };
+  }, []);
+
+  const handleViewUser = useCallback((u: UserListDto) => setViewUser(u), []);
+  const handleEditUser = useCallback((u: UserListDto) => handleEdit(u), [handleEdit]);
+  const handleDeleteUser = useCallback((u: UserListDto) => setDeleteTarget(u), []);
+  const handleResetPwdUser = useCallback((u: UserListDto) => {
+    setResetPwdTarget(u);
+    setResetPwdForm({ userId: u.id, newPassword: '', confirmPassword: '' });
+    setFormError('');
+  }, []);
+
+  const handleSortClick = useCallback((header: string) => {
+    const field = sortMap[header];
+    if (!field) return;
+    setSortBy(prev => {
+      if (prev === field) setSortDesc(d => !d);
+      else setSortDesc(false);
+      return field;
+    });
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setRawSearchTerm(e.target.value);
+    setPage(0);
+  }, []);
+
+  const handleRoleFilterChange = useCallback((e: any) => {
+    setRoleFilter(e.target.value);
+    setPage(0);
+  }, []);
+
+  const handleStatusFilterChange = useCallback((e: any) => {
+    setStatusFilter(e.target.value);
+    setPage(0);
+  }, []);
+
+  const sortableHeadersSet = useMemo(() => new Set(sortableHeaders), []);
 
   return (
     <PageContainer title="Users">
       <Stack spacing={3}>
         <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
           <Typography color="text.secondary" variant="body2">
-            {data ? `${data.totalCount} user(s)` : ''}
+            {data ? `${data.totalCount} user(s)` : loading ? '' : ''}
           </Typography>
           <Stack direction="row" spacing={1}>
             <Button disabled={loading} onClick={handleExport} startIcon={<FileDownloadOutlinedIcon />} variant="outlined">
@@ -350,15 +500,29 @@ export default function Users() {
             disabled={loading}
             fullWidth
             placeholder="Search by name, email..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
-            slotProps={{ input: { startAdornment: <InputAdornment position="start"><Typography color="text.secondary">🔍</Typography></InputAdornment> } }}
+            value={rawSearchTerm}
+            onChange={handleSearchChange}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
-          <Select disabled={loading} size="small" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
+          <Select disabled={loading} size="small" value={roleFilter} onChange={handleRoleFilterChange} displayEmpty sx={{ minWidth: 140 }}>
             <MenuItem value="">All Roles</MenuItem>
-            {roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
+            {rolesLoading ? (
+              <MenuItem disabled>Loading...</MenuItem>
+            ) : rolesError ? (
+              <MenuItem disabled>Error loading roles</MenuItem>
+            ) : (
+              roles.map(r => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)
+            )}
           </Select>
-          <Select disabled={loading} size="small" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} displayEmpty sx={{ minWidth: 140 }}>
+          <Select disabled={loading} size="small" value={statusFilter} onChange={handleStatusFilterChange} displayEmpty sx={{ minWidth: 140 }}>
             <MenuItem value="">All Status</MenuItem>
             <MenuItem value="active">Active</MenuItem>
             <MenuItem value="inactive">Inactive</MenuItem>
@@ -368,7 +532,7 @@ export default function Users() {
 
         {loadError && !loading && (
           <Alert
-            action={<Button color="inherit" onClick={loadData} size="small" startIcon={<ReplayIcon />}>Retry</Button>}
+            action={<Button color="inherit" onClick={() => loadDataAsync(new AbortController().signal)} size="small" startIcon={<ReplayIcon />}>Retry</Button>}
             severity="error"
             sx={{ borderRadius: 2 }}
           >
@@ -384,98 +548,45 @@ export default function Users() {
                   {['Employee', 'Email', 'Role', 'Password Status', 'Status', 'Last Login', 'Created Date', 'Actions'].map((h) => (
                     <TableCell
                       key={h}
-                      sx={{ fontWeight: 700, cursor: ['Name', 'Role', 'Created Date', 'Last Login'].includes(h) ? 'pointer' : 'default' }}
-                      onClick={() => {
-                        const sortMap: Record<string, string> = { 'Name': 'name', 'Role': 'role', 'Created Date': 'createdat', 'Last Login': 'lastlogindate' };
-                        const field = sortMap[h];
-                        if (field) {
-                          if (sortBy === field) setSortDesc(!sortDesc);
-                          else { setSortBy(field); setSortDesc(false); }
-                        }
+                      sx={{
+                        fontWeight: 700,
+                        cursor: sortableHeadersSet.has(h as any) ? 'pointer' : 'default',
+                        userSelect: 'none',
                       }}
+                      onClick={() => handleSortClick(h)}
                     >
-                      {h}
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <span>{h}</span>
+                        {sortBy === sortMap[h] && (
+                          <Typography variant="caption" color="primary">
+                            {sortDesc ? '↓' : '↑'}
+                          </Typography>
+                        )}
+                      </Stack>
                     </TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               {loading ? (
-                <TableLoader columns={8} rows={8} />
+                <TableLoader columns={8} rows={rowsPerPage > 8 ? 8 : rowsPerPage} />
               ) : (
                 <TableBody>
-                    {data?.items.map((u) => (
-                    <TableRow key={u.id} hover>
-                      <TableCell sx={{ maxWidth: 260, minWidth: 180 }}>
-                        <Typography
-                          fontWeight={600}
-                          variant="body2"
-                          sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                        >
-                          {u.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{u.email}</TableCell>
-                      <TableCell><Chip label={u.roleName} size="small" variant="outlined" /></TableCell>
-                      <TableCell>
-                        <Chip
-                          label={u.isDefaultPassword && u.isFirstLogin ? 'Default Password' : 'Password Changed'}
-                          size="small"
-                          color={u.isDefaultPassword && u.isFirstLogin ? 'warning' : 'success'}
-                          variant="filled"
-                        />
-                      </TableCell>
-                      <TableCell><UserStatusChip isActive={u.isActive} isLocked={u.isLocked} /></TableCell>
-                      <TableCell>{u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleDateString() : '-'}</TableCell>
-                      <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={0.5}>
-                          <Tooltip title="View"><IconButton size="small" onClick={() => setViewUser(u)}><RemoveRedEyeOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                          <Tooltip title="Edit"><IconButton size="small" onClick={() => handleEdit(u)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-                          {u.isActive && !u.isLocked && (
-                            <Tooltip title="Lock">
-                              <IconButton size="small" onClick={() => showConfirm('Lock User', `Are you sure you want to lock ${u.name}?`, 'Lock', () => handleLock(u.id), 'warning')}>
-                                <LockIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          {u.isLocked && (
-                            <Tooltip title="Unlock">
-                              <IconButton size="small" onClick={() => showConfirm('Unlock User', `Are you sure you want to unlock ${u.name}?`, 'Unlock', () => handleUnlock(u.id), 'warning')}>
-                                <LockOpenIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          {u.isActive ? (
-                            <Tooltip title="Deactivate">
-                              <IconButton size="small" color="warning" onClick={() => showConfirm('Deactivate User', `Are you sure you want to deactivate ${u.name}?`, 'Deactivate', () => handleDeactivate(u.id), 'error')}>
-                                <LockOpenIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          ) : !u.isLocked && (
-                            <Tooltip title="Activate">
-                              <IconButton size="small" color="success" onClick={() => showConfirm('Activate User', `Are you sure you want to activate ${u.name}?`, 'Activate', () => handleActivate(u.id), 'success')}>
-                                <LockOpenIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          <Tooltip title="Reset Password"><IconButton size="small" onClick={() => { setResetPwdTarget(u); setResetPwdForm({ userId: u.id, newPassword: '', confirmPassword: '' }); setFormError(''); }}><LockOpenIcon fontSize="small" /></IconButton></Tooltip>
-                          <Tooltip title="Reset to Default">
-                            <IconButton size="small" color="warning" onClick={() => showConfirm(
-                              'Reset Password to Default',
-                              `Reset ${u.name}'s password to the default password (NV@12345#)? The user will be forced to change it on next login.`,
-                              'Reset to Default',
-                              () => handleResetPwdDefault(u.id),
-                              'warning'
-                            )}>
-                              <ReplayIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
+                  {data?.items.map((u) => (
+                    <UserRow
+                      key={u.id}
+                      user={u}
+                      onView={handleViewUser}
+                      onEdit={handleEditUser}
+                      onLock={handleLockUser}
+                      onUnlock={handleUnlockUser}
+                      onActivate={handleActivateUser}
+                      onDeactivate={handleDeactivateUser}
+                      onDelete={handleDeleteUser}
+                      onResetPwd={handleResetPwdUser}
+                      onResetDefault={handleResetPwdDefault}
+                    />
                   ))}
-                    {data?.items.length === 0 && (
+                  {data?.items.length === 0 && (
                     <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><Typography color="text.secondary">No users found.</Typography></TableCell></TableRow>
                   )}
                 </TableBody>
@@ -495,12 +606,9 @@ export default function Users() {
         </Paper>
       </Stack>
 
-      {/* Unified Confirmation Dialog */}
       <Dialog onClose={() => setConfirm({ ...confirm, open: false })} open={confirm.open}>
         <DialogTitle>{confirm.title}</DialogTitle>
-        <DialogContent>
-          <Typography>{confirm.message}</Typography>
-        </DialogContent>
+        <DialogContent><Typography>{confirm.message}</Typography></DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirm({ ...confirm, open: false })}>Cancel</Button>
           <Button color={confirm.confirmColor || 'primary'} onClick={() => { confirm.onConfirm(); setConfirm({ ...confirm, open: false }); }} variant="contained">
@@ -509,7 +617,6 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
-      {/* Add User Dialog */}
       <Dialog fullWidth maxWidth="md" onClose={() => setAddDialogOpen(false)} open={addDialogOpen}>
         <DialogTitle>Add User</DialogTitle>
         <DialogContent>
@@ -555,7 +662,6 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
-      {/* Edit User Dialog */}
       <Dialog fullWidth maxWidth="md" onClose={() => setEditTarget(null)} open={Boolean(editTarget)}>
         <DialogTitle>Edit User - {editTarget?.name}</DialogTitle>
         <DialogContent>
@@ -598,7 +704,6 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <Dialog onClose={() => setDeleteTarget(null)} open={Boolean(deleteTarget)}>
         <DialogTitle>Delete User?</DialogTitle>
         <DialogContent>
@@ -610,7 +715,6 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
-      {/* Reset Password Dialog */}
       <Dialog fullWidth maxWidth="sm" onClose={() => setResetPwdTarget(null)} open={Boolean(resetPwdTarget)}>
         <DialogTitle>Reset Password - {resetPwdTarget?.name}</DialogTitle>
         <DialogContent>
@@ -626,7 +730,6 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
-      {/* View User Drawer */}
       <Drawer anchor="right" onClose={() => setViewUser(null)} open={Boolean(viewUser)} PaperProps={{ sx: { width: { xs: 300, sm: 400, md: 500 } } }}>
         <Stack spacing={2} sx={{ p: 3 }}>
           <Typography fontWeight={700} variant="h6">{viewUser?.name}</Typography>
@@ -672,11 +775,11 @@ export default function Users() {
   );
 }
 
-function Row({ label, value }: { label: string; value?: string | null }) {
+const Row = React.memo(function Row({ label, value }: { label: string; value?: string | null }) {
   return (
     <Stack direction="row" justifyContent="space-between">
       <Typography color="text.secondary" variant="body2">{label}</Typography>
       <Typography fontWeight={500} variant="body2">{value ?? '-'}</Typography>
     </Stack>
   );
-}
+});

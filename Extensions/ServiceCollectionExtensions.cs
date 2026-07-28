@@ -1,3 +1,5 @@
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using HRMS.Api.Data;
@@ -80,6 +82,8 @@ namespace HRMS.Api.Extensions
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IUserSynchronizationService, UserSynchronizationService>();
 
+            services.AddSingleton<ICacheService, DistributedCacheService>();
+
             services.AddScoped<IResourceAllocationRepository, ResourceAllocationRepository>();
             services.AddScoped<IResourceAllocationHistoryRepository, ResourceAllocationHistoryRepository>();
             services.AddScoped<IResourceRequestRepository, ResourceRequestRepository>();
@@ -92,10 +96,29 @@ namespace HRMS.Api.Extensions
             services.AddResponseCompression(options =>
             {
                 options.EnableForHttps = true;
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+                options.MimeTypes = new[]
+                {
+                    "text/plain", "text/html", "text/css", "text/javascript",
+                    "application/json", "application/xml", "application/javascript",
+                    "image/svg+xml"
+                };
+            });
+
+            services.Configure<BrotliCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
             });
 
             services.AddHealthChecks();
 
+            services.AddMemoryCache();
             services.AddDistributedMemoryCache();
 
             var redisConnection = configuration.GetValue<string>("Redis:ConnectionString");

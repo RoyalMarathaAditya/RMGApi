@@ -1,35 +1,58 @@
+using System.Diagnostics;
 using HRMS.Api.DTOs.Common;
 using HRMS.Api.DTOs.UserDtos;
 using HRMS.Api.Models;
 using HRMS.Api.Repositories.Interfaces;
+using HRMS.Api.Services.Interfaces;
 using HRMS.Api.Services.Interfaces.UserManagement;
-using Microsoft.Extensions.Logging;
 
 namespace HRMS.Api.Services.UserManagement
 {
     public class UserManagementService : IUserManagementService
     {
         private readonly IUserRepository _userRepository;
+        private readonly ICacheService _cache;
         private readonly ILogger<UserManagementService> _logger;
         private const string DefaultPassword = "NV@12345#";
+        private const string UsersCachePrefix = "users";
+        private const string RolesCacheKey = "roles";
+        private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
-        public UserManagementService(IUserRepository userRepository, ILogger<UserManagementService> logger)
+        public UserManagementService(IUserRepository userRepository, ICacheService cache, ILogger<UserManagementService> logger)
         {
             _userRepository = userRepository;
+            _cache = cache;
             _logger = logger;
         }
 
         public async Task<PagedResponse<UserListDto>> GetUsersAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
         {
-            return await _userRepository.GetPagedAsync(pagination, cancellationToken);
+            var sw = Stopwatch.StartNew();
+
+            var cacheKey = $"{UsersCachePrefix}:page={pagination.PageNumber}&size={pagination.PageSize}&search={pagination.SearchTerm ?? ""}&sort={pagination.SortBy ?? "name"}&desc={pagination.SortDescending}&role={pagination.RoleIdFilter ?? ""}&status={pagination.StatusFilter ?? ""}";
+
+            var result = await _cache.GetOrCreateAsync(cacheKey, async () =>
+                (PagedResponse<UserListDto>?)await _userRepository.GetPagedAsync(pagination, cancellationToken), new CacheEntryOptions
+                {
+                    DistributedExpiration = CacheTtl,
+                    MemoryExpiration = TimeSpan.FromMinutes(1)
+                });
+
+            sw.Stop();
+            if (sw.ElapsedMilliseconds > 150)
+                _logger.LogWarning("GetUsersAsync took {ElapsedMs}ms for page {Page}", sw.ElapsedMilliseconds, pagination.PageNumber);
+
+            return result ?? new PagedResponse<UserListDto>();
         }
 
         public async Task<UserListDto?> GetUserByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
-            if (user is null) return null;
-
-            return MapToDto(user);
+            return await _cache.GetOrCreateAsync($"user:{id}", () =>
+                _userRepository.GetByIdProjectedAsync(id, cancellationToken), new CacheEntryOptions
+                {
+                    DistributedExpiration = TimeSpan.FromMinutes(10),
+                    MemoryExpiration = TimeSpan.FromMinutes(2)
+                });
         }
 
         public async Task<ApiResponse<UserListDto>> CreateUserAsync(CreateUserDto dto, string? createdBy, CancellationToken cancellationToken = default)
@@ -78,6 +101,8 @@ namespace HRMS.Api.Services.UserManagement
 
             _logger.LogInformation("User {UserId} created with default password by {CreatedBy}", created.Id, createdBy);
 
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<UserListDto>.Ok(new UserListDto
             {
                 Id = created.Id,
@@ -123,6 +148,8 @@ namespace HRMS.Api.Services.UserManagement
 
             await _userRepository.UpdateAsync(user, cancellationToken);
 
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<UserListDto>.Ok(MapToDto(user), "User updated successfully.");
         }
 
@@ -133,6 +160,9 @@ namespace HRMS.Api.Services.UserManagement
                 return ApiResponse<bool>.Fail("User not found.");
 
             await _userRepository.DeleteAsync(user, cancellationToken);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, "User deleted successfully.");
         }
 
@@ -154,6 +184,9 @@ namespace HRMS.Api.Services.UserManagement
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user, cancellationToken);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, "Password reset successfully.");
         }
 
@@ -173,6 +206,9 @@ namespace HRMS.Api.Services.UserManagement
             await _userRepository.UpdateAsync(user, cancellationToken);
 
             _logger.LogInformation("Password reset to default for user {UserId} by {ResetBy}", id, resetBy);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, $"Password has been reset to {DefaultPassword}");
         }
 
@@ -188,6 +224,9 @@ namespace HRMS.Api.Services.UserManagement
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user, cancellationToken);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, "User locked successfully.");
         }
 
@@ -204,6 +243,9 @@ namespace HRMS.Api.Services.UserManagement
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user, cancellationToken);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, "User unlocked successfully.");
         }
 
@@ -218,6 +260,9 @@ namespace HRMS.Api.Services.UserManagement
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user, cancellationToken);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, "User activated successfully.");
         }
 
@@ -232,12 +277,28 @@ namespace HRMS.Api.Services.UserManagement
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user, cancellationToken);
+
+            await InvalidateUsersCacheAsync();
+
             return ApiResponse<bool>.Ok(true, "User deactivated successfully.");
         }
 
         public async Task<List<Employee>> GetAvailableEmployeesAsync(CancellationToken cancellationToken = default)
         {
-            return await _userRepository.GetEmployeesWithoutUserAsync(cancellationToken);
+            var cached = await _cache.GetOrCreateAsync("employees:without-user", async () =>
+                (List<Employee>?)await _userRepository.GetEmployeesWithoutUserAsync(cancellationToken), new CacheEntryOptions
+                {
+                    DistributedExpiration = TimeSpan.FromMinutes(10),
+                    MemoryExpiration = TimeSpan.FromMinutes(5)
+                });
+            return cached ?? new List<Employee>();
+        }
+
+        public async Task InvalidateUsersCacheAsync()
+        {
+            await _cache.RemoveByPrefixAsync(UsersCachePrefix);
+            await _cache.RemoveAsync($"user:*");
+            await _cache.RemoveAsync("employees:without-user");
         }
 
         private static UserListDto MapToDto(User user)
