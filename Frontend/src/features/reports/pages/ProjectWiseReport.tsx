@@ -25,11 +25,12 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   TextField,
   Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PageContainer from '../../../components/common/PageContainer';
 import api from '../../../services/api';
 import KpiCard from '../components/KpiCard';
@@ -54,6 +55,9 @@ export default function ProjectWiseReport() {
   const [clientFilter, setClientFilter] = useState('');
   const [practiceFilter, setPracticeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -84,6 +88,20 @@ export default function ProjectWiseReport() {
       console.error('Failed to load chart data');
     }
   }, []);
+
+  const paginatedData = useMemo(
+    () => data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [data, page, rowsPerPage],
+  );
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   useEffect(() => {
     api.get('/master/practices').then((r) => setPractices(r.data as MasterItem[])).catch(() => {});
@@ -121,6 +139,7 @@ export default function ProjectWiseReport() {
     setClientFilter('');
     setPracticeFilter('');
     setStatusFilter('');
+    setPage(0);
   };
 
   return (
@@ -237,7 +256,7 @@ export default function ProjectWiseReport() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {data.map((project) => (
+              {paginatedData.map((project) => (
                 <>
                   <TableRow key={project.projectId} hover>
                     <TableCell>
@@ -318,6 +337,15 @@ export default function ProjectWiseReport() {
             </TableBody>
           </Table>
         </TableContainer>
+          <TablePagination
+            component="div"
+            count={data.length}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
       </Stack>
     </PageContainer>
   );
