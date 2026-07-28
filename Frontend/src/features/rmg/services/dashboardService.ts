@@ -48,6 +48,7 @@ export const dashboardService = {
       if (filter.resourceStatus) params.resourceStatus = filter.resourceStatus;
       if (filter.designation) params.designation = filter.designation;
       if (filter.department) params.department = filter.department;
+      if (filter.project) params.project = filter.project;
     }
     const url = buildUrl('/rmg-dashboard/grid', params);
     const response = await api.get<PaginatedResponse<DashboardGridDto>>(url);
@@ -59,6 +60,7 @@ export const dashboardService = {
     if (filter?.searchTerm) params.searchTerm = filter.searchTerm;
     if (filter?.practice) params.practice = filter.practice;
     if (filter?.resourceStatus) params.resourceStatus = filter.resourceStatus;
+    if (filter?.project) params.project = filter.project;
     const url = buildUrl('/rmg-dashboard/export', params);
     await exportBlob(url, 'ResourceAllocation');
   },

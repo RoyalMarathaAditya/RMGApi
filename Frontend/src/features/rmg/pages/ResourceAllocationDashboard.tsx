@@ -102,6 +102,11 @@ const cellRenderers: Partial<Record<keyof DashboardGridDto, CellRenderer>> = {
   resourceStatus: (row) => (
     <Chip label={row.resourceStatus} size="small" color={statusColors[row.resourceStatus] ?? 'default'} variant="outlined" />
   ),
+  projects: (row) => (
+    row.projects && row.projects.length > 0
+      ? row.projects.join(', ')
+      : <Typography variant="body2" color="text.secondary">—</Typography>
+  ),
 };
 
 const defaultCellRenderer = (row: DashboardGridDto, field: keyof DashboardGridDto) => {
@@ -111,7 +116,8 @@ const defaultCellRenderer = (row: DashboardGridDto, field: keyof DashboardGridDt
 
 const dashboardFieldSet = new Set<keyof DashboardGridDto>([
   'employeeName', 'employeeCode', 'designation', 'totalExperience',
-  'practice', 'subPractice', 'allocationPercentage', 'availableCapacity', 'resourceStatus',
+  'practice', 'subPractice', 'allocationPercentage', 'availableCapacity',
+  'resourceStatus', 'projects',
 ]);
 
 const defaultColumns: ColumnDef[] = [
@@ -124,6 +130,7 @@ const defaultColumns: ColumnDef[] = [
   { field: 'allocationPercentage', headerName: 'Allocation %', dataType: 'decimal' },
   { field: 'availableCapacity', headerName: 'Availability %', dataType: 'decimal' },
   { field: 'resourceStatus', headerName: 'Status', dataType: 'string' },
+  { field: 'projects', headerName: 'Projects', dataType: 'string' },
 ];
 
 const SummaryCard = memo(function SummaryCard({ icon: Icon, label, value, color }: {
@@ -218,6 +225,7 @@ export default function ResourceAllocationDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [practiceFilter, setPracticeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columns, setColumns] = useState<ColumnDef[]>(defaultColumns);
@@ -245,15 +253,24 @@ export default function ResourceAllocationDashboard() {
         .filter((m: ColumnMapping) => m.entityType === 'resource-allocation' && m.isActive)
         .sort((a: ColumnMapping, b: ColumnMapping) => a.displayOrder - b.displayOrder);
       if (active.length > 0) {
-        const cols = active
+        const dynamicCols = active
           .map((m: ColumnMapping) => ({
             field: m.targetProperty.charAt(0).toLowerCase() + m.targetProperty.slice(1) as keyof DashboardGridDto,
             headerName: m.targetDisplayName,
             dataType: m.dataType,
           }))
           .filter((col) => dashboardFieldSet.has(col.field));
-        if (cols.length > 0) {
-          setColumns(cols);
+        if (dynamicCols.length > 0) {
+          const merged = [...defaultColumns];
+          for (const col of dynamicCols) {
+            const idx = merged.findIndex((c) => c.field === col.field);
+            if (idx >= 0) {
+              merged[idx] = col;
+            } else {
+              merged.push(col);
+            }
+          }
+          setColumns(merged);
         }
       }
     } catch (err) {
@@ -271,7 +288,7 @@ export default function ResourceAllocationDashboard() {
     try {
       const summaryData = await dashboardService.getSummary();
       const grid = await dashboardService.getGridData(
-        { searchTerm: searchTerm || undefined, practice: practiceFilter || undefined, resourceStatus: statusFilter || undefined },
+        { searchTerm: searchTerm || undefined, practice: practiceFilter || undefined, resourceStatus: statusFilter || undefined, project: projectFilter || undefined },
         { page: page + 1, pageSize: rowsPerPage }
       );
       if (!controller.signal.aborted) {
@@ -289,7 +306,7 @@ export default function ResourceAllocationDashboard() {
         setLoading(false);
       }
     }
-  }, [searchTerm, practiceFilter, statusFilter, page, rowsPerPage]);
+  }, [searchTerm, practiceFilter, statusFilter, projectFilter, page, rowsPerPage]);
 
   useEffect(() => {
     loadData();
@@ -483,6 +500,7 @@ export default function ResourceAllocationDashboard() {
       searchTerm: searchTerm || undefined,
       practice: practiceFilter || undefined,
       resourceStatus: statusFilter || undefined,
+      project: projectFilter || undefined,
     });
   };
 
@@ -593,6 +611,20 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="On Leave">On Leave</MenuItem>
                 <MenuItem value="Inactive">Inactive</MenuItem>
               </Select>
+              <Autocomplete
+                disabled={loading}
+                size="small"
+                options={projects}
+                getOptionLabel={(option) => option.projectName}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={projects.find((p) => String(p.id) === projectFilter) ?? null}
+                onChange={(_, value) => {
+                  setProjectFilter(value ? String(value.id) : '');
+                  setPage(0);
+                }}
+                renderInput={(params) => <TextField {...params} placeholder="All Projects" />}
+                sx={{ minWidth: 200 }}
+              />
               <Button
                 variant="contained"
                 color="primary"

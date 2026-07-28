@@ -46,7 +46,7 @@ function getRangeCount(practice: PracticeWiseReportDto, label: string): number {
 export default function PracticeWiseReport() {
   const [data, setData] = useState<PracticeWiseReportDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [engineeringOnly, setEngineeringOnly] = useState(false);
+  const [engineeringOnly, setEngineeringOnly] = useState(true);
 
   const loadData = async () => {
     setLoading(true);

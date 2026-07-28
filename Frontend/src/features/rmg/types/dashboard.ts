@@ -65,4 +65,5 @@ export interface GridQueryParams {
   resourceStatus?: string;
   designation?: string;
   department?: string;
+  project?: string;
 }
