@@ -225,7 +225,7 @@ export default function ResourceAllocationDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [practiceFilter, setPracticeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [projectFilter, setProjectFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [columns, setColumns] = useState<ColumnDef[]>(defaultColumns);
@@ -288,7 +288,7 @@ export default function ResourceAllocationDashboard() {
     try {
       const summaryData = await dashboardService.getSummary();
       const grid = await dashboardService.getGridData(
-        { searchTerm: searchTerm || undefined, practice: practiceFilter || undefined, resourceStatus: statusFilter || undefined, project: projectFilter || undefined },
+        { searchTerm: searchTerm || undefined, practice: practiceFilter || undefined, resourceStatus: statusFilter || undefined, project: projectFilter.length > 0 ? projectFilter.join(',') : undefined },
         { page: page + 1, pageSize: rowsPerPage }
       );
       if (!controller.signal.aborted) {
@@ -332,9 +332,28 @@ export default function ResourceAllocationDashboard() {
   const gridData = gridResponse?.items ?? [];
   const totalCount = gridResponse?.totalCount ?? 0;
 
+  const selectedProjectNames = useMemo(() => {
+    if (projectFilter.length === 0) return new Set<string>();
+    return new Set(
+      projects
+        .filter((p) => projectFilter.includes(String(p.id)))
+        .map((p) => p.projectName)
+    );
+  }, [projects, projectFilter]);
+
+  const filteredGridData = useMemo(() => {
+    if (projectFilter.length === 0 || selectedProjectNames.size === 0) return gridData;
+    return gridData.filter((row) =>
+      row.projects?.some((p) => selectedProjectNames.has(p))
+    );
+  }, [gridData, projectFilter, selectedProjectNames]);
+
+  const displayData = projectFilter.length > 0 ? filteredGridData : gridData;
+  const displayTotalCount = projectFilter.length > 0 && filteredGridData.length < totalCount ? filteredGridData.length : totalCount;
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const selectable = gridData
+      const selectable = displayData
         .filter((r) => r.isActive && r.allocationPercentage < 100)
         .map((r) => r.employeeId);
       setSelectedEmployeeIds(selectable);
@@ -500,7 +519,7 @@ export default function ResourceAllocationDashboard() {
       searchTerm: searchTerm || undefined,
       practice: practiceFilter || undefined,
       resourceStatus: statusFilter || undefined,
-      project: projectFilter || undefined,
+      project: projectFilter.length > 0 ? projectFilter.join(',') : undefined,
     });
   };
 
@@ -612,18 +631,29 @@ export default function ResourceAllocationDashboard() {
                 <MenuItem value="Inactive">Inactive</MenuItem>
               </Select>
               <Autocomplete
+                multiple
+                limitTags={1}
                 disabled={loading}
                 size="small"
                 options={projects}
                 getOptionLabel={(option) => option.projectName}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={projects.find((p) => String(p.id) === projectFilter) ?? null}
+                value={projects.filter((p) => projectFilter.includes(String(p.id)))}
                 onChange={(_, value) => {
-                  setProjectFilter(value ? String(value.id) : '');
+                  setProjectFilter(value.map((v) => String(v.id)));
                   setPage(0);
                 }}
                 renderInput={(params) => <TextField {...params} placeholder="All Projects" />}
-                sx={{ minWidth: 200 }}
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...rest } = props;
+                  return (
+                    <li key={key} {...rest}>
+                      <Checkbox size="small" checked={selected} sx={{ mr: 1 }} />
+                      {option.projectName}
+                    </li>
+                  );
+                }}
+                sx={{ minWidth: 250 }}
               />
               <Button
                 variant="contained"
@@ -647,8 +677,8 @@ export default function ResourceAllocationDashboard() {
                   <TableCell sx={{ fontWeight: 700, width: 48, px: 1 }}>
                     <Checkbox
                       size="small"
-                      indeterminate={selectedEmployeeIds.length > 0 && selectedEmployeeIds.length < gridData.filter((r) => r.isActive && r.allocationPercentage < 100).length}
-                      checked={gridData.length > 0 && selectedEmployeeIds.length === gridData.filter((r) => r.isActive && r.allocationPercentage < 100).length}
+                      indeterminate={selectedEmployeeIds.length > 0 && selectedEmployeeIds.length < displayData.filter((r) => r.isActive && r.allocationPercentage < 100).length}
+                      checked={displayData.length > 0 && selectedEmployeeIds.length === displayData.filter((r) => r.isActive && r.allocationPercentage < 100).length}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                     />
                   </TableCell>
@@ -659,7 +689,7 @@ export default function ResourceAllocationDashboard() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {gridData.map((row) => {
+                {displayData.map((row) => {
                   const isFullyAllocated = row.allocationPercentage >= 100;
                   const isInactive = !row.isActive;
                   const isDisabled = isFullyAllocated || isInactive;
@@ -674,7 +704,7 @@ export default function ResourceAllocationDashboard() {
                     />
                   );
                 })}
-                {gridData.length === 0 && (
+                {displayData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={columns.length + 2} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">No resources found.</Typography>
@@ -686,7 +716,7 @@ export default function ResourceAllocationDashboard() {
           </TableContainer>
           <TablePagination
             component="div"
-            count={totalCount}
+            count={displayTotalCount}
             page={page}
             onPageChange={handlePageChange}
             rowsPerPage={rowsPerPage}

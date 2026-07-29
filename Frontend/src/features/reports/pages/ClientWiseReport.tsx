@@ -41,7 +41,6 @@ interface MasterItem {
 
 export default function ClientWiseReport() {
   const [data, setData] = useState<ClientWiseReportDto[]>([]);
-  const [chartData, setChartData] = useState<ReportChartDataDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<MasterItem[]>([]);
 
@@ -67,31 +66,20 @@ export default function ClientWiseReport() {
     }
   }, [selectedClients, statusFilter]);
 
-  const loadChartData = useCallback(async () => {
-    try {
-      const result = await reportService.getClientWiseChartData();
-      setChartData(result);
-    } catch {
-      console.error('Failed to load chart data');
-    }
-  }, []);
-
   useEffect(() => {
     api.get('/clients').then((r) => {
       const items: MasterItem[] = (r.data?.data ?? r.data ?? []).map((c: any) => ({ id: String(c.id), name: c.name }));
       setClients(items);
     }).catch(() => {});
-    loadChartData();
-  }, [loadChartData]);
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       loadData();
-      loadChartData();
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [loadData, loadChartData]);
+  }, [loadData]);
 
   const flatRows = useMemo(() => {
     return data.flatMap((c) =>
@@ -115,6 +103,31 @@ export default function ClientWiseReport() {
     data.length > 0
       ? Math.round(data.reduce((s, c) => s + c.avgAllocation, 0) / data.length)
       : 0;
+
+  const chartData = useMemo((): ReportChartDataDto | null => {
+    if (data.length === 0) return null;
+
+    const totalBillable = data.reduce((s, c) => s + c.billableCount, 0);
+    const totalNonBillable = data.reduce((s, c) => s + c.nonBillableCount, 0);
+
+    const statusCount = new Map<string, number>();
+    data.forEach((c) =>
+      c.projects.forEach((p) => statusCount.set(p.status, (statusCount.get(p.status) ?? 0) + 1))
+    );
+
+    return {
+      billableDistribution: [
+        { name: 'Billable', value: totalBillable },
+        { name: 'Non-Billable', value: totalNonBillable },
+      ],
+      utilizationByEntity: data.map((c) => ({
+        name: c.clientName,
+        utilization: Math.round(c.avgAllocation),
+      })),
+      projectsByStatus: Array.from(statusCount.entries()).map(([name, count]) => ({ name, count })),
+      monthlyTrend: [],
+    };
+  }, [data]);
 
   const handleReset = () => {
     setSelectedClients([]);

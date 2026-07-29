@@ -48,8 +48,8 @@ export const reportService = {
     return unwrap(response);
   },
 
-  async getClientWiseChartData(): Promise<ReportChartDataDto> {
-    const response = await api.get<ReportChartDataDto>('/reports/client-wise/charts');
+  async getClientWiseChartData(params?: Record<string, string>): Promise<ReportChartDataDto> {
+    const response = await api.get<ReportChartDataDto>('/reports/client-wise/charts', { params });
     return unwrap(response);
   },
 
@@ -62,8 +62,8 @@ export const reportService = {
     return unwrap(response);
   },
 
-  async getProjectWiseChartData(): Promise<ReportChartDataDto> {
-    const response = await api.get<ReportChartDataDto>('/reports/project-wise/charts');
+  async getProjectWiseChartData(params?: Record<string, string>): Promise<ReportChartDataDto> {
+    const response = await api.get<ReportChartDataDto>('/reports/project-wise/charts', { params });
     return unwrap(response);
   },
 };

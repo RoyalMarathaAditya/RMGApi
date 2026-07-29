@@ -20,14 +20,18 @@ async function exportBlob(url: string, fallbackPrefix: string) {
   window.URL.revokeObjectURL(link.href);
 }
 
-function buildUrl(basePath: string, params: Record<string, string | number | undefined>): string {
-  const queryParts: string[] = [];
+function buildUrl(basePath: string, params: Record<string, string | number | string[] | undefined>): string {
+  const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) {
+      value.forEach((v) => { if (v !== '') searchParams.append(key, v); });
+    } else if (value !== '') {
+      searchParams.append(key, String(value));
     }
   });
-  return queryParts.length > 0 ? `${basePath}?${queryParts.join('&')}` : basePath;
+  const qs = searchParams.toString();
+  return qs ? `${basePath}?${qs}` : basePath;
 }
 
 export const dashboardService = {
@@ -37,7 +41,7 @@ export const dashboardService = {
   },
 
   async getGridData(filter?: DashboardFilterDto, paging?: GridQueryParams): Promise<PaginatedResponse<DashboardGridDto>> {
-    const params: Record<string, string | number | undefined> = {};
+    const params: Record<string, string | number | string[] | undefined> = {};
     if (paging?.page) params.page = paging.page;
     if (paging?.pageSize) params.pageSize = paging.pageSize;
     if (paging?.sortField) params.sortField = paging.sortField;
@@ -48,7 +52,10 @@ export const dashboardService = {
       if (filter.resourceStatus) params.resourceStatus = filter.resourceStatus;
       if (filter.designation) params.designation = filter.designation;
       if (filter.department) params.department = filter.department;
-      if (filter.project) params.project = filter.project;
+      if (filter.project) {
+        const ids = filter.project.split(',').filter(Boolean);
+        params.project = ids.length === 1 ? ids[0] : ids;
+      }
     }
     const url = buildUrl('/rmg-dashboard/grid', params);
     const response = await api.get<PaginatedResponse<DashboardGridDto>>(url);
@@ -56,11 +63,14 @@ export const dashboardService = {
   },
 
   async exportGridData(filter?: DashboardFilterDto) {
-    const params: Record<string, string | undefined> = {};
+    const params: Record<string, string | string[] | undefined> = {};
     if (filter?.searchTerm) params.searchTerm = filter.searchTerm;
     if (filter?.practice) params.practice = filter.practice;
     if (filter?.resourceStatus) params.resourceStatus = filter.resourceStatus;
-    if (filter?.project) params.project = filter.project;
+    if (filter?.project) {
+      const ids = filter.project.split(',').filter(Boolean);
+      params.project = ids.length === 1 ? ids[0] : ids;
+    }
     const url = buildUrl('/rmg-dashboard/export', params);
     await exportBlob(url, 'ResourceAllocation');
   },
