@@ -5,16 +5,18 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
-import SearchIcon from '@mui/icons-material/Search';
+
 import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
 import {
+  Autocomplete,
   Box,
   Button,
+  Checkbox,
+  Chip,
   Collapse,
   FormControl,
   IconButton,
-  InputAdornment,
   InputLabel,
   MenuItem,
   Paper,
@@ -45,13 +47,13 @@ interface MasterItem {
 
 export default function ProjectWiseReport() {
   const [data, setData] = useState<ProjectWiseReportDto[]>([]);
-  const [chartData, setChartData] = useState<ReportChartDataDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<MasterItem[]>([]);
   const [practices, setPractices] = useState<MasterItem[]>([]);
+  const [projects, setProjects] = useState<MasterItem[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const [projectSearch, setProjectSearch] = useState('');
+  const [selectedProjects, setSelectedProjects] = useState<MasterItem[]>([]);
   const [clientFilter, setClientFilter] = useState('');
   const [practiceFilter, setPracticeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -65,7 +67,7 @@ export default function ProjectWiseReport() {
     setLoading(true);
     try {
       const params: Record<string, string> = {};
-      if (projectSearch) params.search = projectSearch;
+      if (selectedProjects.length > 0) params.projectIds = selectedProjects.map((p) => p.id).join(',');
       if (clientFilter) params.client = clientFilter;
       if (practiceFilter) params.practice = practiceFilter;
       if (statusFilter) params.status = statusFilter;
@@ -78,20 +80,21 @@ export default function ProjectWiseReport() {
     } finally {
       setLoading(false);
     }
-  }, [projectSearch, clientFilter, practiceFilter, statusFilter]);
+  }, [selectedProjects, clientFilter, practiceFilter, statusFilter]);
 
-  const loadChartData = useCallback(async () => {
-    try {
-      const result = await reportService.getProjectWiseChartData();
-      setChartData(result);
-    } catch {
-      console.error('Failed to load chart data');
-    }
-  }, []);
+  const selectedProjectNames = useMemo(() => {
+    if (selectedProjects.length === 0) return new Set<string>();
+    return new Set(selectedProjects.map((p) => p.name));
+  }, [selectedProjects]);
+
+  const filteredData = useMemo(() => {
+    if (selectedProjects.length === 0 || selectedProjectNames.size === 0) return data;
+    return data.filter((row) => selectedProjectNames.has(row.projectName));
+  }, [data, selectedProjects, selectedProjectNames]);
 
   const paginatedData = useMemo(
-    () => data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [data, page, rowsPerPage],
+    () => filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [filteredData, page, rowsPerPage],
   );
 
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -109,33 +112,58 @@ export default function ProjectWiseReport() {
       const items: MasterItem[] = (r.data?.data ?? r.data ?? []).map((c: any) => ({ id: String(c.id), name: c.name }));
       setClients(items);
     }).catch(() => {});
-    loadChartData();
-  }, [loadChartData]);
+    api.get('/projects/active').then((r) => {
+      const items: MasterItem[] = (r.data ?? []).map((p: any) => ({ id: String(p.id), name: p.projectName }));
+      setProjects(items);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       loadData();
-      loadChartData();
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [loadData, loadChartData]);
+  }, [loadData]);
 
   const totals = {
-    projects: data.length,
-    employees: data.reduce((s, p) => s + p.totalEmployees, 0),
-    billable: data.reduce((s, p) => s + p.billableCount, 0),
+    projects: filteredData.length,
+    employees: filteredData.reduce((s, p) => s + p.totalEmployees, 0),
+    billable: filteredData.reduce((s, p) => s + p.billableCount, 0),
   };
   const avgAlloc =
-    data.length > 0
-      ? Math.round(data.reduce((s, p) => s + p.avgAllocation, 0) / data.length)
+    filteredData.length > 0
+      ? Math.round(filteredData.reduce((s, p) => s + p.avgAllocation, 0) / filteredData.length)
       : 0;
   const totalAvgAlloc =
-    data.reduce((s, p) => s + p.avgAllocation * p.totalEmployees, 0) /
+    filteredData.reduce((s, p) => s + p.avgAllocation * p.totalEmployees, 0) /
     (totals.employees || 1);
 
+  const chartData = useMemo((): ReportChartDataDto | null => {
+    if (filteredData.length === 0) return null;
+
+    const totalBillable = filteredData.reduce((s, p) => s + p.billableCount, 0);
+    const totalNonBillable = filteredData.reduce((s, p) => s + (p.totalEmployees - p.billableCount), 0);
+
+    const statusCount = new Map<string, number>();
+    filteredData.forEach((p) => statusCount.set(p.status, (statusCount.get(p.status) ?? 0) + 1));
+
+    return {
+      billableDistribution: [
+        { name: 'Billable', value: totalBillable },
+        { name: 'Non-Billable', value: totalNonBillable },
+      ],
+      utilizationByEntity: filteredData.map((p) => ({
+        name: p.projectName,
+        utilization: Math.round(p.avgAllocation),
+      })),
+      projectsByStatus: Array.from(statusCount.entries()).map(([name, count]) => ({ name, count })),
+      monthlyTrend: [],
+    };
+  }, [filteredData]);
+
   const handleReset = () => {
-    setProjectSearch('');
+    setSelectedProjects([]);
     setClientFilter('');
     setPracticeFilter('');
     setStatusFilter('');
@@ -146,21 +174,32 @@ export default function ProjectWiseReport() {
     <PageContainer title="Project Wise Report">
       <Stack spacing={3}>
         <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-          <TextField
+          <Autocomplete
+            multiple
             size="small"
-            placeholder="Search project..."
-            value={projectSearch}
-            onChange={(e) => setProjectSearch(e.target.value)}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              },
+            options={projects}
+            value={selectedProjects}
+            onChange={(_, value) => { setSelectedProjects(value); setPage(0); }}
+            getOptionLabel={(option) => option.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderInput={(params) => (
+              <TextField {...params} placeholder="Select projects..." sx={{ minWidth: 260 }} />
+            )}
+            renderOption={(props, option, { selected }) => {
+              const { key, ...rest } = props;
+              return (
+                <li key={key} {...rest}>
+                  <Checkbox size="small" checked={selected} sx={{ mr: 1 }} />
+                  {option.name}
+                </li>
+              );
             }}
-            sx={{ minWidth: 200 }}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip key={option.id} label={option.name} size="small" {...getTagProps({ index })} />
+              ))
+            }
+            sx={{ minWidth: 260 }}
           />
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel id="client-label">Client</InputLabel>
@@ -327,7 +366,7 @@ export default function ProjectWiseReport() {
                   </TableRow>
                 </>
               ))}
-              {!loading && data.length === 0 && (
+              {!loading && filteredData.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
                     No project data available
@@ -339,7 +378,7 @@ export default function ProjectWiseReport() {
         </TableContainer>
           <TablePagination
             component="div"
-            count={data.length}
+            count={filteredData.length}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             page={page}
