@@ -13,6 +13,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -224,6 +225,7 @@ export default function ResourceAllocationDashboard() {
   const abortRef = useRef<AbortController | null>(null);
 
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([]);
+  const [dialogSelectedEmployeeIds, setDialogSelectedEmployeeIds] = useState<number[]>([]);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkFormError, setBulkFormError] = useState('');
@@ -369,6 +371,10 @@ export default function ResourceAllocationDashboard() {
     return projects.find((p) => p.id === (bulkFormData?.projectId ?? 0)) ?? null;
   }, [projects, bulkFormData?.projectId]);
 
+  const selectedEmployees = useMemo(() => {
+    return gridData.filter(r => selectedEmployeeIds.includes(r.employeeId));
+  }, [gridData, selectedEmployeeIds]);
+
   const fetchBulkDropdownData = useCallback(async () => {
     const promises = [];
     promises.push(api.get<ApiProject[]>('/projects/active').then(r => setProjects(r.data)).catch(() => {}));
@@ -408,7 +414,7 @@ export default function ResourceAllocationDashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const rawDays = Math.round((today.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    return Math.max(0, Math.round(rawDays * allocationPct / 100));
+    return Math.max(0, rawDays);
   };
 
   const openBulkDialog = () => {
@@ -423,6 +429,7 @@ export default function ResourceAllocationDashboard() {
       billableStatus: 'Billable', allocationStatus: 'History',
       engineering: null,
     });
+    setDialogSelectedEmployeeIds([...selectedEmployeeIds]);
     setBulkFormError('');
     setBulkDateError('');
     setBulkDialogOpen(true);
@@ -446,7 +453,7 @@ export default function ResourceAllocationDashboard() {
     setBulkSaving(true);
     try {
       const dto: BulkProjectAllocationDto = {
-        employeeIds: selectedEmployeeIds,
+        employeeIds: dialogSelectedEmployeeIds,
         projectId: bulkFormData.projectId,
         clientId: bulkFormData.clientId,
         projectStatusId: bulkFormData.projectStatusId,
@@ -466,9 +473,23 @@ export default function ResourceAllocationDashboard() {
         engineering: bulkFormData.engineering ? 'Yes' : 'No',
       };
       await allocationService.addBulkProjectAllocation(dto);
-      setBulkDialogOpen(false);
-      setSelectedEmployeeIds([]);
-      await loadData();
+      setDialogSelectedEmployeeIds([]);
+      setGridResponse((prev) => {
+        if (!prev) return prev;
+        const updatedItems = prev.items.map((item) => {
+          if (dialogSelectedEmployeeIds.includes(item.employeeId)) {
+            const newAllocation = item.allocationPercentage + allocPct;
+            return {
+              ...item,
+              allocationPercentage: newAllocation,
+              availableCapacity: Math.max(0, 100 - newAllocation),
+              resourceStatus: newAllocation >= 100 ? 'Fully Allocated' : newAllocation > 0 ? 'Partially Allocated' : 'Available',
+            };
+          }
+          return item;
+        });
+        return { ...prev, items: updatedItems };
+      });
       toastService.success('Bulk allocation completed successfully.');
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to save bulk allocation';
@@ -666,7 +687,7 @@ export default function ResourceAllocationDashboard() {
 
         <Dialog
           open={bulkDialogOpen}
-          onClose={() => !bulkSaving && setBulkDialogOpen(false)}
+          onClose={() => { if (!bulkSaving) { setBulkDialogOpen(false); setSelectedEmployeeIds([]); setDialogSelectedEmployeeIds([]); } }}
           maxWidth={false}
           fullWidth
           PaperProps={{
@@ -676,119 +697,180 @@ export default function ResourceAllocationDashboard() {
           <DialogTitle sx={{ px: 3, py: 2.5, borderBottom: 1, borderColor: 'divider', fontSize: 18, fontWeight: 700, color: 'text.primary' }}>
             Bulk Allocate
           </DialogTitle>
-          <DialogContent sx={{ px: 3, py: 2.5, overflowY: 'auto' }}>
-            <Typography sx={{ mb: 2, fontSize: 14, color: 'text.secondary' }}>
-              Selected Employees: <strong>{selectedEmployeeIds.length}</strong> employee(s)
-            </Typography>
+          <DialogContent sx={{ px: 3, py: 2.5, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {bulkFormError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{bulkFormError}</Alert>}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: '16px', pt: 1 }}>
-              <Autocomplete
-                options={projects}
-                getOptionLabel={(option) => option.projectName}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={selectedProject}
-                onChange={(_, value) => {
-                  const matchedClient = value?.clientId ? clients.find((c) => c.id === value.clientId) : null;
-                  setBulkFormData((prev) => ({
-                    ...prev,
-                    projectId: value?.id ?? 0,
-                    projectName: value?.projectName ?? '',
-                    clientId: matchedClient?.id ?? null,
-                    clientName: matchedClient?.name ?? value?.clientName ?? '',
-                  }));
-                }}
-                fullWidth size="small"
-                renderInput={(params) => (
-                  <TextField {...params} label="Project Name *" placeholder="Select Project Name" />
-                )}
-              />
-              <TextField label="Project Code" fullWidth size="small" value={selectedProject?.projectCode ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="Client" fullWidth size="small" value={bulkFormData.clientName || selectedProject?.clientName || ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="Project Manager" fullWidth size="small" value={selectedProject?.projectManager ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="Delivery Head" fullWidth size="small" value={selectedProject?.deliveryHead ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="CSM" fullWidth size="small" value={selectedProject?.csm ?? selectedProject?.csmRevenueTypeName ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <Autocomplete
-                options={projectStatuses}
-                getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={projectStatuses.find((s) => s.id === bulkFormData.projectStatusId) ?? null}
-                onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, projectStatusId: value?.id ?? null }))}
-                fullWidth size="small"
-                renderInput={(params) => <TextField {...params} label="Project Status *" placeholder="Select Project Status" slotProps={{ inputLabel: { shrink: true } }} />}
-              />
-              <TextField label="Start Date *" type="date" fullWidth size="small" value={bulkFormData.startDate}
-                onChange={(e) => {
-                  const newStart = e.target.value;
-                  setBulkFormData((prev) => ({ ...prev, startDate: newStart, endDate: prev.endDate && newStart && prev.endDate < newStart ? '' : prev.endDate }));
-                  if (newStart && bulkFormData.endDate && bulkFormData.endDate >= newStart) setBulkDateError('');
-                }}
-                slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label="End Date *" type="date" fullWidth size="small" value={bulkFormData.endDate}
-                onChange={(e) => {
-                  const newEnd = e.target.value;
-                  setBulkFormData((prev) => ({ ...prev, endDate: newEnd }));
-                  if (bulkFormData.startDate && newEnd && newEnd < bulkFormData.startDate) setBulkDateError('End Date cannot be earlier than Start Date.');
-                  else setBulkDateError('');
-                }}
-                error={Boolean(bulkDateError)} helperText={bulkDateError}
-                slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: bulkFormData.startDate || undefined } }} />
-              <TextField label="Allocation Status" fullWidth size="small" value={computeAllocationStatus(bulkFormData.endDate)} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="Allocation % *" type="number" fullWidth size="small" value={bulkFormData.allocationPercentage}
-                onChange={(e) => setBulkFormData((prev) => ({ ...prev, allocationPercentage: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: 1, max: 100 } }} />
-              <TextField select label="Billable Status *" fullWidth size="small" value={bulkFormData.billableStatus}
-                onChange={(e) => setBulkFormData((prev) => ({ ...prev, billableStatus: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true } }}>
-                <MenuItem value="" disabled sx={{ color: 'text.disabled' }}>Select Billable Status</MenuItem>
-                {BILLABLE_STATUSES.map((s) => (<MenuItem key={s} value={s}>{s}</MenuItem>))}
-              </TextField>
-              <Autocomplete
-                options={statuses} getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={statuses.find((s) => s.id === bulkFormData.statusId) ?? null}
-                onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, statusId: value?.id ?? null }))}
-                fullWidth size="small"
-                renderInput={(params) => <TextField {...params} label="Status *" placeholder="Select Status" slotProps={{ inputLabel: { shrink: true } }} />} />
-              <Autocomplete
-                options={currentBillingStatuses} getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={currentBillingStatuses.find((s) => s.id === bulkFormData.currentBillingStatusId) ?? null}
-                onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, currentBillingStatusId: value?.id ?? null }))}
-                fullWidth size="small"
-                renderInput={(params) => <TextField {...params} label="Current Billing Status *" placeholder="Select Current Billing Status" slotProps={{ inputLabel: { shrink: true } }} />} />
-              <Autocomplete
-                options={billingBuckets} getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                value={billingBuckets.find((s) => s.id === bulkFormData.billingBucketId) ?? null}
-                onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, billingBucketId: value?.id ?? null }))}
-                fullWidth size="small"
-                renderInput={(params) => <TextField {...params} label="Billing Bucket *" placeholder="Select Billing Bucket" slotProps={{ inputLabel: { shrink: true } }} />} />
-              <TextField label="Duration" fullWidth size="small" value={bulkFormData.startDate && bulkFormData.endDate ? `${computeDurationDays(bulkFormData.startDate, bulkFormData.endDate)} Days` : '—'} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="Ageing" fullWidth size="small" value={bulkFormData.startDate && bulkFormData.allocationPercentage ? `${computeAgeingDays(bulkFormData.startDate, Number(bulkFormData.allocationPercentage))} Days` : '—'} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <TextField label="Ageing Bucket" fullWidth size="small"
-                value={(() => {
-                  if (!bulkFormData.startDate || !bulkFormData.allocationPercentage) return '—';
-                  const ageingDays = computeAgeingDays(bulkFormData.startDate, Number(bulkFormData.allocationPercentage));
-                  let index;
-                  if (ageingDays <= 30) index = 0;
-                  else if (ageingDays <= 90) index = 1;
-                  else if (ageingDays <= 181) index = 2;
-                  else index = 3;
-                  return ageingBuckets[index]?.name ?? '—';
-                })()}
-                slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
-              <FormControl sx={{ justifyContent: 'center' }}>
-                <FormLabel id="bulk-engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: 'text.secondary', mb: 0.5, '&.Mui-focused': { color: 'text.secondary' } }}>Engineering *</FormLabel>
-                <RadioGroup row aria-labelledby="bulk-engineering-radio-label" value={bulkFormData.engineering === null ? '' : bulkFormData.engineering ? 'Yes' : 'No'}
-                  onChange={(e) => setBulkFormData((prev) => ({ ...prev, engineering: e.target.value === 'Yes' }))}>
-                  <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
-                  <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
-                </RadioGroup>
-              </FormControl>
+            <Box sx={{ display: 'flex', gap: 3, minHeight: 420, flex: 1, overflow: 'hidden' }}>
+              <Box sx={{ width: 280, flexShrink: 0, borderRight: '1px solid', borderColor: 'divider', pr: 2, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Stack direction="row" alignItems="center" sx={{ mb: 1 }}>
+                  <Checkbox
+                    size="small"
+                    indeterminate={dialogSelectedEmployeeIds.length > 0 && dialogSelectedEmployeeIds.length < selectedEmployees.length}
+                    checked={selectedEmployees.length > 0 && dialogSelectedEmployeeIds.length === selectedEmployees.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setDialogSelectedEmployeeIds(selectedEmployees.map(r => r.employeeId));
+                      } else {
+                        setDialogSelectedEmployeeIds([]);
+                      }
+                    }}
+                  />
+                  <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
+                    {dialogSelectedEmployeeIds.length}/{selectedEmployees.length} Selected
+                  </Typography>
+                </Stack>
+                <Divider />
+                <Box sx={{ overflowY: 'auto', flex: 1, mt: 1, minHeight: 0 }}>
+                  {selectedEmployees.map((emp) => (
+                    <Stack
+                      key={emp.employeeId}
+                      direction="row"
+                      alignItems="center"
+                      sx={{
+                        py: 0.75,
+                        px: 0.5,
+                        borderRadius: 1,
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <Checkbox
+                        size="small"
+                        checked={dialogSelectedEmployeeIds.includes(emp.employeeId)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setDialogSelectedEmployeeIds(prev => [...prev, emp.employeeId]);
+                          } else {
+                            setDialogSelectedEmployeeIds(prev => prev.filter(id => id !== emp.employeeId));
+                          }
+                        }}
+                      />
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" fontWeight={600}>
+                          {emp.employeeName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Allocation: {emp.allocationPercentage}%
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  ))}
+                  {selectedEmployees.length === 0 && (
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                      No employees selected
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '16px', pt: 1 }}>
+                  <Autocomplete
+                    options={projects}
+                    getOptionLabel={(option) => option.projectName}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={selectedProject}
+                    onChange={(_, value) => {
+                      const matchedClient = value?.clientId ? clients.find((c) => c.id === value.clientId) : null;
+                      setBulkFormData((prev) => ({
+                        ...prev,
+                        projectId: value?.id ?? 0,
+                        projectName: value?.projectName ?? '',
+                        clientId: matchedClient?.id ?? null,
+                        clientName: matchedClient?.name ?? value?.clientName ?? '',
+                      }));
+                    }}
+                    fullWidth size="small"
+                    renderInput={(params) => (
+                      <TextField {...params} label="Project Name *" placeholder="Select Project Name" />
+                    )}
+                  />
+                  <TextField label="Project Code" fullWidth size="small" value={selectedProject?.projectCode ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="Client" fullWidth size="small" value={bulkFormData.clientName || selectedProject?.clientName || ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="Project Manager" fullWidth size="small" value={selectedProject?.projectManager ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="Delivery Head" fullWidth size="small" value={selectedProject?.deliveryHead ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="CSM" fullWidth size="small" value={selectedProject?.csm ?? selectedProject?.csmRevenueTypeName ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <Autocomplete
+                    options={projectStatuses}
+                    getOptionLabel={(option) => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={projectStatuses.find((s) => s.id === bulkFormData.projectStatusId) ?? null}
+                    onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, projectStatusId: value?.id ?? null }))}
+                    fullWidth size="small"
+                    renderInput={(params) => <TextField {...params} label="Project Status *" placeholder="Select Project Status" slotProps={{ inputLabel: { shrink: true } }} />}
+                  />
+                  <TextField label="Start Date *" type="date" fullWidth size="small" value={bulkFormData.startDate}
+                    onChange={(e) => {
+                      const newStart = e.target.value;
+                      setBulkFormData((prev) => ({ ...prev, startDate: newStart, endDate: prev.endDate && newStart && prev.endDate < newStart ? '' : prev.endDate }));
+                      if (newStart && bulkFormData.endDate && bulkFormData.endDate >= newStart) setBulkDateError('');
+                    }}
+                    slotProps={{ inputLabel: { shrink: true } }} />
+                  <TextField label="End Date *" type="date" fullWidth size="small" value={bulkFormData.endDate}
+                    onChange={(e) => {
+                      const newEnd = e.target.value;
+                      setBulkFormData((prev) => ({ ...prev, endDate: newEnd }));
+                      if (bulkFormData.startDate && newEnd && newEnd < bulkFormData.startDate) setBulkDateError('End Date cannot be earlier than Start Date.');
+                      else setBulkDateError('');
+                    }}
+                    error={Boolean(bulkDateError)} helperText={bulkDateError}
+                    slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: bulkFormData.startDate || undefined } }} />
+                  <TextField label="Allocation Status" fullWidth size="small" value={computeAllocationStatus(bulkFormData.endDate)} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="Allocation % *" type="number" fullWidth size="small" value={bulkFormData.allocationPercentage}
+                    onChange={(e) => setBulkFormData((prev) => ({ ...prev, allocationPercentage: e.target.value }))}
+                    slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: 1, max: 100 } }} />
+                  <TextField select label="Billable Status *" fullWidth size="small" value={bulkFormData.billableStatus}
+                    onChange={(e) => setBulkFormData((prev) => ({ ...prev, billableStatus: e.target.value }))}
+                    slotProps={{ inputLabel: { shrink: true } }}>
+                    <MenuItem value="" disabled sx={{ color: 'text.disabled' }}>Select Billable Status</MenuItem>
+                    {BILLABLE_STATUSES.map((s) => (<MenuItem key={s} value={s}>{s}</MenuItem>))}
+                  </TextField>
+                  <Autocomplete
+                    options={statuses} getOptionLabel={(option) => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={statuses.find((s) => s.id === bulkFormData.statusId) ?? null}
+                    onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, statusId: value?.id ?? null }))}
+                    fullWidth size="small"
+                    renderInput={(params) => <TextField {...params} label="Status *" placeholder="Select Status" slotProps={{ inputLabel: { shrink: true } }} />} />
+                  <Autocomplete
+                    options={currentBillingStatuses} getOptionLabel={(option) => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={currentBillingStatuses.find((s) => s.id === bulkFormData.currentBillingStatusId) ?? null}
+                    onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, currentBillingStatusId: value?.id ?? null }))}
+                    fullWidth size="small"
+                    renderInput={(params) => <TextField {...params} label="Current Billing Status *" placeholder="Select Current Billing Status" slotProps={{ inputLabel: { shrink: true } }} />} />
+                  <Autocomplete
+                    options={billingBuckets} getOptionLabel={(option) => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={billingBuckets.find((s) => s.id === bulkFormData.billingBucketId) ?? null}
+                    onChange={(_, value) => setBulkFormData((prev) => ({ ...prev, billingBucketId: value?.id ?? null }))}
+                    fullWidth size="small"
+                    renderInput={(params) => <TextField {...params} label="Billing Bucket *" placeholder="Select Billing Bucket" slotProps={{ inputLabel: { shrink: true } }} />} />
+                  <TextField label="Duration" fullWidth size="small" value={bulkFormData.startDate && bulkFormData.endDate ? `${computeDurationDays(bulkFormData.startDate, bulkFormData.endDate)} Days` : '—'} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="Ageing" fullWidth size="small" value={bulkFormData.startDate && bulkFormData.allocationPercentage ? `${computeAgeingDays(bulkFormData.startDate, Number(bulkFormData.allocationPercentage))} Days` : '—'} slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <TextField label="Ageing Bucket" fullWidth size="small"
+                    value={(() => {
+                      if (!bulkFormData.startDate || !bulkFormData.allocationPercentage) return '—';
+                      const ageingDays = computeAgeingDays(bulkFormData.startDate, Number(bulkFormData.allocationPercentage));
+                      let index;
+                      if (ageingDays <= 30) index = 0;
+                      else if (ageingDays <= 90) index = 1;
+                      else if (ageingDays <= 181) index = 2;
+                      else index = 3;
+                      return ageingBuckets[index]?.name ?? '—';
+                    })()}
+                    slotProps={{ input: { readOnly: true } }} sx={{ '& .MuiInputBase-root': { bgcolor: 'action.hover' } }} />
+                  <FormControl sx={{ justifyContent: 'center' }}>
+                    <FormLabel id="bulk-engineering-radio-label" sx={{ fontSize: 14, fontWeight: 500, color: 'text.secondary', mb: 0.5, '&.Mui-focused': { color: 'text.secondary' } }}>Engineering *</FormLabel>
+                    <RadioGroup row aria-labelledby="bulk-engineering-radio-label" value={bulkFormData.engineering === null ? '' : bulkFormData.engineering ? 'Yes' : 'No'}
+                      onChange={(e) => setBulkFormData((prev) => ({ ...prev, engineering: e.target.value === 'Yes' }))}>
+                      <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                      <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
+              </Box>
             </Box>
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider', gap: 1 }}>
-            <Button onClick={() => setBulkDialogOpen(false)} disabled={bulkSaving} sx={{ textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}>Cancel</Button>
+            <Button onClick={() => { setBulkDialogOpen(false); setSelectedEmployeeIds([]); setDialogSelectedEmployeeIds([]); }} disabled={bulkSaving} sx={{ textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}>Close</Button>
             <Button variant="contained" onClick={handleBulkSave} disabled={bulkSaving}
               startIcon={bulkSaving ? <CircularProgress size={16} color="inherit" /> : undefined}
               sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', bgcolor: '#2563EB', '&:hover': { bgcolor: '#1D4ED8' } }}>
