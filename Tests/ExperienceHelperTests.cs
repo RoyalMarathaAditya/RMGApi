@@ -4,13 +4,25 @@ namespace HRMS.Api.Tests;
 
 public class ExperienceHelperTests
 {
+    private static decimal ExpectedYearsMonths(DateTime doj, DateTime effectiveEndDate)
+    {
+        var years = effectiveEndDate.Year - doj.Year;
+        var months = effectiveEndDate.Month - doj.Month;
+        if (months < 0)
+        {
+            years--;
+            months += 12;
+        }
+        return years + (decimal)months / 10m;
+    }
+
     [Fact]
     public void CalculateNVExperience_ActiveEmployee_ReturnsCorrectYears()
     {
         var doj = new DateTime(2025, 1, 1);
         var result = ExperienceHelper.CalculateNVExperience(doj, isActive: true, lwd: null);
 
-        var expected = Math.Round((decimal)(DateTime.UtcNow.Date - doj).TotalDays / 365.25m, 1);
+        var expected = ExpectedYearsMonths(doj, DateTime.UtcNow.Date);
         Assert.Equal(expected, result);
     }
 
@@ -21,7 +33,7 @@ public class ExperienceHelperTests
         var lwd = new DateTime(2025, 10, 1);
         var result = ExperienceHelper.CalculateNVExperience(doj, isActive: false, lwd: lwd);
 
-        var expected = Math.Round((decimal)(lwd - doj).TotalDays / 365.25m, 1);
+        var expected = ExpectedYearsMonths(doj, lwd);
         Assert.Equal(expected, result);
     }
 
@@ -31,7 +43,7 @@ public class ExperienceHelperTests
         var doj = new DateTime(2025, 1, 1);
         var result = ExperienceHelper.CalculateNVExperience(doj, isActive: false, lwd: null);
 
-        var expected = Math.Round((decimal)(DateTime.UtcNow.Date - doj).TotalDays / 365.25m, 1);
+        var expected = ExpectedYearsMonths(doj, DateTime.UtcNow.Date);
         Assert.Equal(expected, result);
     }
 
@@ -61,7 +73,7 @@ public class ExperienceHelperTests
         var prior = 2.5m;
         var result = ExperienceHelper.CalculateTotalExperience(doj, prior, isActive: true, lwd: null);
 
-        var nvOnly = Math.Round((decimal)(DateTime.UtcNow.Date - doj).TotalDays / 365.25m, 1);
+        var nvOnly = ExpectedYearsMonths(doj, DateTime.UtcNow.Date);
         var expected = Math.Round(nvOnly + prior, 1);
         Assert.Equal(expected, result);
     }
@@ -74,7 +86,7 @@ public class ExperienceHelperTests
         var prior = 3.0m;
         var result = ExperienceHelper.CalculateTotalExperience(doj, prior, isActive: false, lwd: lwd);
 
-        var nvOnly = Math.Round((decimal)(lwd - doj).TotalDays / 365.25m, 1);
+        var nvOnly = ExpectedYearsMonths(doj, lwd);
         var expected = Math.Round(nvOnly + prior, 1);
         Assert.Equal(expected, result);
     }
