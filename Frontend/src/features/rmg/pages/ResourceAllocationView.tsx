@@ -350,22 +350,14 @@ export default function ResourceAllocationView() {
 
   const totalDisplay = useMemo(() => {
     if (!nvExperience) return '—';
-    const priorYears = Math.floor(data?.priorExperience ?? 0);
-    const priorMonths = Math.round(((data?.priorExperience ?? 0) - priorYears) * 12);
-    let totalMonths = nvExperience.months + priorMonths;
-    let totalYears = nvExperience.years + priorYears;
-    if (totalMonths >= 12) { totalYears++; totalMonths -= 12; }
-    return `${totalYears}.${totalMonths} Years`;
+    const totalExperience = (nvExperience.years + nvExperience.months / 10) + (data?.priorExperience ?? 0);
+    return `${totalExperience.toFixed(1)} Years`;
   }, [nvExperience, data?.priorExperience]);
 
   const experienceRange = useMemo(() => {
     if (!nvExperience) return '—';
-    const priorYears = Math.floor(data?.priorExperience ?? 0);
-    const priorMonths = Math.round(((data?.priorExperience ?? 0) - priorYears) * 12);
-    let totalMonths = nvExperience.months + priorMonths;
-    let totalYears = nvExperience.years + priorYears;
-    if (totalMonths >= 12) { totalYears++; }
-    return getExperienceRange(totalYears);
+    const totalExperience = (nvExperience.years + nvExperience.months / 10) + (data?.priorExperience ?? 0);
+    return getExperienceRange(totalExperience);
   }, [nvExperience, data?.priorExperience]);
 
   const handleSort = (key: SortKey) => {

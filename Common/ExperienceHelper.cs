@@ -20,7 +20,15 @@ namespace HRMS.Api.Common
                 return 0;
             }
 
-            return Math.Round((decimal)(effectiveEndDate - doj).TotalDays / 365.25m, 1);
+            var years = effectiveEndDate.Year - doj.Year;
+            var months = effectiveEndDate.Month - doj.Month;
+            if (months < 0)
+            {
+                years--;
+                months += 12;
+            }
+
+            return years + (decimal)months / 10m;
         }
 
         public static decimal CalculateTotalExperience(DateTime doj, decimal? priorExperience, bool isActive, DateTime? lwd)
